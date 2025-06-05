@@ -5,6 +5,5 @@ fastapi
 uvicorn
 pydantic
 typing
-mcp-client
-mcp-server
+mcp_server
 crewai
