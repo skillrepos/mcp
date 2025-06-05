@@ -1,0 +1,42 @@
+{
+   // "build": { "dockerfile": "Dockerfile" },
+    "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+    "hostRequirements": {
+       "cpus": 4,
+       "memory": "16gb",
+       "storage": "32gb"
+    },
+    "features": {
+       "ghcr.io/devcontainers/features/docker-from-docker:1": {},
+       "ghcr.io/devcontainers/features/github-cli:1": {},
+       "ghcr.io/devcontainers/features/python:1": {},
+       "node": {
+               "version": "lts",
+               "nodeGypDependencies": true
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.terminal.activateEnvInCurrentTerminal": true,
+                "python.defaultInterpreterPath": ".venv/bin/python",
+                "github.copilot.enable": {
+                  "*": false,
+                  "plaintext": false,  
+                  "markdown": false,
+                  "scminput": false
+                 },   
+                 "workbench.startupEditor": "readme", 
+                 // Open Markdown files in preview mode by default
+                 "workbench.editorAssociations": {
+                     "*.md": "vscode.markdown.preview.editor"
+                 }
+            },
+            "extensions": [
+               "mathematic.vscode-pdf",
+               "vstirbu.vscode-mermaid-preview"
+            ]
+        }
+    },
+    "postCreateCommand": "bash -i scripts/pysetup.sh py_env"
+}
