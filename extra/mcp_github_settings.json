@@ -1,5 +1,4 @@
 {
-  "mcp": {
     "servers": {
       "GitHub": {
         "type": "http",
@@ -17,5 +16,5 @@
         "password": true
       }
     ]
-  }
 }
+
