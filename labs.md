@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.0 - 06/15/25
+## Revision 1.1 - 06/16/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -332,18 +332,17 @@ GitHub MCP Server
 
 10. Now, we can start the local MCP server. In the *mcp.json* file, above the name of the server, click on the small *Start* link (see figure below). A dialog will pop up for you to paste in your PAT. Paste the token in there and hit *Enter*. (Note that the token will be masked out.)
 
-
 ![Starting the server](./images/mcp23.png?raw=true "Starting the server")
 
-11. After this, you should see the text above the server name change to "√Running | Stop | Restart | 51 tools | More...".
+After this, you should see the text above the server name change to "√Running | Stop | Restart | 51 tools | More...".
 
 ![Starting the server](./images/mcp24.png?raw=true "Starting the server")
 
-12. To see the tools that are available, in the Copilot Chat dialog, click on the small *tool* icon (see figure) and then scroll down to the *MCP Server: GitHub MCP Server* section. You'll see the available tools we picked up under that.
+11. To see the tools that are available, in the Copilot Chat dialog, click on the small *tool* icon (see figure) and then scroll down to the *MCP Server: GitHub MCP Server* section. You'll see the available tools we picked up under that.
 
 ![Starting the server](./images/mcp25.png?raw=true "Starting the server")
 
-13. Now that we have these tools available, we can use them in Copilot's Chat interface. (Again, you must be in *Agent* mode.) Here are some example prompts to try:
+12. Now that we have these tools available, we can use them in Copilot's Chat interface. (Again, you must be in *Agent* mode.) Here are some example prompts to try:
 
 ```
 Find username for <your name> on GitHub
@@ -351,24 +350,6 @@ Show info on recent changes in skillrepos/mcp on GitHub
 ```
 </br></br>
 ![Example usage](./images/mcp26.png?raw=true "Example usage")
-
-2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
-
-```
-code classic_calc.py
-```
-</br></br>
-```
-import requests, urllib.parse, sys
-
-expr = urllib.parse.quote_plus("12*8")
-url  = f"https://api.mathjs.org/v4/?expr={expr}"
-print("Calling:", url)
-print("Result :", requests.get(url, timeout=10).text)
-```
-</br></br>
-![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
 
  <p align="center">
 **[END OF LAB]**
