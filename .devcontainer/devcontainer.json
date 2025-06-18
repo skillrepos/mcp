@@ -44,16 +44,10 @@
     }
   },
 
-  // Forward and expose the MCP Server and Inspector ports
-  "forwardPorts": [8000, 6274, 6277],
-  "portsAttributes": {
-    "8000": { "label": "MCP Server" }, 
-    "6274": { "label": "MCP Inspector UI" },
-    "6277": { "label": "MCP Inspector Proxy" }
-  },
+ 
 
   // Install & setup on create
-  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh && gh codespace ports visibility --codespace $CODESPACE_NAME 8000:public 6274:public 6277:public",
+  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
 
   // Start Ollama on container start
   "postStartCommand": "nohup bash -c 'ollama serve &'"
