@@ -1,43 +1,60 @@
 {
-   // "build": { "dockerfile": "Dockerfile" },
-    "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-    "hostRequirements": {
-       "cpus": 4,
-       "memory": "16gb",
-       "storage": "32gb"
-    },
-    "features": {
-       "ghcr.io/devcontainers/features/docker-from-docker:1": {},
-       "ghcr.io/devcontainers/features/github-cli:1": {},
-       "ghcr.io/devcontainers/features/python:1": {},
-       "node": {
-               "version": "lts",
-               "nodeGypDependencies": true
+  // Use the official base image
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+
+  // Host machine requirements
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+
+  // Dev Container Features
+  "features": {
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {},
+    "node": {
+      "version": "lts",
+      "nodeGypDependencies": true
+    }
+  },
+
+  // VS Code customizations
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "github.copilot.enable": {
+          "*": false,
+          "plaintext": false,
+          "markdown": false,
+          "scminput": false
+        },
+        "workbench.startupEditor": "readme",
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
         }
-    },
-    "customizations": {
-        "vscode": {
-            "settings": {
-                "python.terminal.activateEnvInCurrentTerminal": true,
-                "python.defaultInterpreterPath": ".venv/bin/python",
-                "github.copilot.enable": {
-                  "*": false,
-                  "plaintext": false,  
-                  "markdown": false,
-                  "scminput": false
-                 },   
-                 "workbench.startupEditor": "readme", 
-                 // Open Markdown files in preview mode by default
-                 "workbench.editorAssociations": {
-                     "*.md": "vscode.markdown.preview.editor"
-                 }
-            },
-            "extensions": [
-               "mathematic.vscode-pdf",
-               "vstirbu.vscode-mermaid-preview"
-            ]
-        }
-    },
-    "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
-    "postStartCommand" : "nohup bash -c 'ollama serve &'"    
+      },
+      "extensions": [
+        "mathematic.vscode-pdf",
+        "vstirbu.vscode-mermaid-preview"
+      ]
+    }
+  },
+
+  // Forward and expose the MCP Server and Inspector ports
+  "forwardPorts": [8000, 6274, 6277],
+  "portsAttributes": {
+    "8000": { "label": "MCP Server" }, 
+    "6274": { "label": "MCP Inspector UI" },
+    "6277": { "label": "MCP Inspector Proxy" }
+  },
+
+  // Install & setup on create
+  "postCreateCommand": "gh codespace ports visibility 8000:pubic 6274:public 6277:public && bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
+
+  // Start Ollama on container start
+  "postStartCommand": "nohup bash -c 'ollama serve &'"
 }
