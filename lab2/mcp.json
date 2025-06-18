@@ -1,0 +1,9 @@
+// mcp.json
+{
+  "mcpServers": {
+    "codespace": {
+      "type": "streamable-http",
+      "url": "https://${CODESPACE_NAME}-8000.app.github.dev/mcp/"
+    }
+  }
+}

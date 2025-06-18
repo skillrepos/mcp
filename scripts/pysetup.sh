@@ -8,4 +8,8 @@ python3 -m venv ./$PYTHON_ENV \
 
 source ./$PYTHON_ENV/bin/activate
 
-pip3 install -r $CODESPACE_VSCODE_FOLDER/requirements.txt
+if [ -f "./requirements.txt" ]; then
+  pip3 install -r "./requirements.txt"
+else
+  pip3 install -r "/workspaces/mcp/requirements.txt"
+fi
