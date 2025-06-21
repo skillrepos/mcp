@@ -43,7 +43,7 @@
           "markdown": false,
           "scminput": false
         },
-        "workbench.startupEditor": "readme",
+        "workbench.startupEditor": "none",
         "workbench.editorAssociations": {
           "*.md": "vscode.markdown.preview.editor"
         }
@@ -61,5 +61,5 @@
   "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
 
   // Start Ollama on container start
-  "postStartCommand": "nohup bash -c 'ollama serve &'"
+  "postStartCommand": "nohup bash -c 'ollama serve & && code labs.md"
 }
