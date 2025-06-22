@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.1 - 06/16/25
+## Revision 1.2 - 06/22/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -122,35 +122,56 @@ python agent_mcp.py
 </p>
 </br></br></br>
 
-**Lab 2 - MCP Lightning Lab: From Hand-Rolled API Calls to Zero-Boilerplate Tool Invocation**
+**Lab 2 - MCP Capabilities**
 
-**Purpose: In this lab, we'll contrast the traditional approach of hard-coding REST requests against the Model-Context Protocol (MCP) approach to automatically discover, validate, and invoke tools—then see how an LLM can seamlessly leverage those same MCP-exposed functions without any extra HTTP or JSON glue code.**
+**Purpose: - In this lab, we'll use the Inspector tool to understand more about the different capabilities that can be provided by MCP servers**
 
-1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
+1. Change into the *lab2* directory in the terminal.
    
 ```
-cd lab1
+cd lab2
 ```
 
-2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
+2. In this directory, we have an example MCP server with tools, a prompt, and a resource.  It's designed as a "travel assistant" example. Open the file and take a look at the code. The numbered comments highlight the key parts.
 
 ```
-code classic_calc.py
+code mcp_travel_server.py
 ```
-</br></br>
-```
-import requests, urllib.parse, sys
 
-expr = urllib.parse.quote_plus("12*8")
-url  = f"https://api.mathjs.org/v4/?expr={expr}"
-print("Calling:", url)
-print("Result :", requests.get(url, timeout=10).text)
-```
-</br></br>
-![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
+3. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
 
- <p align="center">
+```
+python mcp_travel_server.py
+```
+
+4. With the server running, let's start the inspector. First open up a second terminal. You can just right-click in the current terminal and choose "Split Terminal" from the pop-up menu. This will open a second terminal for you next to the current one.
+
+![Splitting terminal](./images/mcp32.png?raw=true "Splitting terminal")
+
+
+5. Now, we have a couple of steps to start the inspector in the codespace. First, source the script "start_inspector.sh". In the new terminal, enter:
+
+```
+source ./start_inspector.sh
+```
+
+6. This script removes any processes using the needed ports, sets some needed environment variables, then prints out further steps to take, and finally starts the inspector. Notice the output section "3. Open the app at the URL printed below". You'll need that URL in a moment.
+
+7. Before we can connect everything, we need to make a couple of ports exposed by the server and client public. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6477 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
+
+![Setting ports to Public](./images/mcp31.png?raw=true "Setting ports to Public")
+
+
+8. After this, switch back to the *TERMINAL* tab, and use the URL under "3. Open the app at the URL printed below" to open the inspector. You can just copy and paste the URL into a browser tab. (Depending on your system/keyboard, you may also be able to hold down one of the "meta" keys and click on the URL to open it.) When it starts up, you should see a screen like below. **Click on the Connect button** to connect to the server.
+
+![Connecting](./images/mcp34.png?raw=true "Connecting")
+   
+9. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
+
+![Resources](./images/mcp27.png?raw=true "Resources") 
+
+
+<p align="center">
 **[END OF LAB]**
 </p>
 </br></br></br>
