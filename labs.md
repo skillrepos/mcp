@@ -138,38 +138,48 @@ cd lab2
 code mcp_travel_server.py
 ```
 
-3. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
+3. Before we run it, let's grab a unique URL to more easily run the inspector. In the terminal, run the command below, and copy the URL after "Inspector URL=" that's shown.
+
+```
+../scripts/get-inspector-url.sh
+```
+</br></br>
+![Copy URL](./images/mcp35.png?raw=true "Copy URL")
+
+
+4. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
 
 ```
 python mcp_travel_server.py
 ```
-
-4. With the server running, let's start the inspector. First open up a second terminal. You can just right-click in the current terminal and choose "Split Terminal" from the pop-up menu. This will open a second terminal for you next to the current one.
-
-![Splitting terminal](./images/mcp32.png?raw=true "Splitting terminal")
+</br></br>
+![Running server](./images/mcp36.png?raw=true "Running server")
 
 
-5. Now, we have a couple of steps to start the inspector in the codespace. First, source the script "start_inspector.sh". In the new terminal, enter:
-
-```
-source ./start_inspector.sh
-```
-
-6. This script removes any processes using the needed ports, sets some needed environment variables, then prints out further steps to take, and finally starts the inspector. Notice the output section "3. Open the app at the URL printed below". You'll need that URL in a moment.
-
-7. Before we can connect everything, we need to make a couple of ports exposed by the server and client public. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6477 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
+5. Before we can connect everything, we need to make a couple of ports *Public* that are exposed by the server and client. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6477 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
 
 ![Setting ports to Public](./images/mcp31.png?raw=true "Setting ports to Public")
 
 
-8. After this, switch back to the *TERMINAL* tab, and use the URL under "3. Open the app at the URL printed below" to open the inspector. You can just copy and paste the URL into a browser tab. (Depending on your system/keyboard, you may also be able to hold down one of the "meta" keys and click on the URL to open it.) When it starts up, you should see a screen like below. **Click on the Connect button** to connect to the server.
+6. After this, you can go to a new browser tab and paste the URL you copied in step 3 into a browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
 
 ![Connecting](./images/mcp34.png?raw=true "Connecting")
    
-9. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
+7. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
 
 ![Resources](./images/mcp27.png?raw=true "Resources") 
 
+8. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the actual definition of the prompt.
+
+![Prompt](./images/mcp28.png?raw=true "Prompt") 
+
+9. Finally, let's take a look at the tools available from the server. Click on *Tools* in the gray bar, then *List Tools* in the box below. You'll see two tools defined - one to calculate distance and one to convert currency.
+
+![Tools](./images/mcp37.png?raw=true "Tools") 
+
+10. Let's try running the distance_between tool. Select the tool in the list. On the right side, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click "Run Tool" to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
+
+![Running tool](./images/mcp37.png?raw=true "Running tool") 
 
 <p align="center">
 **[END OF LAB]**
