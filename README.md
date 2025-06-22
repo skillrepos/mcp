@@ -19,7 +19,11 @@ After the initial startup, it will run a script to setup the python environment,
 
 ![Final prep](./images/mcp2.png?raw=true "Final prep")
 
-The codespace is ready to use when you see a prompt like the one shown below in its terminal.
+When the setup is done, you may see a prompt to press a key like this.
 
 ![Ready to use](./images/mcp3.png?raw=true "Ready to use")
+
+The codespace is ready to use when you see a prompt like the one shown below in its terminal.
+
+![Ready to use](./images/mcp3-2.png?raw=true "Ready to use")
 
