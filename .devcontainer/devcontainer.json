@@ -9,6 +9,22 @@
     "storage": "32gb"
   },
 
+  "forwardPorts": [8000, 6274, 6277],
+  "portsAttributes": {
+    "8000": {
+      "label": "MCP Server",
+      "visibility": "public"
+    },
+    "6474": {
+      "label": "MCP Inspector Interface",
+      "visibility": "public"
+    },
+    "6477": {
+      "label": "MCP Inspector proxy",
+      "visibility": "public"
+      }
+  },
+
   // Dev Container Features
   "features": {
     "ghcr.io/devcontainers/features/docker-from-docker:1": {},
@@ -47,7 +63,7 @@
  
 
   // Install & setup on create
-  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
+  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh && nohup bash -c 'source scripts/start-inspector.sh'",
 
   // Start Ollama on container start
   "postStartCommand": "bash -i code labs.md && nohup bash -c 'ollama serve &"
