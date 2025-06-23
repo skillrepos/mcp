@@ -1,14 +1,5 @@
 # server_v2.py
 
-import warnings
-# ─────────────────────────────────────────────────────────────────
-# Silence noisy deprecation warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning,
-                        message=".*websockets\\.legacy.*")
-warnings.filterwarnings("ignore", category=DeprecationWarning,
-                        message=".*WebSocketServerProtocol is deprecated.*")
-# ─────────────────────────────────────────────────────────────────
-
 from fastmcp import FastMCP
 import uvicorn
 
@@ -37,7 +28,7 @@ def sub(a: int, b: int) -> int | str:
     return _sub_impl_v2(a, b)   # currently pointing at v2
 
 # ── Register & capture the FastAPI app via streamable HTTP ─────────
-app = mcp.streamable_http_app(path="/mcp")
+app = mcp.http_app(path="/mcp", transport="http")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
