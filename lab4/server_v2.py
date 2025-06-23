@@ -26,12 +26,12 @@ def _sub_impl_v2(a: int, b: int) -> int:
 def sub_v1(a: int, b: int) -> int:
     return _sub_impl_v1(a, b)
 
-@mcp.tool(name="sub_v2", description="sub two ints (current version)")
+@mcp.tool(name="sub_v2", description="sub two ints - v2")
 def sub_v2(a: int, b: int) -> str:
     return _sub_impl_v2(a, b)
 
 # ── Alias for “current” version ───────────────────────────────────
-@mcp.tool(name="sub", description="sub two ints")
+@mcp.tool(name="sub", description="sub two ints (current version)")
 def sub(a: int, b: int) -> int | str:
     # Switch here between v1 & v2
     return _sub_impl_v2(a, b)   # currently pointing at v2
