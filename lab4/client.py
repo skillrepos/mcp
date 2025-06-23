@@ -1,9 +1,10 @@
 # client.py
 
+import sys
 import asyncio
 from fastmcp import Client
 
-async def main(tool: str = "sub"):
+async def main(tool: str):
     async with Client("http://127.0.0.1:8000/mcp/") as c:
         # 1) List all tools with name + description
         tools = await c.list_tools()
@@ -14,9 +15,8 @@ async def main(tool: str = "sub"):
         # 2) Call the requested tool
         raw = await c.call_tool(tool, {"a": 4, "b": 3})
 
-        # 3) When using the streamable-HTTP transport, FastMCP wraps primitive results in a list of TextContent objects. Unwrap.
+        # 3) Unwrap TextContent-like lists if needed
         if isinstance(raw, list) and raw and hasattr(raw[0], "text"):
-            # take the first element’s .text field
             result = raw[0].text
         else:
             result = raw
@@ -24,4 +24,6 @@ async def main(tool: str = "sub"):
         print(f"\nResult of {tool}(4,3): {result!r}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # pick up tool from argv[1], default to "add"
+    tool_name = sys.argv[1] if len(sys.argv) > 1 else "sub"
+    asyncio.run(main(tool_name))
