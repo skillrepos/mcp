@@ -1,4 +1,4 @@
-# llama_tool_server.py  – MCP v6-18 style with robust list‐content parsing
+# llama_tool_server.py  – MCP v6-18 style 
 
 import httpx
 import uvicorn
@@ -51,20 +51,16 @@ async def summarize(text: str) -> str:
         # Fallback
         return str(content)
 
-    # 1) OpenAI-style “choices”
-   # if "choices" in data and data["choices"]:
-   #     return extract_text(data["choices"][0].get("message", {}).get("content", ""))
-
-    # 2) Ollama v2-style “results”
+    # Ollama v2-style “results”
     if "results" in data and data["results"]:
         return extract_text(data["results"][0].get("message", {}).get("content", ""))
 
-    # 3) Ollama v1-style top-level “message”
+    # Ollama v1-style top-level “message”
     if "message" in data and isinstance(data["message"], dict):
         return extract_text(data["message"].get("content", ""))
 
-    # 4) Fallback: show raw JSON so you can adapt further
-   # return f"(unexpected format) {data}"
+    # Fallback: show raw JSON so you can adapt further
+    return f"(unexpected format) {data}"
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=9000)
