@@ -7,9 +7,13 @@ from fastmcp import FastMCP
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 MODEL     = "llama3.2:latest"
 
+# Create FastMCP instance
 mcp = FastMCP("LLama Summarizer")
+
+# Mount both RPC (POST) and SSE (GET) at /mcp
 app = mcp.http_app(path="/mcp", transport="streamable-http")
 
+# Summarize tool with latency measurement
 @mcp.tool(name="summarize",
           description="Summarize English text in one sentence")
 async def summarize(text: str) -> str:
@@ -27,7 +31,7 @@ async def summarize(text: str) -> str:
         r.raise_for_status()
         data = r.json()
 
-    # Helper to normalize a “content” field that might be str | dict | list
+    # Helper to normalize various content shapes
     def extract_text(content):
         # If it’s a plain string
         if isinstance(content, str):
