@@ -1,7 +1,13 @@
+import asyncio
+from fastmcp import Client
+
+# This client connects to an MCP server at the specified URL, invokes the 'summarize' tool,
+# and prints the returned summary text in a clean, line-by-line format.
+
 async def main():
     # Create an asynchronous context-managed MCP client.
     # The `Client` automatically handles connecting via HTTP POST/SSE under the hood.
-    async with Client("http://127.0.0.1:9000/mcp") as c:
+    async with Client("http://127.0.0.1:9000/mcp/") as c:
         # The text to summarize
         text = (
             "Model-Context Protocol (MCP) lets clients discover, version "
