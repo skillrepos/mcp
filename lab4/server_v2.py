@@ -28,7 +28,7 @@ def sub(a: int, b: int) -> int | str:
     return _sub_impl_v2(a, b)   # currently pointing at v2
 
 # ── Register & capture the FastAPI app via streamable HTTP ─────────
-app = mcp.http_app(path="/mcp", transport="http")
+app = mcp.streamable_http_app(path="/mcp")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
