@@ -1,38 +1,36 @@
 # server.py
 
 import warnings
+# ─────────────────────────────────────────────────────────────────
+# Silence noisy deprecation warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning,
                         message=".*websockets\\.legacy.*")
 warnings.filterwarnings("ignore", category=DeprecationWarning,
                         message=".*WebSocketServerProtocol is deprecated.*")
+# ─────────────────────────────────────────────────────────────────
 
 from fastmcp import FastMCP
 import uvicorn
 
 mcp = FastMCP("Calc API")
 
+# ── Core implementation helpers ───────────────────────────────────
+def _sub_impl_v1(a: int, b: int) -> int:
+    return a - b
 
-# ── 1) Raw implementation, untouched by FastMCP  ────────────────────
-def _add_impl(a: int, b: int) -> int:
-    return a + b
+# ── Versioned tools ───────────────────────────────────────────────
+@mcp.tool(name="sub_v1", description="subtract two ints – v1")
+def sub_v1(a: int, b: int) -> int:
+    return _sub_impl_v1(a, b)
 
+# ── Alias for “current” version ───────────────────────────────────
+@mcp.tool(name="sub", description="subtract two ints (current version)")
+def sub(a: int, b: int) -> int | str:
+    # Call v1
+    return _sub_impl_v1(a, b)   # currently pointing at v1
 
-# ── 2) Expose v1 under its own name ───────────────────────────────
-@mcp.tool(name="add_v1", description="Add two ints – v1")
-def add_v1(a: int, b: int) -> int:
-    # delegate to the raw helper
-    return _add_impl(a, b)
-
-
-# ── 3) Alias "add" that points at v1  ────────────────────────────
-@mcp.tool(name="add", description="Add two ints (current version)")
-def add(a: int, b: int) -> int:
-    # again call the raw helper directly
-    return _add_impl(a, b)
-
-
-# ── 4) Register & capture the FastAPI app  ───────────────────────
-app = mcp.streamable_http_app(path="/mcp")  # or transport="http" on FastMCP ≥2.3.2
+# ── Register & capture the FastAPI app via streamable HTTP ─────────
+app = mcp.streamable_http_app(path="/mcp")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
