@@ -188,104 +188,92 @@ python mcp_travel_server.py
 
 11. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000.
 
-**Lab 3 - MCP Lightning Lab: From Hand-Rolled API Calls to Zero-Boilerplate Tool Invocation**
+**Lab 3 - Security and Authorization in MCP**
 
-**Purpose: In this lab, we'll contrast the traditional approach of hard-coding REST requests against the Model-Context Protocol (MCP) approach to automatically discover, validate, and invoke tools—then see how an LLM can seamlessly leverage those same MCP-exposed functions without any extra HTTP or JSON glue code.**
+**Purpose: In this lab, we'll demonstrate how to introduce an external authorization server and work with it to verify the difference between authorized and unauthorized requests when calling MCP tools.
 
-1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
+1. Change into the *lab3* directory in the terminal.
    
 ```
-cd lab1
+cd lab3
 ```
 
-2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
+2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us well for this lab. You can open up the files and take a look at the code. s designed as a "travel assistant" example. Open the file and take a look at the code. The numbered comments highlight the key parts. You can open any of the files by clicking on them in the explorer view to the left or using the command below. The table under that suggests some things to notice about each.
 
 ```
-code classic_calc.py
+code <file name>
 ```
-</br></br>
+</br></br>   
+
+| **File**               | **What to notice**                                                             |
+|------------------------|--------------------------------------------------------------------------------|
+| **`auth_server.py`**   | `/token` issues a short-lived JWT; `/introspect` lets you verify its validity. |
+| **`secure_server.py`** | Middleware rejects any request that’s missing a token or fails JWT verification.|
+| **`secure_client.py`** | Fetches a token first, then calls the `add` tool with that bearer token.        |
+
+3. Start the authorization server with the command below and leave it running in that terminal.
+
 ```
-import requests, urllib.parse, sys
-
-expr = urllib.parse.quote_plus("12*8")
-url  = f"https://api.mathjs.org/v4/?expr={expr}"
-print("Calling:", url)
-print("Result :", requests.get(url, timeout=10).text)
+python auth_server.py
 ```
-</br></br>
-![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
 
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
+4. Over to the far right is a "+" sign to create a new terminal.  Click on that and then let's verify that our authorization server is working with the curl command below. Run the command in the new terminal.
 
-**Lab 4 - MCP Lightning Lab: From Hand-Rolled API Calls to Zero-Boilerplate Tool Invocation**
+```
+curl -X POST -d "username=demo-client&password=demopass" \
+     http://127.0.0.1:9000/token
+```
 
-**Purpose: In this lab, we'll contrast the traditional approach of hard-coding REST requests against the Model-Context Protocol (MCP) approach to automatically discover, validate, and invoke tools—then see how an LLM can seamlessly leverage those same MCP-exposed functions without any extra HTTP or JSON glue code.**
+(Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io or run the following command in the terminal:
 
-1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
+```
+python -c "import jose,jwt,os; print(jose.jwt.get_unverified_claims(os.getenv('<token string>')))")
+```
+
+5. Now, in the new terminal, start the secure server.
+
+```
+python secure_server.py
+```
+
+6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. (When you run this you will see a "500 Internal Server Error" response. But if you switch back to the terminal where the server is running, you'll see that it's really a "401" error. It shows as a 500 error because the 401 is "swallowed" before it gets back to the client.
+
+```
+curl -i -X POST http://127.0.0.1:8000/mcp \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":"bad","method":"list_tools","params":[]}'
+```
+
+7. Now in the terminal you did the curl from, you can run the secure client. You should see output showing that it ran the "add" tool. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool
+
+```
+python secure_client.py
+```
+
+8. If you want, you can introspect the token with the curl command below.
+
+```
+curl -s -X POST http://127.0.0.1:9000/introspect \
+     -H "Content-Type: application/json" \
+     -d "{\"token\":\"$TOKEN\"}" | jq
+```
+
+9. Finally, you can show that breaking the token breaks the authentication. Run the curl command below. Then look back at the terminal with the authorization server running and you should see an error message.
+
+```
+BROKEN_TOKEN="${TOKEN}corruption"
+curl -i -X POST http://127.0.0.1:8000/mcp \
+     -H "Authorization: Bearer $BROKEN_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
+```
+
+10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
-```
-cd lab1
-```
 
-2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
+**Lab 4 - ?**
 
-```
-code classic_calc.py
-```
-</br></br>
-```
-import requests, urllib.parse, sys
-
-expr = urllib.parse.quote_plus("12*8")
-url  = f"https://api.mathjs.org/v4/?expr={expr}"
-print("Calling:", url)
-print("Result :", requests.get(url, timeout=10).text)
-```
-</br></br>
-![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
-
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 5 - MCP Lightning Lab: From Hand-Rolled API Calls to Zero-Boilerplate Tool Invocation**
-
-**Purpose: In this lab, we'll contrast the traditional approach of hard-coding REST requests against the Model-Context Protocol (MCP) approach to automatically discover, validate, and invoke tools—then see how an LLM can seamlessly leverage those same MCP-exposed functions without any extra HTTP or JSON glue code.**
-
-1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
-   
-```
-cd lab1
-```
-
-2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
-
-```
-code classic_calc.py
-```
-</br></br>
-```
-import requests, urllib.parse, sys
-
-expr = urllib.parse.quote_plus("12*8")
-url  = f"https://api.mathjs.org/v4/?expr={expr}"
-print("Calling:", url)
-print("Result :", requests.get(url, timeout=10).text)
-```
-</br></br>
-![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
-
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
+**Lab 5 - ?**
 
 **Lab 6 - Connecting Applications to MCP Servers**
 
