@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.2 - 06/22/25
+## Revision 1.3 - 06/23/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -374,7 +374,88 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 </p>
 </br></br></br>
 
-**Lab 5 - ?**
+**Lab 5 - Building Robust MCP Tools**
+
+**Purpose: In this lab, we'll learn more about defining, discovering, and invoking MCP tools, along with performance telemetry and streaming support.**
+
+1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
+   
+```
+cd lab5
+```
+
+2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it  with the command "ollama serve &".
+
+```
+ollama list
+```
+</br></br>
+![Checking Ollama](./images/mcp48.png?raw=true "Checking Ollama")
+
+3. With Ollama showing that llama3.2 is available, we can proceed. In this directory, we have an MCP server in the file *llama_tool_server.py. It provides a tool called "summarize" that uses the llama3.2 LLM to produce a summary of whatever text is passed to it. You can look at the code if you want by opening it in the editor. When you are ready, make sure the cursor is in the terminal and run it as below.
+
+```
+python llama_tool_server.py
+```
+</br></br>
+![Running server](./images/mcp49.png?raw=true "Running server")
+
+4. Now, switch to another terminal. We also have a client in the file *summarize_client.py*. For simplicity, it is just calling the summarize tool rather than discovering, etc. You can look at the contents if you want. When ready, run the client with the command below. This will take a long time to run while the LLM gets loaded up and does its processing. (If you look back in the server's terminal, you can see some of that progressing.) After a while, you should see output like the screenshot. You'll have to look closely to see the actual summarized text string.
+
+```
+python summarize_client.py
+```
+</br></br>
+![Running client](./images/mcp50.png?raw=true "Running client")
+
+5. Let's edit the server and add a "ping" tool in case we wanted it for a readiness probe or such. Switch to the tab with the *llama_tool_server.py* file open (or open it). Then add the code sample shown below in the file (above or below the *summarize* tool definition. Pay attention to alignment. See screenshot for an example.
+
+```
+@mcp.tool(name="ping", description="Check server health")
+async def ping() -> str:
+    return "pong"
+```
+</br></br>
+![Adding ping](./images/mcp51.png?raw=true "Adding ping")
+
+6. Restart your server. Switch back to the terminal where your server is running. CTRL+C to stop it. Then restart it. As a reminder, the command is below.
+
+```
+python llama_tool_server.py
+```
+
+7. Switch to the other terminal where you ran your client. While we don't have discovery built into our client, we do have a simple program that can do discovery for our server. It's in *discover_tools.py*. You can "cat" it to see it and then run it when you're ready. You should see output as in the screenshot.
+
+```
+cat discover_tools.py
+python discover_tools.py
+```
+</br></br>
+![Discovering tools](./images/mcp52.png?raw=true "Discovering tools")
+
+8. Now, let's see how we could add a simple latency measurement for our round-trip time to Ollama. In the file *latency_server.py*, we have the code already added. You can run the command below to see the differences side-by-side. You do not need/want to make any changes in the code. When done viewing, just click on the "x" in the "llama_tool_server.py <--> latency_server.py" tab at the top.
+
+![Comparing servers](./images/mcp53.png?raw=true "Comparing servers")
+
+9. Switch back to the tab where the server is running. Stop it with CTRL+C. Then you can start the latency server with the command below.
+
+```
+python latency_server.py
+```
+
+10. Switch again to the terminal where you ran the client and execute it. Afterwards, you should see output like in the screenshot below. Notice the time measurement in the output.
+
+```
+python summarize_client.py
+```
+</br></br>
+
+![Output with time](./images/mcp54.png?raw=true "Output with time")
+
+ <p align="center">
+**[END OF LAB]**
+</p>
+</br></br></br>
 
 **Lab 6 - Connecting Applications to MCP Servers**
 
