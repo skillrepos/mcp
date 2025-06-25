@@ -66,5 +66,5 @@
   "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh && nohup bash -c 'source scripts/start-inspector.sh'",
 
   // Start Ollama on container start
-  "postStartCommand": "bash -i code labs.md && nohup bash -c 'ollama serve &"
+  "postStartCommand": "nohup bash -c 'ollama serve &"
 }
