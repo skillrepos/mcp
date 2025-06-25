@@ -11,5 +11,5 @@ source ./$PYTHON_ENV/bin/activate
 if [ -f "./requirements.txt" ]; then
   pip3 install -r "./requirements.txt"
 else
-  pip3 install -r "/workspaces/mcp/requirements.txt"
+  pip3 install -r "/workspaces/ai-agents/requirements/requirements.txt"
 fi
