@@ -1,39 +1,56 @@
+# summarize_client.py
+#
+# Connects to an MCP server, calls the “summarize” tool, and prints only the
+# human-readable summary text (no wrappers, no CallToolResult noise).
+#
+# Requirements
+#   fastmcp ≥ 2.9.0
+#   Python ≥ 3.9
+#
+# Usage
+#   python summarize_client.py
+#
+
 import asyncio
 from fastmcp import Client
 
-# This client connects to an MCP server at the specified URL, invokes the 'summarize' tool,
-# and prints the returned summary text in a clean, line-by-line format.
 
-async def main():
-    # Create an asynchronous context-managed MCP client.
-    # The `Client` automatically handles connecting via HTTP POST/SSE under the hood.
+async def main() -> None:
     async with Client("http://127.0.0.1:9000/mcp/") as c:
-        # The text to summarize
         text = (
             "Model-Context Protocol (MCP) lets clients discover, version "
             "and call AI tools, prompts and resources over a simple RPC/HTTP interface."
         )
 
-        # Call the 'summarize' tool on the MCP server, passing a JSON-compatible dict
-        # `call_tool` returns either a single response object or a list of streamed chunks
-        result = await c.call_tool("summarize", {"text": text})
+        # Call the tool (may return a single CallToolResult or a streamed list)
+        raw = await c.call_tool("summarize", {"text": text})
 
         print("Summary:")
 
-        # Normalize to a list: handle streaming responses (list) or single result
-        chunks = result if isinstance(result, list) else [result]
+        # Always treat the response as a list for uniform handling
+        chunks = raw if isinstance(raw, list) else [raw]
 
-        # Iterate over each chunk and print its content
         for chunk in chunks:
-            # Many MCP clients return objects with a `.text` attribute for actual text content.
-            # Use getattr to safely retrieve `.text`, falling back to str(chunk) if not present.
-            content = getattr(chunk, "text", None)
-            if isinstance(content, str):
-                print(content)
-            else:
-                # If chunk is already a simple type (e.g. str), just print it
-                print(str(chunk))
+            # ── 1) Most common: CallToolResult with .content -> [TextContent, …]
+            if hasattr(chunk, "content") and chunk.content:
+                for block in chunk.content:
+                    if hasattr(block, "text"):
+                        print(block.text)
+                    else:                      # non-text block (rare here)
+                        print(block)
 
-# Entry point: run the `main` coroutine
+            # ── 2) Streamed TextContent objects
+            elif hasattr(chunk, "text"):
+                print(chunk.text)
+
+            # ── 3) Primitive result wrapped in .data
+            elif hasattr(chunk, "data"):
+                print(chunk.data)
+
+            # ── 4) Fallback: print whatever it is
+            else:
+                print(chunk)
+
+
 if __name__ == "__main__":
     asyncio.run(main())
