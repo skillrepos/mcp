@@ -402,7 +402,7 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 
 **Purpose: In this lab, we'll learn more about defining, discovering, and invoking MCP tools, along with performance telemetry and streaming support.**
 
-1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
+1. Change into the *lab5* directory in a terminal (and in any other terminals you use along the way).
    
 ```
 cd lab5
@@ -424,7 +424,7 @@ python llama_tool_server.py
 </br></br>
 ![Running server](./images/mcp49.png?raw=true "Running server")
 
-4. Now, switch to another terminal. We also have a client in the file *summarize_client.py*. For simplicity, it is just calling the summarize tool rather than discovering, etc. You can look at the contents if you want. When ready, run the client with the command below. This will take a long time to run while the LLM gets loaded up and does its processing. (If you look back in the server's terminal, you can see some of that progressing.) After a while, you should see output like the screenshot. You'll have to look closely to see the actual summarized text string.
+4. Now, switch to another terminal. (Remember to be in the *lab5* directory.) We also have a client in the file *summarize_client.py*. For simplicity, it is just calling the summarize tool rather than discovering, etc. You can look at the contents if you want. When ready, run the client with the command below. This will take a long time to run while the LLM gets loaded up and does its processing. (If you look back in the server's terminal, you can see some of that progressing.) After a while, you should see output like the screenshot. You'll have to look closely to see the actual summarized text string.
 
 ```
 python summarize_client.py
@@ -435,6 +435,7 @@ python summarize_client.py
 5. Let's edit the server and add a "ping" tool in case we wanted it for a readiness probe or such. Switch to the tab with the *llama_tool_server.py* file open (or open it). Then add the code sample shown below in the file (above or below the *summarize* tool definition. Pay attention to alignment. See screenshot for an example.
 
 ```
+# Healthcheck tool
 @mcp.tool(name="ping", description="Check server health")
 async def ping() -> str:
     return "pong"
@@ -458,6 +459,10 @@ python discover_tools.py
 ![Discovering tools](./images/mcp52.png?raw=true "Discovering tools")
 
 8. Now, let's see how we could add a simple latency measurement for our round-trip time to Ollama. In the file *latency_server.py*, we have the code already added. You can run the command below to see the differences side-by-side. You do not need/want to make any changes in the code. When done viewing, just click on the "x" in the "llama_tool_server.py <--> latency_server.py" tab at the top.
+
+```
+code -d llama_tool_server.py latency_server.py
+```
 
 ![Comparing servers](./images/mcp53.png?raw=true "Comparing servers")
 
@@ -584,3 +589,4 @@ Show info on recent changes in skillrepos/mcp on GitHub
 </br></br></br>
 
 **THE END**
+
