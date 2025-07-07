@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.3 - 06/23/25
+## Revision 1.4 - 07/07/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 python mcp_client.py
 ```
 </br></br>
-![Running client](./images/mcp7.png?raw=true "Running client")
+![Running client](./images/mcp7-new.png?raw=true "Running client")
 
 8. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt.
    To save time, we already have the code for the agent in the file *agent_mcp.py*. You can browse the code to see what it is doing.
@@ -116,6 +116,8 @@ python agent_mcp.py
 ```
 </br></br>
 ![Running agent](./images/mcp9.png?raw=true "Running agent")
+
+10. You can stop the MCP server in the original terminal via CTRL-C.
 
 <p align="center">
 **[END OF LAB]**
@@ -138,13 +140,13 @@ cd lab2
 code mcp_travel_server.py
 ```
 
-3. Before we run it, let's grab a unique URL to more easily run the inspector. In the terminal, run the command below, and copy the URL after "Inspector URL=" that's shown.
+3. Before we run it, let's grab a unique URL to more easily run the inspector. In the terminal, run the command below, and copy the URL that's printed out.
 
 ```
 ../scripts/get-inspector-url.sh
 ```
 </br></br>
-![Copy URL](./images/mcp35.png?raw=true "Copy URL")
+![Copy URL](./images/mcp35-new.png?raw=true "Copy URL")
 
 
 4. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
@@ -156,12 +158,14 @@ python mcp_travel_server.py
 ![Running server](./images/mcp36.png?raw=true "Running server")
 
 
-5. Before we can connect everything, we need to make a couple of ports *Public* that are exposed by the server and client. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6477 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
+5. Before we can connect everything, we need to make a couple of ports *Public* that are exposed by the server and client. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6277 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
 
 ![Setting ports to Public](./images/mcp31.png?raw=true "Setting ports to Public")
 
 
 6. After this, you can go to a new browser tab and paste the URL you copied in step 3 into a browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
+
+**NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
 ![Connecting](./images/mcp34.png?raw=true "Connecting")
    
@@ -179,14 +183,15 @@ python mcp_travel_server.py
 
 10. Let's try running the distance_between tool. Select the tool in the list. On the right side, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click "Run Tool" to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
-![Running tool](./images/mcp37.png?raw=true "Running tool") 
+![Running tool](./images/mcp38.png?raw=true "Running tool") 
+
+11. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the inspector running in it.
 
 <p align="center">
 **[END OF LAB]**
 </p>
 </br></br></br>
 
-11. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000.
 
 **Lab 3 - Security and Authorization in MCP**
 
