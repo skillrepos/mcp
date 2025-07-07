@@ -11,3 +11,4 @@ fastmcp
 langchain_ollama
 langgraph
 langchain_mcp_adapters
+python-jose

@@ -203,11 +203,8 @@ python mcp_travel_server.py
 cd lab3
 ```
 
-2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us well for this lab. You can open up the files and take a look at the code. s designed as a "travel assistant" example. Open the file and take a look at the code. The numbered comments highlight the key parts. You can open any of the files by clicking on them in the explorer view to the left or using the command below. The table under that suggests some things to notice about each.
+2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us well for this lab. It's designed as a "travel assistant" example.  You can open any of the files by clicking on them in the explorer view to the left or using the "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table under that suggests some things to notice about each.
 
-```
-code <file name>
-```
 </br></br>   
 
 | **File**               | **What to notice**                                                             |
@@ -216,26 +213,35 @@ code <file name>
 | **`secure_server.py`** | Middleware rejects any request that’s missing a token or fails JWT verification.|
 | **`secure_client.py`** | Fetches a token first, then calls the `add` tool with that bearer token.        |
 
+</br></br>
+
 3. Start the authorization server with the command below and leave it running in that terminal.
 
 ```
 python auth_server.py
 ```
 
-4. Over to the far right is a "+" sign to create a new terminal.  Click on that and then let's verify that our authorization server is working with the curl command below. Run the command in the new terminal.
+![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
+
+4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (** Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
 
 ```
-curl -X POST -d "username=demo-client&password=demopass" \
-     http://127.0.0.1:9000/token
+export TOKEN=$(
+  curl -s -X POST \
+       -d "username=demo-client&password=demopass" \
+       http://127.0.0.1:9000/token \
+  | jq -r '.access_token'        
+)
+
+echo "export TOKEN=$TOKEN" >> ~/.bashrc   
+source ~/.bashrc 
 ```
 
-(Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io or run the following command in the terminal:
+![curl and add new terminal](./images/mcp61.png?raw=true "curl and add new terminal") 
 
-```
-python -c "import jose,jwt,os; print(jose.jwt.get_unverified_claims(os.getenv('<token string>')))")
-```
+(Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io 
 
-5. Now, in the new terminal, start the secure server.
+5. Now, in that terminal, start the secure server.
 
 ```
 python secure_server.py
@@ -244,24 +250,33 @@ python secure_server.py
 6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. (When you run this you will see a "500 Internal Server Error" response. But if you switch back to the terminal where the server is running, you'll see that it's really a "401" error. It shows as a 500 error because the 401 is "swallowed" before it gets back to the client.
 
 ```
+cd lab3 
+
 curl -i -X POST http://127.0.0.1:8000/mcp \
      -H "Content-Type: application/json" \
      -d '{"jsonrpc":"2.0","id":"bad","method":"list_tools","params":[]}'
 ```
 
-7. Now in the terminal you did the curl from, you can run the secure client. You should see output showing that it ran the "add" tool. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool
+![500 error and switching terminals](./images/mcp56.png?raw=true "500 error and switching terminals") 
+
+
+7. Now in the same terminal, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
 
 ```
 python secure_client.py
 ```
 
-8. If you want, you can introspect the token with the curl command below.
+![Running the secure client](./images/mcp59.png?raw=true "Running the secure client") 
+
+8. If you want, you can introspect the token we created with the curl command below.
 
 ```
 curl -s -X POST http://127.0.0.1:9000/introspect \
      -H "Content-Type: application/json" \
      -d "{\"token\":\"$TOKEN\"}" | jq
 ```
+
+![Introspecting token](./images/mcp62.png?raw=true "Introspecting token") 
 
 9. Finally, you can show that breaking the token breaks the authentication. Run the curl command below. Then look back at the terminal with the authorization server running and you should see an error message.
 
@@ -272,6 +287,8 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -H "Content-Type: application/json" \
      -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
 ```
+
+![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
 
 10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
