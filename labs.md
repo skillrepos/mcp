@@ -292,21 +292,24 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 
 10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
+<p align="center">
+**[END OF LAB]**
+</p>
+</br></br></br>
 
 **Lab 4 - Rapid Versioning and Rollback of MCP Tools**
 
 **Purpose: In this lab, we'll see how to release, pin, and rollback MCP tool versions in minutes using the alias-delegation pattern, ensuring safe upgrades and fast recovery.
 
-1. Change into the *lab4* directory in the terminal.
+1. Change into the *lab4* directory in a terminal.
    
 ```
 cd lab4
 ```
 
-2. Take a quick look at the *server.py* file we have here. (You can click on the file or use the first command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the second command. Output will look like the screenshot (ignore the warnings).
+2. Take a quick look at the *server.py* file we have here. (You can click on the file or use the usual "code" command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the command below. Output will look like the screenshot (ignore the warnings).
 
 ```
-code server.py
 python server.py
 ```
 </br></br>
@@ -314,10 +317,9 @@ python server.py
 ![Server startup](./images/mcp39.png?raw=true "Server startup") 
 
 
-3. Now we can test the server by running a client. Open a new terminal as before, by clicking on the "+" control or splitting the terminal. Make sure you are in the *lab4* directory. You can now look at the client (by clicking on it in the explorer view or using the first command). When ready, make sure that you are in the TERMINAL and use the second command to run the client.
+3. Now we can test the server by running a client. Switch to another terminal and make sure you are in the *lab4* directory. You can view the client code via the usual methods. When ready, make sure that you are in the TERMINAL and use the second command to run the client.
 
 ```
-code client.py
 python client.py
 ```
 </br></br>
@@ -335,12 +337,12 @@ code -d server.py server_v2.py
 
 5. You should see a side-by-side compare of the two files. When you're done looking, just click the "x" in the tab for the "server.py <-> server_v2.py" pane at the top to close the view.
 
-![Server diff](./images/mcp41.png?raw=true "Server diff") 
+![Server diff](./images/mcp64.png?raw=true "Server diff") 
 
 6. Now, start the server_v2 code.
 
 ```
-python server_v2.code
+python server_v2.py
 ```
 
 7. Switch to the other terminal and run the client again. This time you should see that it's calling the v2 version by default and we get a different answer.
@@ -385,11 +387,11 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 
 10. (Optional) Suppose you later decide you don't want this function to continue to being used. You can add a [DEPRECATED] flag in the description by going back to the server_v2.py file and adding it on the line starting with "@mcp.tool(name="sub_v2")".  Then change the "Alias" section to point to "return _sub_impl_v1(a,b)" again. See screenshot for change.
 
-![Deprecating v2](./images/mcp46.png?raw=true "Deprecating v2") 
+![Deprecating v2](./images/mcp67.png?raw=true "Deprecating v2") 
 
 11. (Optional) If you did step 10, you can start the updated server_v2 running with the usual python command again. Then switch over and run the client again. You should see that you get the v1 result and also the [DEPRECATED] banner shows up in the tool descriptions.
 
-![Deprecated v2](./images/mcp47.png?raw=true "Deprecated v2")
+![Deprecated v2](./images/mcp68.png?raw=true "Deprecated v2")
 
  <p align="center">
 **[END OF LAB]**
