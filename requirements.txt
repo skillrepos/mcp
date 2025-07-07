@@ -7,3 +7,7 @@ pydantic
 typing
 mcp_server
 crewai
+fastmcp
+langchain_ollama
+langgraph
+langchain_mcp_adapters
