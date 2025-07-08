@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.5 - 07/07/25
+## Revision 1.6 - 07/08/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -16,9 +16,9 @@
 6. VPNs may interfere with the ability to run the codespace. It is recommended to not use a VPN if you run into problems.
 </br></br></br>
 
-**Lab 1 - MCP Lightning Lab: From Hand-Rolled API Calls to Zero-Boilerplate Tool Invocation**
+**Lab 1 - MCP Jumpstart**
 
-**Purpose: In this lab, we'll contrast the traditional approach of hard-coding REST requests against the Model-Context Protocol (MCP) approach to automatically discover, validate, and invoke tools—then see how an LLM can seamlessly leverage those same MCP-exposed functions without any extra HTTP or JSON glue code.**
+**Purpose: In this lab, we'll see how to go from hand-rolled API calls to an MCP implementation.**
 
 1. For our labs in this workshop, we have different directories with related code. For this lab, it is the *lab1* directory. Change into that directory in the terminal and take a look at the app's files.
    
