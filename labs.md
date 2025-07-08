@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.6 - 07/08/25
+## Revision 1.7 - 07/08/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -67,7 +67,7 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 6. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow.
 
 ```
-code mpc_client.py
+code mcp_client.py
 ```
 </br></br>
 ```
@@ -361,7 +361,7 @@ python - <<'PY'
 import asyncio
 from client import main
 
-# Pin to add_v1 explicitly
+# Pin to sub_v1 explicitly
 asyncio.run(main("sub_v1"))
 PY
 ```
@@ -376,7 +376,7 @@ python - <<'PY'
 import asyncio
 from client import main
 
-# Pin to add_v1 explicitly
+# Pin to sub_v1 explicitly
 asyncio.run(main("sub_v3"))
 PY
 ```
