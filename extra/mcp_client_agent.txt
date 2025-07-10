@@ -1,3 +1,4 @@
+# mcp_client_agent.py – version for FastMCP 2.10.4 and Ollama
 import asyncio
 import httpx
 import json
