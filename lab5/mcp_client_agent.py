@@ -1,14 +1,21 @@
-# mcp_client_agent.py – Final fully working version for FastMCP 2.10.4 and Ollama
+# mcp_client_agent.py – version for FastMCP 2.10.4 and Ollama
 import asyncio
 import httpx
 import json
 from fastmcp import Client
 
+# ANSI color codes for terminal output
+BLUE = "\033[94m"     # Bright blue for requests
+GREEN = "\033[92m"    # Bright green for responses
+RESET = "\033[0m"     # Reset color
+
+# MCP server endpoint
 SERVER_URL = "http://127.0.0.1:8000/mcp/"
+
+# Ollama chat endpoint
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
 async def call_ollama(system_prompt, user_input, model_name):
-
     }
 
     async with httpx.AsyncClient(timeout=60) as client:
@@ -20,18 +27,19 @@ async def call_ollama(system_prompt, user_input, model_name):
     ).strip()
 
 async def main():
+    # Create an async MCP client context
     async with Client(SERVER_URL) as client:
-        print("Connected to MCP server.")
+        print(f"{GREEN}Connected to MCP server.{RESET}")
 
-        print("Available tools:", ", ".join(tool_names), "\n")
+        print(f"{BLUE}Available tools: {', '.join(tool_names)}{RESET}\n")
 
-        # Get model name from server resource and parse JSON
+        # Request model resource from server
 
-        print("Model name returned from server:", repr(model_name_raw))
-        print("Model name used for Ollama:", repr(model_name))
+        print(f"{BLUE}Model name returned from server: {model_name_raw!r}{RESET}")
+        print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
 
         while True:
-            cmd = input("Enter tool name (or 'exit'): ").strip().lower()
+            cmd = input("\nEnter tool name (or 'exit'): ").strip().lower()
             if cmd == "exit":
                 break
 
@@ -44,18 +52,21 @@ async def main():
                 continue
 
             try:
-                # Get the prompt from the server
+                # Get the prompt template for this tool from the server
+                print(f"{BLUE}Requesting prompt for tool: {cmd}{RESET}")
 
-                # Extract the first user message's content
+                # Extract user role template from the prompt
                 user_msg_template = ""
                 for msg in prompt_result.messages:
                     if msg.role == "user":
                         user_msg_template = msg.content.text
                         break
 
-                # Fill in the user input
+                # Fill in user input to generate final prompt
 
-                # Call Ollama with the filled prompt
+                # Send the prompt and input to the Ollama model
+                # Display result in green
+                print(f"\n{GREEN}[{cmd.upper()} RESULT]\n{result}{RESET}\n")
 
             except Exception as e:
                 print("Unexpected error:", e)
