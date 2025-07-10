@@ -1,3 +1,4 @@
+# mcp_server.py – FastMCP 2.10.4-compatible server
 from mcp.server.fastmcp import FastMCP
 
 # ANSI color codes
@@ -15,76 +16,24 @@ server = FastMCP(service_name="LLamaTools")
 
 @server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
 def prompt_summarize(**context):
-    print(f"{BLUE}[PROMPT REQUEST] summarize called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Summarize the following text in one sentence.\n\n"
-            f"{context.get('text', '')}"
-        )
-    }
-    print(f"{GREEN}[PROMPT RETURN] summarize response: {result}{RESET}")
-    return result
 
 @server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
 def prompt_reword(**context):
-    print(f"{BLUE}[PROMPT REQUEST] reword called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Reword the following text using clearer and simpler language.\n\n"
-            f"{context.get('text', '')}"
-        )
-    }
-    print(f"{GREEN}[PROMPT RETURN] reword response: {result}{RESET}")
-    return result
 
 @server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
 def prompt_expand(**context):
-    print(f"{BLUE}[PROMPT REQUEST] expand called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Expand on the following idea with additional detail and explanation.\n\n"
-            f"{context.get('text', '')}"
-        )
-    }
-    print(f"{GREEN}[PROMPT RETURN] expand response: {result}{RESET}")
-    return result
 
 # ───────────────────────────────────────────────
 # Tool handlers – used to expose tool names to the client
 # These stubs are for visibility only; they do not perform actions
 # ───────────────────────────────────────────────
 
-@server.tool("summarize")
-def summarize_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] summarize_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] summarize_tool returning: {text!r}{RESET}")
-    return text
-
-@server.tool("reword")
-def reword_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] reword_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] reword_tool returning: {text!r}{RESET}")
-    return text
-
-@server.tool("expand")
-def expand_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] expand_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] expand_tool returning: {text!r}{RESET}")
-    return text
 
 # ───────────────────────────────────────────────
 # Resource endpoint – used to expose model metadata
 # ───────────────────────────────────────────────
 
 @server.resource("resource://model")
-def model_name():
-    print(f"{BLUE}[RESOURCE REQUEST] model_name requested{RESET}")
-    result = {"model": "llama3.2:latest"}
-    print(f"{GREEN}[RESOURCE RETURN] model_name response: {result}{RESET}")
-    return result
 
 # ───────────────────────────────────────────────
 # Entry point – start the FastMCP server with streamable HTTP
