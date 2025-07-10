@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.7 - 07/08/25
+## Revision 1.8 - 07/10/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -398,9 +398,9 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 </p>
 </br></br></br>
 
-**Lab 5 - Building Robust MCP Tools**
+**Lab 5 - Best Practices and Patterns for using MCP in Agents**
 
-**Purpose: In this lab, we'll learn more about defining, discovering, and invoking MCP tools, along with performance telemetry and streaming support.**
+**Purpose: In this lab, we'll look at some best practices and patterns in implementing MCP in an agent.**
 
 1. Change into the *lab5* directory in a terminal (and in any other terminals you use along the way).
    
@@ -408,7 +408,7 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 cd lab5
 ```
 
-2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it  with the command "ollama serve &".
+2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it with the command "ollama serve &".
 
 ```
 ollama list
@@ -416,70 +416,52 @@ ollama list
 </br></br>
 ![Checking Ollama](./images/mcp48.png?raw=true "Checking Ollama")
 
-3. With Ollama showing that llama3.2 is available, we can proceed. In this directory, we have an MCP server in the file *llama_tool_server.py. It provides a tool called "summarize" that uses the llama3.2 LLM to produce a summary of whatever text is passed to it. You can look at the code if you want by opening it in the editor. When you are ready, make sure the cursor is in the terminal and run it as below.
+3. In this directory, we have two partially implemented files - one for an MCP server named [**lab5/mcp_server.py**](./lab5/mcp_server.py) and one for an agent that uses the MCP server - named [**lab5/mcp_client_agent.py**](./lab5/mcp_client_agent.py). To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
 
 ```
-python llama_tool_server.py
-```
-</br></br>
-![Running server](./images/mcp49.png?raw=true "Running server")
-
-4. Now, switch to another terminal. (Remember to be in the *lab5* directory.) We also have a client in the file *summarize_client.py*. For simplicity, it is just calling the summarize tool rather than discovering, etc. You can look at the contents if you want. When ready, run the client with the command below. This will take a long time to run while the LLM gets loaded up and does its processing. (If you look back in the server's terminal, you can see some of that progressing.) After a while, you should see output like the screenshot. You'll have to look closely to see the actual summarized text string.
-
-```
-python summarize_client.py
-```
-</br></br>
-![Running client](./images/mcp50.png?raw=true "Running client")
-
-5. Let's edit the server and add a "ping" tool in case we wanted it for a readiness probe or such. Switch to the tab with the *llama_tool_server.py* file open (or open it). Then add the code sample shown below in the file (above or below the *summarize* tool definition. Pay attention to alignment. See screenshot for an example.
-
-```
-# Healthcheck tool
-@mcp.tool(name="ping", description="Check server health")
-async def ping() -> str:
-    return "pong"
-```
-</br></br>
-![Adding ping](./images/mcp51.png?raw=true "Adding ping")
-
-6. Restart your server. Switch back to the terminal where your server is running. CTRL+C to stop it. Then restart it. As a reminder, the command is below.
-
-```
-python llama_tool_server.py
+code -d ../extra/mcp_server.txt mcp_server.py
 ```
 
-7. Switch to the other terminal where you ran your client. While we don't have discovery built into our client, we do have a simple program that can do discovery for our server. It's in *discover_tools.py*. You can "cat" it to see it and then run it when you're ready. You should see output as in the screenshot.
+4. Once you have run the command, you'll have a side-by-side view in your editor of the completed code and the mcp_server.py file. You can merge each section of code into the mcp_server.py file by hovering over the middle bar and clicking on the arrows pointing right. Go through each section, look at the code, and then click to merge the changes in, one at a time.
+
+![Side-by-side merge](./images/aa40.png?raw=true "Side-by-side merge") 
+
+6. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
+
+![Merge complete](./images/aa41.png?raw=true "Merge complete") 
+
+7. Now you can run your agent with the following command:
 
 ```
-cat discover_tools.py
-python discover_tools.py
+python mcp_server.py
+```
+
+
+8. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
+
+```
+code -d ../extra/mcp_server.txt mcp_server.py
 ```
 </br></br>
-![Discovering tools](./images/mcp52.png?raw=true "Discovering tools")
+![Side-by-side merge](./images/aa40.png?raw=true "Side-by-side merge")
 
-8. Now, let's see how we could add a simple latency measurement for our round-trip time to Ollama. In the file *latency_server.py*, we have the code already added. You can run the command below to see the differences side-by-side. You do not need/want to make any changes in the code. When done viewing, just click on the "x" in the "llama_tool_server.py <--> latency_server.py" tab at the top.
-
-```
-code -d llama_tool_server.py latency_server.py
-```
-
-![Comparing servers](./images/mcp53.png?raw=true "Comparing servers")
-
-9. Switch back to the tab where the server is running. Stop it with CTRL+C. Then you can start the latency server with the command below.
+9. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
 
 ```
-python latency_server.py
+python mcp_client_agent.py
 ```
 
-10. Switch again to the terminal where you ran the client and execute it. Afterwards, you should see output like in the screenshot below. Notice the time measurement in the output.
+10. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below. Then, follow steps 3, 5, and 6 from lab 2 to get the ports setup, the URL to connect to, etc.
 
 ```
-python summarize_client.py
-```
-</br></br>
+../scripts/start-inspector.sh
 
-![Output with time](./images/mcp54.png?raw=true "Output with time")
+11. If you did step 10, and got the server connected, you can click on the prompts item in the top row and tell it to list the prompts. Due to some limitations, when you select "Get Prompts" you won't be able to see the full text of the prompt. You can also look at the resource with the model name.  If you look at the tools from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+
+![Running the inspector](./images/mcp53.png?raw=true "Running the inspector")
+
+12. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
+
 
  <p align="center">
 **[END OF LAB]**
