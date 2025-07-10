@@ -1,4 +1,4 @@
-# client8.py – Final fully working version for FastMCP 2.10.4 and Ollama
+# mcp_client_agent.py – Final fully working version for FastMCP 2.10.4 and Ollama
 import asyncio
 import httpx
 import json
