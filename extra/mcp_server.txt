@@ -1,95 +1,112 @@
-from mcp.server.fastmcp import FastMCP
+# mcp_client_agent.py – version for FastMCP 2.10.4 and Ollama
+import asyncio
+import httpx
+import json
+from fastmcp import Client
 
-# ANSI color codes
-BLUE = "\033[94m"
-GREEN = "\033[92m"
-RESET = "\033[0m"
+# ANSI color codes for terminal output
+BLUE = "\033[94m"     # Bright blue for requests
+GREEN = "\033[92m"    # Bright green for responses
+RESET = "\033[0m"     # Reset color
 
-# Create a FastMCP server instance with a service name
-server = FastMCP(service_name="LLamaTools")
+# MCP server endpoint
+SERVER_URL = "http://127.0.0.1:8000/mcp/"
 
-# ───────────────────────────────────────────────
-# Prompt handlers – return single message templates
-# These are used by clients to fetch structured prompts
-# ───────────────────────────────────────────────
+# Ollama chat endpoint
+OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
-@server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
-def prompt_summarize(**context):
-    print(f"{BLUE}[PROMPT REQUEST] summarize called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Summarize the following text in one sentence.\n\n"
-            f"{context.get('text', '')}"
-        )
+async def call_ollama(system_prompt, user_input, model_name):
+    """
+    Send a chat message to the Ollama model with the given prompt and input.
+
+    Args:
+        system_prompt (str): System-level instruction for the model.
+        user_input (str): User input to fill into the prompt.
+        model_name (str): Ollama model to use.
+
+    Returns:
+        str: Response text from the model.
+    """
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_input}
+    ]
+
+    payload = {
+        "model": model_name,
+        "messages": messages,
+        "stream": False
     }
-    print(f"{GREEN}[PROMPT RETURN] summarize response: {result}{RESET}")
-    return result
 
-@server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
-def prompt_reword(**context):
-    print(f"{BLUE}[PROMPT REQUEST] reword called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Reword the following text using clearer and simpler language.\n\n"
-            f"{context.get('text', '')}"
-        )
-    }
-    print(f"{GREEN}[PROMPT RETURN] reword response: {result}{RESET}")
-    return result
+    async with httpx.AsyncClient(timeout=60) as client:
+        response = await client.post(OLLAMA_URL, json=payload)
+        response.raise_for_status()
+        result = response.json()
 
-@server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
-def prompt_expand(**context):
-    print(f"{BLUE}[PROMPT REQUEST] expand called with context: {context}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Expand on the following idea with additional detail and explanation.\n\n"
-            f"{context.get('text', '')}"
-        )
-    }
-    print(f"{GREEN}[PROMPT RETURN] expand response: {result}{RESET}")
-    return result
+    # Return the best match from known response formats
+    return (
+        result.get("message", {}).get("content")
+        or result.get("response")
+        or str(result)
+    ).strip()
 
-# ───────────────────────────────────────────────
-# Tool handlers – used to expose tool names to the client
-# These stubs are for visibility only; they do not perform actions
-# ───────────────────────────────────────────────
+async def main():
+    # Create an async MCP client context
+    async with Client(SERVER_URL) as client:
+        print(f"{GREEN}Connected to MCP server.{RESET}")
 
-@server.tool("summarize")
-def summarize_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] summarize_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] summarize_tool returning: {text!r}{RESET}")
-    return text
+        # Retrieve list of available tools from server
+        tools = await client.list_tools()
+        tool_names = [t.name for t in tools]
+        print(f"{BLUE}Available tools: {', '.join(tool_names)}{RESET}\n")
 
-@server.tool("reword")
-def reword_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] reword_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] reword_tool returning: {text!r}{RESET}")
-    return text
+        # Request model resource from server
+        model_res = await client.read_resource("resource://model")
+        model_json = json.loads(model_res[0].text)
+        model_name_raw = model_json["model"]
+        model_name = model_name_raw.split(":")[0]  # Normalize for Ollama
 
-@server.tool("expand")
-def expand_tool(text: str) -> str:
-    print(f"{BLUE}[TOOL REQUEST] expand_tool received input: {text!r}{RESET}")
-    print(f"{GREEN}[TOOL RETURN] expand_tool returning: {text!r}{RESET}")
-    return text
+        print(f"{BLUE}Model name returned from server: {model_name_raw!r}{RESET}")
+        print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
 
-# ───────────────────────────────────────────────
-# Resource endpoint – used to expose model metadata
-# ───────────────────────────────────────────────
+        while True:
+            cmd = input("\nEnter tool name (or 'exit'): ").strip().lower()
+            if cmd == "exit":
+                break
 
-@server.resource("resource://model")
-def model_name():
-    print(f"{BLUE}[RESOURCE REQUEST] model_name requested{RESET}")
-    result = {"model": "llama3.2:latest"}
-    print(f"{GREEN}[RESOURCE RETURN] model_name response: {result}{RESET}")
-    return result
+            if cmd not in tool_names:
+                print("Unknown tool:", cmd)
+                continue
 
-# ───────────────────────────────────────────────
-# Entry point – start the FastMCP server with streamable HTTP
-# ───────────────────────────────────────────────
+            user_input = input("Enter input text: ").strip()
+            if not user_input:
+                continue
+
+            try:
+                # Get the prompt template for this tool from the server
+                print(f"{BLUE}Requesting prompt for tool: {cmd}{RESET}")
+                prompt_result = await client.get_prompt(cmd)
+
+                # Extract user role template from the prompt
+                user_msg_template = ""
+                for msg in prompt_result.messages:
+                    if msg.role == "user":
+                        user_msg_template = msg.content.text
+                        break
+
+                # Fill in user input to generate final prompt
+                rendered_prompt = user_msg_template.format(text=user_input)
+
+                # Send the prompt and input to the Ollama model
+                print(f"{BLUE}Calling Ollama with prompt: {rendered_prompt!r}{RESET}")
+                result = await call_ollama(rendered_prompt, user_input, model_name)
+
+                # Display result in green
+                print(f"\n{GREEN}[{cmd.upper()} RESULT]\n{result}{RESET}\n")
+
+            except Exception as e:
+                print("Unexpected error:", e)
 
 if __name__ == "__main__":
-    print(f"{BLUE}Starting FastMCP server on streamable HTTP...{RESET}")
-    server.run(transport="streamable-http")
+    asyncio.run(main())
+
