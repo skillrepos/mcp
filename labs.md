@@ -155,7 +155,7 @@ python mcp_travel_server.py
 ../scripts/start_mcpi.sh
 ```
 </br></br>
-![Copy URL](./images/mcp76-new.png?raw=true "Copy URL")
+![Copy URL](./images/mcp76.png?raw=true "Copy URL")
 
 
 5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
