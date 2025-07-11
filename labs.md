@@ -419,11 +419,11 @@ code -d ../extra/mcp_server.txt mcp_server.py
 
 4. Once you have run the command, you'll have a side-by-side view in your editor of the completed code and the mcp_server.py file. You can merge each section of code into the mcp_server.py file by hovering over the middle bar and clicking on the arrows pointing right. Go through each section, look at the code, and then click to merge the changes in, one at a time.
 
-![Side-by-side merge](./images/aa40.png?raw=true "Side-by-side merge") 
+![Side-by-side merge](./images/mcp70.png?raw=true "Side-by-side merge") 
 
 6. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
 
-![Merge complete](./images/aa41.png?raw=true "Merge complete") 
+![Merge complete](./images/mcp71.png?raw=true "Merge complete") 
 
 7. Now you can run your agent with the following command:
 
