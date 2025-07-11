@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.8 - 07/10/25
+## Revision 1.9 - 07/10/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -134,22 +134,13 @@ python agent_mcp.py
 cd lab2
 ```
 
-2. In this directory, we have an example MCP server with tools, a prompt, and a resource.  It's designed as a "travel assistant" example. Open the file and take a look at the code. The numbered comments highlight the key parts.
+2. In this directory, we have an example MCP server with tools, a prompt, and a resource.  It's designed as a "travel assistant" example. Open the file and take a look at the code. You can use the command below for that or click on it in the files list. The numbered comments highlight the key parts.
 
 ```
 code mcp_travel_server.py
 ```
 
-3. Before we run it, let's grab a unique URL to more easily run the inspector. In the terminal, run the command below, and copy the URL that's printed out.
-
-```
-../scripts/get-inspector-url.sh
-```
-</br></br>
-![Copy URL](./images/mcp35-new.png?raw=true "Copy URL")
-
-
-4. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
+3. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
 
 ```
 python mcp_travel_server.py
@@ -158,12 +149,16 @@ python mcp_travel_server.py
 ![Running server](./images/mcp36.png?raw=true "Running server")
 
 
-5. Before we can connect everything, we need to make a couple of ports *Public* that are exposed by the server and client. To do this, switch to the *PORTS* that is next to the *TERMINAL* tab. Then find the rows for the port 8000 (used by the server) and port 6277 (used by the inspector). On each of these rows, right-click and select the menu item for *Port visibility*. Then set the visibility for both ports to *Public*.
+4. Now let's start the inspector. We have a script that will do that with the settings we need to use it in the codespace. Run the command below to get the processes going.
 
-![Setting ports to Public](./images/mcp31.png?raw=true "Setting ports to Public")
+```
+../scripts/start_mcpi.sh
+```
+</br></br>
+![Copy URL](./images/mcp76-new.png?raw=true "Copy URL")
 
 
-6. After this, you can go to a new browser tab and paste the URL you copied in step 3 into a browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
+5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
@@ -440,10 +435,10 @@ python mcp_server.py
 8. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
 
 ```
-code -d ../extra/mcp_server.txt mcp_server.py
+code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 ```
 </br></br>
-![Side-by-side merge](./images/aa40.png?raw=true "Side-by-side merge")
+![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
 
 9. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
 
@@ -451,14 +446,19 @@ code -d ../extra/mcp_server.txt mcp_server.py
 python mcp_client_agent.py
 ```
 
-10. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below. Then, follow steps 3, 5, and 6 from lab 2 to get the ports setup, the URL to connect to, etc.
+![Trying out the client](./images/mcp74.png?raw=true "Trying out the client")
+
+10. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
 
 ```
 ../scripts/start-inspector.sh
+```
 
-11. If you did step 10, and got the server connected, you can click on the prompts item in the top row and tell it to list the prompts. Due to some limitations, when you select "Get Prompts" you won't be able to see the full text of the prompt. You can also look at the resource with the model name.  If you look at the tools from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+![Starting the inspector](./images/mcp77.png?raw=true "Starting the inspector")
 
-![Running the inspector](./images/mcp53.png?raw=true "Running the inspector")
+11. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+
+![Running the inspector](./images/mcp75.png?raw=true "Running the inspector")
 
 12. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
 
