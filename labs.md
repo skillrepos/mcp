@@ -421,18 +421,17 @@ code -d ../extra/mcp_server.txt mcp_server.py
 
 ![Side-by-side merge](./images/mcp70.png?raw=true "Side-by-side merge") 
 
-6. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
+5. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
 
 ![Merge complete](./images/mcp71.png?raw=true "Merge complete") 
 
-7. Now you can run your agent with the following command:
+6. Now you can run your agent with the following command:
 
 ```
 python mcp_server.py
 ```
 
-
-8. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
+7. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
 
 ```
 code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
@@ -440,7 +439,7 @@ code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 </br></br>
 ![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
 
-9. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
+8. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
 
 ```
 python mcp_client_agent.py
@@ -448,7 +447,7 @@ python mcp_client_agent.py
 
 ![Trying out the client](./images/mcp74.png?raw=true "Trying out the client")
 
-10. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
+9. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
 
 ```
 ../scripts/start-inspector.sh
@@ -456,11 +455,11 @@ python mcp_client_agent.py
 
 ![Starting the inspector](./images/mcp77.png?raw=true "Starting the inspector")
 
-11. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+10. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
 
 ![Running the inspector](./images/mcp75.png?raw=true "Running the inspector")
 
-12. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
+11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
 
 
  <p align="center">
