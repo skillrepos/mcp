@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.12 - 07/12/25
+## Revision 1.13 - 07/12/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -435,7 +435,7 @@ Show info on recent changes in skillrepos/mcp on GitHub
 cd lab6
 ```
 
-2. Take a quick look at the *server.py* file we have here. (You can click on the file or use the usual "code" command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the command below. Output will look like the screenshot (ignore the warnings).
+2. Take a quick look at the [**lab6/server.py**](./lab6/server.py) file we have here. (You can click on the file or use the usual "code" command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the command below. Output will look like the screenshot (ignore the warnings).
 
 ```
 python server.py
@@ -457,7 +457,7 @@ You should see output that lists the tools and then calls the add tool to add th
 ![Client run](./images/mcp40.png?raw=true "Client run") 
 
 
-4. Now, let's see how it looks if we introduce a different v2 version. Switch back to the terminal running the server and stop it with CTRL+C. We have a file *server_v2.py* with the v2 version of the subtraction routine.  We've also set the default to use v2. The v2 version has a subtle difference in the implementation. Take a look at the differences between the original server code and the v2 code via the command below. 
+4. Now, let's see how it looks if we introduce a different v2 version. Switch back to the terminal running the server and stop it with CTRL+C. We have a file [**lab6/server_v2.py**](./lab6/server_v2.py) with the v2 version of the subtraction routine.  We've also set the default to use v2. The v2 version has a subtle difference in the implementation. Take a look at the differences between the original server code and the v2 code via the command below. 
 
 ```
 code -d server.py server_v2.py
