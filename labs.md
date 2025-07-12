@@ -158,7 +158,7 @@ python mcp_travel_server.py
 ![Copy URL](./images/mcp76.png?raw=true "Copy URL")
 
 
-5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server.
+5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub about connecting to a codespace, just allow it.)
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
@@ -168,7 +168,7 @@ python mcp_travel_server.py
 
 ![Resources](./images/mcp27.png?raw=true "Resources") 
 
-8. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the actual definition of the prompt.
+8. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the specification of the prompt.
 
 ![Prompt](./images/mcp28.png?raw=true "Prompt") 
 
@@ -198,7 +198,7 @@ python mcp_travel_server.py
 cd lab3
 ```
 
-2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us well for this lab. It's designed as a "travel assistant" example.  You can open any of the files by clicking on them in the explorer view to the left or using the "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table under that suggests some things to notice about each.
+2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us for this lab. It's designed as a "travel assistant" example.  You can open any of the files by clicking on them in the explorer view to the left or using the "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table under that suggests some things to notice about each.
 
 </br></br>   
 
@@ -292,14 +292,147 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 </p>
 </br></br></br>
 
-**Lab 4 - Rapid Versioning and Rollback of MCP Tools**
 
-**Purpose: In this lab, we'll see how to release, pin, and rollback MCP tool versions in minutes using the alias-delegation pattern, ensuring safe upgrades and fast recovery.
+**Lab 4 - Best Practices and Patterns for using MCP in Agents**
 
-1. Change into the *lab4* directory in a terminal.
+**Purpose: In this lab, we'll look at some best practices and patterns in implementing MCP in an agent.**
+
+1. Change into the *lab4* directory in a terminal (and in any other terminals you use along the way).
    
 ```
 cd lab4
+```
+
+2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it with the command "ollama serve &".
+
+```
+ollama list
+```
+</br></br>
+![Checking Ollama](./images/mcp48.png?raw=true "Checking Ollama")
+
+3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
+
+```
+code -d ../extra/mcp_server.txt mcp_server.py
+```
+
+4. Once you have run the command, you'll have a side-by-side view in your editor of the completed code and the mcp_server.py file. You can merge each section of code into the mcp_server.py file by hovering over the middle bar and clicking on the arrows pointing right. Go through each section, look at the code, and then click to merge the changes in, one at a time.
+
+![Side-by-side merge](./images/mcp70.png?raw=true "Side-by-side merge") 
+
+5. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
+
+![Merge complete](./images/mcp71.png?raw=true "Merge complete") 
+
+6. Now you can run your agent with the following command:
+
+```
+python mcp_server.py
+```
+
+7. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
+
+```
+code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
+```
+</br></br>
+![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
+
+8. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
+
+```
+python mcp_client_agent.py
+```
+
+![Trying out the client](./images/mcp74.png?raw=true "Trying out the client")
+
+9. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
+
+```
+../scripts/start-inspector.sh
+```
+
+![Starting the inspector](./images/mcp77.png?raw=true "Starting the inspector")
+
+10. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+
+![Running the inspector](./images/mcp75.png?raw=true "Running the inspector")
+
+11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
+
+
+ <p align="center">
+**[END OF LAB]**
+</p>
+</br></br></br>
+
+**Lab 5 - Connecting Applications to MCP Servers**
+
+**Purpose: In this lab, we'll see how to connect GitHub Copilot to the GitHub MCP Server.**
+
+1. For authentication to GitHub, we will need a GitHub personal access token (PAT). When logged into GitHub, click on the link below, provide a note and click the green "Generate token" button at the bottom.
+
+Link:  Generate classic personal access token (repo & workflow scopes) https://github.com/settings/tokens/new?scopes=repo,workflow
+
+![Creating token](./images/mcp10.png?raw=true "Creating token")
+   
+2. On the next screen, make sure to copy the generated token and save it for use later in the lab. You will not be able to see the actual token again!
+
+![Copying token](./images/mcp11.png?raw=true "Copying token")
+
+3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom.
+
+![Opening chat panel](./images/mcp69.png?raw=true "Opening chat panel")
+<br>
+![Switching to Agent mode](./images/mcp12.png?raw=true "Switching to Agent mode")
+
+4. Now we need to add the GitHub MCP Server configuration in our IDE. You could fill most of this out via IDE prompts, but for simplicity, we already have a sample configuration file that we can just copy in. Run the commands below in the terminal. The last one will open the file in the editor.
+
+```
+cd /workspaces/mcp
+mkdir .vscode
+cp extra/mcp_github_settings.json  .vscode/mcp.json
+code .vscode/mcp.json
+```
+
+5. Now, we can start the local MCP server. In the *mcp.json* file, above the name of the server, click on the small *Start* link (see figure below). A dialog will pop up for you to paste in your PAT. Paste the token in there and hit *Enter*. (Note that the token will be masked out.)
+
+![Starting the server](./images/mcp23.png?raw=true "Starting the server")
+
+After this, you should see the text above the server name change to "√Running | Stop | Restart | ## tools | More...".
+
+![Starting the server](./images/mcp24.png?raw=true "Starting the server")
+
+6. To see the tools that are available, in the Copilot Chat dialog, click on the small *tool* icon (see figure) and then scroll down to the *MCP Server: GitHub MCP Server* section. You'll see the available tools we picked up under that.
+
+![Viewing available tools](./images/mcp25.png?raw=true "Viewing available tools")
+
+7. Now that we have these tools available, we can use them in Copilot's Chat interface. (Again, you must be in *Agent* mode.) Here are some example prompts to try:
+
+```
+Find username for <your name> on GitHub
+Show info on recent changes in skillrepos/mcp on GitHub
+```
+</br></br>
+
+8. Notice the mention of "Ran <tool name> - GitHub MCP Server (MCP Server) early in the output for each.
+
+![Example usage](./images/mcp26.png?raw=true "Example usage")
+
+ <p align="center">
+**[END OF LAB]**
+</p>
+</br></br></br>
+
+**(Bonus Lab) Lab 6 - Rapid Versioning and Rollback of MCP Tools**
+
+**Purpose: In this lab, we'll see how to release, pin, and rollback MCP tool versions in minutes using the alias-delegation pattern, ensuring safe upgrades and fast recovery.
+
+1. Change into the *lab6* directory in a terminal.
+   
+```
+cd lab6
 ```
 
 2. Take a quick look at the *server.py* file we have here. (You can click on the file or use the usual "code" command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the command below. Output will look like the screenshot (ignore the warnings).
@@ -387,138 +520,6 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 11. (Optional) If you did step 10, you can start the updated server_v2 running with the usual python command again. Then switch over and run the client again. You should see that you get the v1 result and also the [DEPRECATED] banner shows up in the tool descriptions.
 
 ![Deprecated v2](./images/mcp68.png?raw=true "Deprecated v2")
-
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 5 - Best Practices and Patterns for using MCP in Agents**
-
-**Purpose: In this lab, we'll look at some best practices and patterns in implementing MCP in an agent.**
-
-1. Change into the *lab5* directory in a terminal (and in any other terminals you use along the way).
-   
-```
-cd lab5
-```
-
-2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it with the command "ollama serve &".
-
-```
-ollama list
-```
-</br></br>
-![Checking Ollama](./images/mcp48.png?raw=true "Checking Ollama")
-
-3. In this directory, we have two partially implemented files - one for an MCP server named [**lab5/mcp_server.py**](./lab5/mcp_server.py) and one for an agent that uses the MCP server - named [**lab5/mcp_client_agent.py**](./lab5/mcp_client_agent.py). To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
-
-```
-code -d ../extra/mcp_server.txt mcp_server.py
-```
-
-4. Once you have run the command, you'll have a side-by-side view in your editor of the completed code and the mcp_server.py file. You can merge each section of code into the mcp_server.py file by hovering over the middle bar and clicking on the arrows pointing right. Go through each section, look at the code, and then click to merge the changes in, one at a time.
-
-![Side-by-side merge](./images/mcp70.png?raw=true "Side-by-side merge") 
-
-5. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
-
-![Merge complete](./images/mcp71.png?raw=true "Merge complete") 
-
-6. Now you can run your agent with the following command:
-
-```
-python mcp_server.py
-```
-
-7. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
-
-```
-code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
-```
-</br></br>
-![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
-
-8. Once you've completed the merge and closed the tab, run the client and select one of the commands and ener some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
-
-```
-python mcp_client_agent.py
-```
-
-![Trying out the client](./images/mcp74.png?raw=true "Trying out the client")
-
-9. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
-
-```
-../scripts/start-inspector.sh
-```
-
-![Starting the inspector](./images/mcp77.png?raw=true "Starting the inspector")
-
-10. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
-
-![Running the inspector](./images/mcp75.png?raw=true "Running the inspector")
-
-11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
-
-
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 6 - Connecting Applications to MCP Servers**
-
-**Purpose: In this lab, we'll see how to connect GitHub Copilot to the GitHub MCP Server.**
-
-1. For authentication to GitHub, we will need a GitHub personal access token (PAT). When logged into GitHub, click on the link below, provide a note and click the green "Generate token" button at the bottom.
-
-Link:  Generate classic personal access token (repo & workflow scopes) https://github.com/settings/tokens/new?scopes=repo,workflow
-
-![Creating token](./images/mcp10.png?raw=true "Creating token")
-   
-2. On the next screen, make sure to copy the generated token and save it for use later in the lab. You will not be able to see the actual token again!
-
-![Copying token](./images/mcp11.png?raw=true "Copying token")
-
-3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom.
-
-![Opening chat panel](./images/mcp69.png?raw=true "Opening chat panel")
-<br>
-![Switching to Agent mode](./images/mcp12.png?raw=true "Switching to Agent mode")
-
-4. Now we need to add the GitHub MCP Server configuration in our IDE. You could fill most of this out via IDE prompts, but for simplicity, we already have a sample configuration file that we can just copy in. Run the commands below in the terminal. The last one will open the file in the editor.
-
-```
-cd /workspaces/mcp
-mkdir .vscode
-cp extra/mcp_github_settings.json  .vscode/mcp.json
-code .vscode/mcp.json
-```
-
-5. Now, we can start the local MCP server. In the *mcp.json* file, above the name of the server, click on the small *Start* link (see figure below). A dialog will pop up for you to paste in your PAT. Paste the token in there and hit *Enter*. (Note that the token will be masked out.)
-
-![Starting the server](./images/mcp23.png?raw=true "Starting the server")
-
-After this, you should see the text above the server name change to "√Running | Stop | Restart | ## tools | More...".
-
-![Starting the server](./images/mcp24.png?raw=true "Starting the server")
-
-6. To see the tools that are available, in the Copilot Chat dialog, click on the small *tool* icon (see figure) and then scroll down to the *MCP Server: GitHub MCP Server* section. You'll see the available tools we picked up under that.
-
-![Viewing available tools](./images/mcp25.png?raw=true "Viewing available tools")
-
-7. Now that we have these tools available, we can use them in Copilot's Chat interface. (Again, you must be in *Agent* mode.) Here are some example prompts to try:
-
-```
-Find username for <your name> on GitHub
-Show info on recent changes in skillrepos/mcp on GitHub
-```
-</br></br>
-
-8. Notice the mention of "Ran <tool name> - GitHub MCP Server (MCP Server) early in the output for each.
-
-![Example usage](./images/mcp26.png?raw=true "Example usage")
 
  <p align="center">
 **[END OF LAB]**
