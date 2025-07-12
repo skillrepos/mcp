@@ -52,10 +52,11 @@ wait_for_port() {
 # Wait for required ports to become available
 wait_for_port 8000
 wait_for_port 6277
+wait_for_port 6274
 
 # Make ports public using GitHub CLI with explicit codespace name
-echo "Making ports 8000 and 6277 public..."
-gh codespace ports visibility 8000:public 6277:public --codespace "$CODESPACE_NAME"
+echo "Making ports public..."
+gh codespace ports visibility 8000:public 6277:public 6274:public  --codespace "$CODESPACE_NAME"
 
 # Shorten the MI_URL using tinyurl.com
 short_url=$(curl -s "https://tinyurl.com/api-create.php?url=$MI_URL")
