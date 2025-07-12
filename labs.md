@@ -158,7 +158,7 @@ python mcp_travel_server.py
 ![Copy URL](./images/mcp76.png?raw=true "Copy URL")
 
 
-5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub about connecting to a codespace, just allow it.)
+5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
@@ -309,7 +309,7 @@ cd lab4
 ollama list
 ```
 </br></br>
-![Checking Ollama](./images/mcp48.png?raw=true "Checking Ollama")
+![Checking Ollama](./images/mcp48-new.png?raw=true "Checking Ollama")
 
 3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
 
@@ -345,15 +345,15 @@ code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 python mcp_client_agent.py
 ```
 
-![Trying out the client](./images/mcp74.png?raw=true "Trying out the client")
+![Trying out the client](./images/mcp74-new.png?raw=true "Trying out the client")
 
-9. Optional: If you want, you can start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
+9. Let's start up the MCP inspector again and see the resources in the server. To do this, you'll need to make sure the inspector is still running. If not or not sure, go ahead and run the command below as before. (If you get a warning message from GitHub about connecting, just click *Continue*.) Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
 
 ```
-../scripts/start-inspector.sh
+../scripts/start_mcpi.sh
 ```
 
-![Starting the inspector](./images/mcp77.png?raw=true "Starting the inspector")
+![Starting the inspector](./images/mcp77-new.png?raw=true "Starting the inspector")
 
 10. If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
 
