@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.14 - 07/12/25
+## Revision 1.15 - 07/12/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -381,7 +381,7 @@ Link:  Generate classic personal access token (repo & workflow scopes) https://g
 
 ![Copying token](./images/mcp11.png?raw=true "Copying token")
 
-3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom.
+3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom. (**NOTE:** If you don't Ask mode or an option to switch to another mode, you may need to complete a setup step. Click on the Copilot icon in the bottom status bar and look for a button that says "Complete setup" and click on that. Then you should see the options.)
 
 ![Opening chat panel](./images/mcp69.png?raw=true "Opening chat panel")
 <br>
