@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.9 - 07/10/25
+## Revision 1.10 - 07/12/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -11,7 +11,7 @@
 1. We will be working in the public GitHub.com, not a private instance.
 2. Chrome may work better than Firefox for some tasks.
 3. Substitute the appropriate key combinations for your operating system where needed.
-4. The default environment will be a GitHub Codespace (with Copilot already installed). If you prefer to use your own IDE, you are responsible for installing Copilot in it. Some things in the lab may be different if you use your own environment.
+4. The default environment will be a GitHub Codespace (with everything you need already installed). If you prefer to use your own environment, you are responsible for installing the needed apps and dependencies in it. Some things in the lab may be different if you use your own environment.
 5. To copy and paste in the codespace, you may need to use keyboard commands - CTRL-C and CTRL-V.**
 6. VPNs may interfere with the ability to run the codespace. It is recommended to not use a VPN if you run into problems.
 </br></br></br>
