@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.11 - 07/12/25
+## Revision 1.12 - 07/12/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -64,7 +64,7 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 
 ![Splitting terminal](./images/mcp6.png?raw=true "Splitting terminal")
 
-6. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow.
+6. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow. Save your changes when done.
 
 ```
 code mcp_client.py
