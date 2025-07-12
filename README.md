@@ -27,3 +27,12 @@ The codespace is ready to use when you see a prompt like the one shown below in 
 
 ![Ready to use](./images/mcp3-2.png?raw=true "Ready to use")
 
+
+**3. Open the labs file.**
+
+You can open the labs.md file either in your codespace or in a separate browswer tab/instance.**
+
+**4. Change your codespace's default timeout from 30 minutes to 60 or more.**
+To do this, when logged in to GitHub, go to https://github.com/settings/codespaces and scroll down on that page until you see the *Default idle timeout* section. Adjust the value as desired.
+
+![Changing codespace idle timeout value](./images/gaidd4.png?raw=true "Changing codespace idle timeout value")
