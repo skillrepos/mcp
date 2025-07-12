@@ -30,7 +30,7 @@ The codespace is ready to use when you see a prompt like the one shown below in 
 
 **3. Open the labs file.**
 
-You can open the labs.md file either in your codespace or in a separate browswer tab/instance.**
+You can open the [labs.md](./labs.md) file either in your codespace or in a separate browswer tab/instance.**
 
 ![Labs](./images/mcp78.png?raw=true "Labs")
 
