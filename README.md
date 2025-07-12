@@ -1,5 +1,5 @@
-# mcp
-Repository for Understanding MCP (Model Context Protocol) - A hands-on guide 
+# Understanding MCP
+## Repository for Understanding MCP (Model Context Protocol) - A hands-on guide 
 
 These instructions will guide you through configuring a GitHub Codespaces environment that you can use to run the code. 
 
