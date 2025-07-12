@@ -149,7 +149,7 @@ python mcp_travel_server.py
 ![Running server](./images/mcp36.png?raw=true "Running server")
 
 
-4. Now let's start the inspector. We have a script that will do that with the settings we need to use it in the codespace. Run the command below to get the processes going.
+4. Now let's start the inspector. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going.
 
 ```
 ../scripts/start_mcpi.sh
