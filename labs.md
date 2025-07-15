@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.16 - 07/12/25
+## Revision 1.17 - 07/14/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
