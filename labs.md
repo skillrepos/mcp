@@ -162,7 +162,7 @@ python mcp_travel_server.py
 
 5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
 
-*If you can't get the inspector to run in the codespace, there is an alternative approach listed at the end of the document where you can try to run a local instance. See directions in this doc after the last lab.*
+**If you can't get the inspector to run in the codespace, there is an alternative approach listed at the end of the document where you can try to run a local instance. See directions in this doc after the last lab.**
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
