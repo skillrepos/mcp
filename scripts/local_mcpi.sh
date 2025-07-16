@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# local_mcpi.sh <codespace-name>
+# local_mcpi.sh <full-mcp-server-url>
+# Example:
+#   ./local_mcpi.sh https://bug-free-pancake-p7575jwp9p3975g-8000.app.github.dev/mcp/
 
 set -e
 
-# 1. Get codespace name
-CODESPACE_NAME="$1"
-if [ -z "$CODESPACE_NAME" ]; then
-  echo "❌ Usage: $0 <codespace-name>"
+# 1. Get full MCP URL from argument
+MCP_URL="$1"
+if [ -z "$MCP_URL" ]; then
+  echo "❌ Usage: $0 <full-mcp-server-url>"
   exit 1
 fi
 
-# 2. Kill any process on ports 6274 or 6277
+# 2. Kill existing Inspector processes on ports 6274 and 6277
 echo "🛑 Killing processes on ports 6274 and 6277 (if any)..."
 kill -9 $(lsof -t -i:6274) 2>/dev/null || true
 kill -9 $(lsof -t -i:6277) 2>/dev/null || true
 
-# 3. Check for npm and install if missing
+# 3. Check for npm and install if needed
 if ! command -v npm &>/dev/null; then
   echo "📦 npm not found. Installing..."
 
@@ -45,18 +47,17 @@ else
 fi
 
 # 5. Start MCP Inspector
-MCP_URL="https://${CODESPACE_NAME}-8000.app.github.dev/mcp/"
 echo "🚀 Starting MCP Inspector for: $MCP_URL"
-
 npx @modelcontextprotocol/inspector --url "$MCP_URL" --protocol streaming-http &
 
-# 6. Open browser to Inspector UI
+# 6. Open Inspector UI in browser
 INSPECTOR_URL="http://localhost:6277"
-echo "🌐 Opening browser: $INSPECTOR_URL"
+echo "🌐 Opening browser to MCP Inspector UI: $INSPECTOR_URL"
 if command -v open &>/dev/null; then
   open "$INSPECTOR_URL"
 elif command -v xdg-open &>/dev/null; then
   xdg-open "$INSPECTOR_URL"
 else
-  echo "Please open your browser and go to: $INSPECTOR_URL"
+  echo "Please open your browser to: $INSPECTOR_URL"
 fi
+
