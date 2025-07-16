@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.17 - 07/14/25
+## Revision 1.19 - 07/15/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -161,6 +161,8 @@ python mcp_travel_server.py
 
 
 5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
+
+*If you can't get the inspector to run in the codespace, there is an alternative approach listed at the end of the document where you can try to run a local instance. See directions in this doc after the last lab.*
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
@@ -528,5 +530,30 @@ After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub
 </p>
 </br></br></br>
 
+**Alternative approach to run inspector locally, if needed**
+
+1. Clone down this repository
+
+```
+git clone https://github.com/skillrepos/mcp
+```
+
+2. If you are running in the codespace, in an available terminal, get the name of the codespace with the command below. Copy this to use in the next step.
+
+```
+echo https://${CODESPACE_NAME}-8000.app.github.dev/mcp/
+```
+
+3. If you are not running in the codespace but running the server local, grab the URL for the host and port where the server is running - most likely something like *http://127.0.0.1:8000/mcp/*
+
+4. In your local clone, change to the mcp directory and run the command below (substituting in the value you copied in step 2 or 3 for SERVER_URL.
+
+```
+cd mcp
+scripts/local_mcpi.sh SERVER_URL
+```
+4. This should eventually open up a browser with the inspector running in the tab on localhost:6274. (You may also see a failed browser open for the proxy port on 6277. You can ignore that.)
+
+5. Click connect to connect to the server and continue with the lab.
 **THE END**
 
