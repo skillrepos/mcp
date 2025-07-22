@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.20 - 07/21/25
+## Revision 1.21 - 07/22/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -117,7 +117,7 @@ code -d mcp_client.py agent_mcp.py
 python agent_mcp.py
 ```
 </br></br>
-![Running agent](./images/mcp9.png?raw=true "Running agent")
+![Running agent](./images/mcp81.png?raw=true "Running agent")
 
 10. You can stop the MCP server in the original terminal via CTRL-C.
 
