@@ -63,7 +63,7 @@ async def main():
     )
 
     # 6. Set the user prompt to a math expression involving multiple operations
-    user_prompt = "What’s 12×8 plus √144?"
+    user_prompt = "What’s 12×8 / 3 ?"
 
     # ─────────────────────────────────────────────────────────────────────────────
     # 7. Invoke the agent with the user prompt
