@@ -1,4 +1,0 @@
-fastmcp>=2.3.2
-fastapi
-uvicorn[standard]
-httpx
