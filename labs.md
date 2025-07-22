@@ -548,10 +548,10 @@ git clone https://github.com/skillrepos/mcp
 2. If you are running in the codespace, in an available terminal, get the name of the codespace with the command below. Copy this to use in the next step.
 
 ```
-echo https://${CODESPACE_NAME}-8000.app.github.dev/mcp/
+echo https://${CODESPACE_NAME}-8000.app.github.dev/mcp
 ```
 
-3. If you are not running in the codespace but running the server local, grab the URL for the host and port where the server is running - most likely something like *http://127.0.0.1:8000/mcp/*
+3. If you are not running in the codespace but running the server local, grab the URL for the host and port where the server is running - most likely something like *http://127.0.0.1:8000/mcp*
 
 4. In your local clone, change to the mcp directory and run the command below (substituting in the value you copied in step 2 or 3 for SERVER_URL.
 
