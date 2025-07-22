@@ -277,7 +277,7 @@ curl -s -X POST http://127.0.0.1:9000/introspect \
 
 ![Introspecting token](./images/mcp62.png?raw=true "Introspecting token") 
 
-9. Finally, you can show that breaking the token breaks the authentication. Run the curl command below. Then look back at the terminal with the authorization server running and you should see an error message.
+9. Finally, you can show that breaking the token breaks the authentication. Run the curl command below. 
 
 ```
 BROKEN_TOKEN="${TOKEN}corruption"
@@ -286,8 +286,13 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -H "Content-Type: application/json" \
      -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
 ```
+</br></br>
+Then look back at the terminal with the authorization server running and you should see an error message.
+</br></br>
 
 ![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
+
+</br></br>
 
 10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
@@ -315,7 +320,9 @@ ollama list
 </br></br>
 ![Checking Ollama](./images/mcp48-new.png?raw=true "Checking Ollama")
 
-3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
+3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). The agent takes input text and then allows you to choose to have the text summarized, expanded or reworded by picking which option you want.
+</br></br>
+To complete the implementation in each of these, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
 
 ```
 code -d ../extra/mcp_server.txt mcp_server.py
