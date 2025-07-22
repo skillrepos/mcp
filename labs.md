@@ -456,7 +456,7 @@ python server.py
 ![Server startup](./images/mcp39-new.png?raw=true "Server startup") 
 
 
-3. Now we can test the server by running a client. Switch to another terminal and make sure you are in the *lab6* directory. You can view the client code via the usual methods. When ready, make sure that you are in the TERMINAL and use the second command to run the client.
+3. Now we can test the server by running a client. Switch to another terminal and make sure you are in the *lab6* directory. You can view the client code at [**lab6/client.py**](./lab6/client.py) or via the *code* command. When ready, make sure that you are in the TERMINAL and use the second command to run the client.
 
 ```
 python client.py
