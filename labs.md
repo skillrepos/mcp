@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 1.22 - 07/22/25
+## Revision 2.00 - 07/22/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -430,107 +430,6 @@ Show info on recent changes in skillrepos/mcp on GitHub
 8. Notice the mention of "Ran <tool name> - GitHub MCP Server (MCP Server) early in the output for each.
 
 ![Example usage](./images/mcp26.png?raw=true "Example usage")
-
- <p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**(Bonus Lab) Lab 6 - Rapid Versioning and Rollback of MCP Tools**
-
-**Purpose: In this lab, we'll see how to release, pin, and rollback MCP tool versions in minutes using the alias-delegation pattern, ensuring safe upgrades and fast recovery.
-
-1. Change into the *lab6* directory in a terminal.
-   
-```
-cd lab6
-```
-
-2. Take a quick look at the [**lab6/server.py**](./lab6/server.py) file we have here. (You can click on the file or use the usual "code" command.) It implements a simple subtraction function for two integers. Notice that it uses an alias of "sub" to reference the underlying _sub_impl_v1 implementation function (version 1). After looking at it, *make sure you are in the TERMINAL* and you can start it running with the command below. Output will look like the screenshot (ignore the warnings).
-
-```
-python server.py
-```
-</br></br>
-
-![Server startup](./images/mcp39-new.png?raw=true "Server startup") 
-
-
-3. Now we can test the server by running a client. Switch to another terminal and make sure you are in the *lab6* directory. You can view the client code at [**lab6/client.py**](./lab6/client.py) or via the *code* command. When ready, make sure that you are in the TERMINAL and use the second command to run the client.
-
-```
-python client.py
-```
-</br></br>
-
-You should see output that lists the tools and then calls the add tool to add the numbers. Note that both "sub_v1" and "sub" both exist.
-
-![Client run](./images/mcp40-new.png?raw=true "Client run") 
-
-
-4. Now, let's see how it looks if we introduce a different v2 version. Switch back to the terminal running the server and stop it with CTRL+C. We have a file [**lab6/server_v2.py**](./lab6/server_v2.py) with the v2 version of the subtraction routine.  We've also set the default to use v2. The v2 version has a subtle difference in the implementation. Take a look at the differences between the original server code and the v2 code via the command below. 
-
-```
-code -d server.py server_v2.py
-```
-
-5. You should see a side-by-side compare of the two files. When you're done looking, just click the "x" in the tab for the "server.py <-> server_v2.py" pane at the top to close the view.
-
-![Server diff](./images/mcp64.png?raw=true "Server diff") 
-
-6. Now, stop the currently running server (via CTRL-C) and start the server_v2 version.
-
-```
-python server_v2.py
-```
-
-7. Switch to the other terminal and run the client again. This time you should see that it's calling the v2 version by default and we get a different answer.
-
-```
-python client.py
-```
-</br></br>
-
-![New client run](./images/mcp42-new.png?raw=true "New client run") 
-   
-8. What if we wanted to pin to the previous (v1) version. We can do that easily. Here's some example code you can run (copy and paste and Enter) to demonstrate in the terminal using our existing server and client.
-
-```
-python - <<'PY'
-import asyncio
-from client import main
-
-# Pin to sub_v1 explicitly
-asyncio.run(main("sub_v1"))
-PY
-```
-</br></br>
-
-![Pin to v1](./images/mcp43-new.png?raw=true "Pin to v1") 
-
-9. We can also see what happens if we try to use a version that doesn't exist with the code below. (Note the "sub_v3" reference.)
-
-```
-python - <<'PY'
-import asyncio
-from client import main
-
-# Pin to sub_v1 explicitly
-asyncio.run(main("sub_v3"))
-PY
-```
-</br></br>
-After running, you should see a "fastmcp.exceptions.ToolError: Unknown tool: sub_v3" message in the output.
-
-![Pin to v3](./images/mcp44-new.png?raw=true "Pin to v3") 
-
-10. (Optional) Suppose you later decide you don't want this function to continue to being used. You can add a [DEPRECATED] flag in the description by going back to the server_v2.py file and adding it on the line starting with "@mcp.tool(name="sub_v2")".  Then change the "Alias" section to point to "return _sub_impl_v1(a,b)" again. See screenshot for change.
-
-![Deprecating v2](./images/mcp67.png?raw=true "Deprecating v2") 
-
-11. (Optional) If you did step 10, you can start the updated server_v2 running with the usual python command again. Then switch over and run the client again. You should see that you get the v1 result and also the [DEPRECATED] banner shows up in the tool descriptions.
-
-![Deprecated v2](./images/mcp68-new.png?raw=true "Deprecated v2")
 
  <p align="center">
 **[END OF LAB]**
