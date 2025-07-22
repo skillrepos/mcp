@@ -235,7 +235,7 @@ export TOKEN=$(
 echo "export TOKEN=$TOKEN" >> ~/.bashrc   
 source ~/.bashrc 
 ```
-
+</br></br>
 ![curl and add new terminal](./images/mcp61.png?raw=true "curl and add new terminal") 
 
 (Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io 
@@ -259,7 +259,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 ![500 error and switching terminals](./images/mcp56.png?raw=true "500 error and switching terminals") 
 
 
-7. Now in the same terminal, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
+7. Back in the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
 
 ```
 python secure_client.py
