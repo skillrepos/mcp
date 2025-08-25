@@ -147,22 +147,25 @@ python agent_mcp.py
 1. Change into the *lab2* directory in the terminal.
    
 ```
-cd lab2
+cd ../lab2
 ```
+<br><br>
 
 2. In this directory, we have an example MCP server with tools, a prompt, and a resource.  It's designed as a "travel assistant" example. Open the file and take a look at the code. You can use the command below for that or click on it in the files list. The numbered comments highlight the key parts.
 
 ```
 code mcp_travel_server.py
 ```
+<br><br>
 
 3. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
 
 ```
 python mcp_travel_server.py
 ```
-</br></br>
+
 ![Running server](./images/mcp36.png?raw=true "Running server")
+<br><br>
 
 
 4. Now let's start the inspector. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going.
@@ -170,8 +173,9 @@ python mcp_travel_server.py
 ```
 ../scripts/start_mcpi.sh
 ```
-</br></br>
+
 ![Copy URL](./images/mcp76.png?raw=true "Copy URL")
+<br><br>
 
 
 5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
@@ -181,24 +185,33 @@ python mcp_travel_server.py
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
 ![Connecting](./images/mcp34.png?raw=true "Connecting")
+<br><br>
+
    
-7. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
+6. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
 
 ![Resources](./images/mcp27.png?raw=true "Resources") 
+<br><br>
 
-8. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the specification of the prompt.
+
+7. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the specification of the prompt.
 
 ![Prompt](./images/mcp28.png?raw=true "Prompt") 
+<br><br>
 
-9. Finally, let's take a look at the tools available from the server. Click on *Tools* in the gray bar, then *List Tools* in the box below. You'll see two tools defined - one to calculate distance and one to convert currency.
+
+8. Finally, let's take a look at the tools available from the server. Click on *Tools* in the gray bar, then *List Tools* in the box below. You'll see two tools defined - one to calculate distance and one to convert currency.
 
 ![Tools](./images/mcp37.png?raw=true "Tools") 
+<br><br>
 
-10. Let's try running the distance_between tool. Select the tool in the list. On the right side, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click "Run Tool" to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
+
+9. Let's try running the distance_between tool. Select the tool in the list. On the right side, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click "Run Tool" to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
 ![Running tool](./images/mcp38.png?raw=true "Running tool") 
+<br><br>
 
-11. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the inspector running in it.
+10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the inspector running in it.
 
 <p align="center">
 **[END OF LAB]**
@@ -213,8 +226,10 @@ python mcp_travel_server.py
 1. Change into the *lab3* directory in the terminal.
    
 ```
-cd lab3
+cd ../lab3
 ```
+<br><br>
+
 
 2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us for this lab. It's designed as a "travel assistant" example.  You can open any of the files by clicking on them in the explorer view to the left or using the "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table under that suggests some things to notice about each.
 
@@ -233,6 +248,8 @@ cd lab3
 ```
 python auth_server.py
 ```
+<br><br>
+
 
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 
@@ -253,12 +270,16 @@ source ~/.bashrc
 ![curl and add new terminal](./images/mcp61.png?raw=true "curl and add new terminal") 
 
 (Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io 
+<br><br>
+
 
 5. Now, in that terminal, start the secure server.
 
 ```
 python secure_server.py
 ```
+<br><br>
+
 
 6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. (When you run this you will see a "500 Internal Server Error" response. But if you switch back to the terminal where the server is running, you'll see that it's really a "401" error. It shows as a 500 error because the 401 is "swallowed" before it gets back to the client.
 
@@ -271,6 +292,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 ```
 
 ![500 error and switching terminals](./images/mcp56.png?raw=true "500 error and switching terminals") 
+<br><br>
 
 
 7. Back in the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
@@ -280,6 +302,8 @@ python secure_client.py
 ```
 
 ![Running the secure client](./images/mcp59.png?raw=true "Running the secure client") 
+<br><br>
+
 
 8. If you want, you can introspect the token we created with the curl command below.
 
@@ -290,6 +314,8 @@ curl -s -X POST http://127.0.0.1:9000/introspect \
 ```
 
 ![Introspecting token](./images/mcp62.png?raw=true "Introspecting token") 
+<br><br>
+
 
 9. Finally, you can show that breaking the token breaks the authentication. Run the curl command below. 
 
