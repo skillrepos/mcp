@@ -10,7 +10,7 @@ from mcp.server.fastmcp import FastMCP
 # ──────────────────────────────────────────────────────────────
 # 1)  Create the server
 # ──────────────────────────────────────────────────────────────
-server = FastMCP(service_name="TravelHelper")
+server = FastMCP()
 
 # ──────────────────────────────────────────────────────────────
 # 2)  Tools
