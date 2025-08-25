@@ -7,7 +7,7 @@ GREEN = "\033[92m"
 RESET = "\033[0m"
 
 # Create a FastMCP server instance with a service name
-server = FastMCP(service_name="LLamaTools")
+server = FastMCP()
 
 # ───────────────────────────────────────────────
 # Prompt handlers – return single message templates
