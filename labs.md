@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.00 - 07/22/25
+## Revision 2.01 - 08/25/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -30,12 +30,15 @@ cd lab1
 ```
 
 2. Let's first create a simple code example to invoke an API math function in the "classic" way - using a raw REST call.
-   In the terminal, run the first command below to create a new file called *classic_calc.py*. Then paste in the code shown into that file.
+   In the terminal, run the first command below to create a new file called *classic_calc.py*. 
 
 ```
 code classic_calc.py
 ```
 </br></br>
+
+3. Now, paste the code below into the *classic_calc.py* file.
+   
 ```
 import requests, urllib.parse, sys
 
@@ -48,13 +51,13 @@ print("Result :", requests.get(url, timeout=10).text)
 ![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
 
 
-3. Save your changes (CTRL/CMD/OPTION + S). Now, run the code using the command below. You should see the expected answer (96) printed out. Notice that you needed to know the endpoint, URL-encode the call, and parse the response yourself. This is only for one tool, but imagine doing this for multiple tools.
+4. Save your changes (CTRL/CMD/OPTION + S). Now, run the code using the command below. You should see the expected answer (96) printed out. Notice that you needed to know the endpoint, URL-encode the call, and parse the response yourself. This is only for one tool, but imagine doing this for multiple tools.
 
 ```
 python classic_calc.py
 ```
 
-4. Now, let's see how we can use an MCP server to do this. There is an existing MCP server for simple calculator functions that we're going to be using in this lab. It is named *calculator-mcp* from *wrtnlabs*. (The code for it is in GitHub at https://github.com/wrtnlabs/calculator-mcp if you are interested.) Start a running instance of the server by using *npx* (a Node.js CLI). We'll start it running on port 8931. Run the command below and you should see output like the screenshot shown.
+5. Now, let's see how we can use an MCP server to do this. There is an existing MCP server for simple calculator functions that we're going to be using in this lab. It is named *calculator-mcp* from *wrtnlabs*. (The code for it is in GitHub at https://github.com/wrtnlabs/calculator-mcp if you are interested.) Start a running instance of the server by using *npx* (a Node.js CLI). We'll start it running on port 8931. Run the command below and you should see output like the screenshot shown.
 
 ```
 npx -y @wrtnlabs/calculator-mcp@latest --port 8931
@@ -62,11 +65,11 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 
 ![Running remote MCP server](./images/mcp5.png?raw=true "Running remote MCP server")
 
-5. Now, let's open an additional terminal so we can run our custom code. Right-click and select *Split terminal*.
+6. Now, let's open an additional terminal so we can run our custom code. Right-click and select *Split terminal*.
 
 ![Splitting terminal](./images/mcp6.png?raw=true "Splitting terminal")
 
-6. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow. Save your changes when done.
+7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow. Save your changes when done.
 
 ```
 code mcp_client.py
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-7. Notice that we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. Run the client with the command below and you should see output similar to the screenshot below. 
+8. Notice that we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. Run the client with the command below and you should see output similar to the screenshot below. 
 
 ```
 python mcp_client.py
@@ -100,7 +103,7 @@ python mcp_client.py
 </br></br>
 ![Running client](./images/mcp7-new.png?raw=true "Running client")
 
-8. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt.
+9. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt.
    To save time, we already have the code for the agent in the file *agent_mcp.py*. You can browse the code to see what it is doing.
    To make it easier to see the differences from the simple client, run the command below and you can scroll down through the differences.
    *Do not make any changes in the files here.* When done, just click the "X" in the tab at the top to close this view.
@@ -111,7 +114,7 @@ code -d mcp_client.py agent_mcp.py
 </br></br>
 ![Diff view](./images/mcp80.png?raw=true "Diff view")
 
-9. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again.
+10. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again.
 
 ```
 python agent_mcp.py
@@ -119,7 +122,7 @@ python agent_mcp.py
 </br></br>
 ![Running agent](./images/mcp81.png?raw=true "Running agent")
 
-10. You can stop the MCP server in the original terminal via CTRL-C.
+11. You can stop the MCP server in the original terminal via CTRL-C.
 
 <p align="center">
 **[END OF LAB]**
