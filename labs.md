@@ -532,5 +532,7 @@ scripts/local_mcpi.sh SERVER_URL
 5. This should eventually open up a browser with the inspector running in the tab on localhost:6274. (You may also see a failed browser open for the proxy port on 6277. You can ignore that.)
 
 6. Click connect to connect to the server and continue with the lab.
+
+<br><br>
 **THE END**
 
