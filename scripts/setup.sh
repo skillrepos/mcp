@@ -39,13 +39,13 @@ done
 
 sleep 15
 
+
 echo "Pulling llama3.2 model..."
 ollama pull llama3.2
 ollama list
 
-echo "Starting Ollama service in background..."
-nohup bash -c 'ollama serve &'
 
-echo "Manual setup complete!"
+
+echo "Setup complete!"
 echo "Python environment: $PYTHON_ENV"
 echo "To activate the environment, run: source ./$PYTHON_ENV/bin/activate"
