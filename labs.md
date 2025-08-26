@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.01 - 08/25/25
+## Revision 2.02 - 08/26/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -38,7 +38,7 @@ code classic_calc.py
 ```
 </br></br>
 
-3. Now, paste the code below into the *classic_calc.py* file.
+3. Here's the code for our simple API call. Paste the code below into the *classic_calc.py* file.
    
 ```
 import requests, urllib.parse, sys
@@ -52,7 +52,7 @@ print("Result :", requests.get(url, timeout=10).text)
 ![Creating classic_calc.py](./images/mcp4.png?raw=true "Creating classic_calc.py")
 </br></br>
 
-4. Save your changes (CTRL/CMD/OPTION + S). Now, run the code using the command below. You should see the expected answer (96) printed out. Notice that you needed to know the endpoint, URL-encode the call, and parse the response yourself. This is only for one tool, but imagine doing this for multiple tools.
+4. Save your changes (CTRL/CMD/OPTION + S). Now, run the code using the command below. You should see the expected answer (96) printed out. Notice that you needed to **know the endpoint, URL-encode the call, and parse the response** yourself. This is only for one tool, but imagine doing this for multiple tools.
 
 ```
 python classic_calc.py
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 ```
 <br><br>
 
-9. Notice that we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. Run the client with the command below and you should see output similar to the screenshot below. 
+9. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. Run the client with the command below and you should see output similar to the screenshot below. 
 
 ```
 python mcp_client.py
@@ -114,7 +114,7 @@ python mcp_client.py
 
 10. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt.
    To save time, we already have the code for the agent in the file *agent_mcp.py*. You can browse the code to see what it is doing.
-   To make it easier to see the differences from the simple client, run the command below and you can scroll down through the differences.
+   To make it easier to see the **differences from the simple client**, run the command below and you can scroll down through the differences.
    *Do not make any changes in the files here.* When done, just click the "X" in the tab at the top to close this view.
 
 ```
@@ -168,7 +168,7 @@ python mcp_travel_server.py
 <br><br>
 
 
-4. Now let's start the inspector. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going.
+4. Let's use the MCP Inspector tool to look at items in the server. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going.
 
 ```
 ../scripts/start_mcpi.sh
