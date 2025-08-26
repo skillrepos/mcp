@@ -13,22 +13,28 @@ Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/b
 
 ![Creating new codespace from button](./images/mcp1.png?raw=true "Creating new codespace from button")
 
-This will run for a long time (10 or more minutes) while it gets everything ready.
+This will run for a few minutes while it gets the virtual environment ready. You'll then need to run a setup script to finalize the installation.
 
-After the initial startup, it will run a script to setup the python environment, install needed python pieces, install Ollama, and then download the models we will use. This will take several more minutes to run. It will look like this while this is running.
+**3. Run setup script to finalize the installation.**
 
-![Final prep](./images/mcp2.png?raw=true "Final prep")
+In the codespace *TERMINAL* panel at the bottom, run the following command.
 
-When the setup is done, you may see a prompt to press a key like this.
+```
+scripts/setup.sh
+```
 
-![Ready to use](./images/mcp3.png?raw=true "Ready to use")
+This will setup the python environment, install needed python pieces, install Ollama, and then download the model we will use. This will take several more minutes to run. 
 
-The codespace is ready to use when you see a prompt like the one shown below in its terminal.
-
-![Ready to use](./images/mcp3-2.png?raw=true "Ready to use")
+![Final prep](./images/mcp89.png?raw=true "Final prep")
 
 
-**3. Open the labs file.**
+**4. Open a new terminal.**
+
+When the script is completed (after a long run), you can just click on the "+" sign on the far right to get a new terminal with the provided Python environment to work in.
+
+![New terminal](./images/mcp90.png?raw=true "New terminal")
+
+**5. Open the labs file.**
 
 You can open the [labs.md](./labs.md) file either in your codespace or in a separate browswer tab/instance.**
 
