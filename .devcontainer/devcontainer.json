@@ -58,13 +58,5 @@
         "vstirbu.vscode-mermaid-preview"
       ]
     }
-  },
-
- 
-
-  // Install & setup on create
-  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
-
-  // Start Ollama on container start
-  "postStartCommand": "nohup bash -c 'ollama serve &'"
+  }
 }
