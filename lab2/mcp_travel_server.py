@@ -5,12 +5,30 @@ Serves via Streamable-HTTP at http://localhost:8000/mcp
 """
 import os
 import math
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
+from fastapi.middleware.cors import CORSMiddleware
 
 # ──────────────────────────────────────────────────────────────
 # 1)  Create the server
 # ──────────────────────────────────────────────────────────────
 server = FastMCP()
+
+# Add CORS middleware to handle cross-origin requests
+app = server.http_app(path="/mcp", transport="streamable-http")
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_str:
+    allowed_origins = allowed_origins_str.split(",")
+else:
+    # Development fallback - allow common codespace origins
+    allowed_origins = ["*"]  # Allow all origins in development
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ──────────────────────────────────────────────────────────────
 # 2)  Tools
@@ -52,15 +70,15 @@ def major_cities() -> dict:
 # ──────────────────────────────────────────────────────────────
 # 4)  Prompt
 # ──────────────────────────────────────────────────────────────
-@server.prompt(
-    "recommend_sightseeing",
-    "You are a travel guide. List the top 3 attractions in {city}, one per line."
-)
-def recommend_sightseeing():
-    pass  # template-driven prompt
+@server.prompt("recommend_sightseeing")
+def recommend_sightseeing() -> str:
+    """You are a travel guide. List the top 3 attractions in {city}, one per line."""
+    return "You are a travel guide. List the top 3 attractions in {city}, one per line."
 
 # ──────────────────────────────────────────────────────────────
 # 5)  Run  (Streamable-HTTP ⇒ plain JSON when Accept: application/json)
 # ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-   server.run(transport="streamable-http")   
+    import uvicorn
+    # Use the FastAPI app with CORS middleware instead of server.run()
+    uvicorn.run(app, host="0.0.0.0", port=8000)   
