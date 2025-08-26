@@ -32,7 +32,7 @@ This will setup the python environment, install needed python pieces, install Ol
 
 When the script is completed (after a long run), you can just click on the "+" sign on the far right to get a new terminal with the provided Python environment to work in.
 
-![New terminal](./images/mcp90.png?raw=true "New terminal")
+![New terminal](./images/atoa3.png?raw=true "New terminal")
 
 **5. Open the labs file.**
 
