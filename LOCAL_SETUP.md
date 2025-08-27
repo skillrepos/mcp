@@ -46,42 +46,8 @@ Based on the devcontainer configuration, your system should have:
    # Download from https://nodejs.org/
    ```
 
-3. **Git**
-   ```bash
-   # Check your version
-   git --version
-   
-   # Install on macOS with Homebrew
-   brew install git
-   
-   # Install on Ubuntu/Debian
-   sudo apt install git
-   ```
+3. **Ollama** (for local LLM support)
 
-4. **GitHub CLI (optional but recommended)**
-   ```bash
-   # Install on macOS with Homebrew
-   brew install gh
-   
-   # Install on Ubuntu/Debian
-   sudo apt install gh
-   
-   # Login to GitHub
-   gh auth login
-   ```
-
-5. **Docker (optional - for containerized development)**
-   ```bash
-   # Install Docker Desktop from https://docker.com/
-   # Or on Linux:
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sudo sh get-docker.sh
-   ```
-
-### Optional Tools
-
-- **Ollama** (for local LLM support)
-- **VS Code** with Python and MCP extensions
 
 ## 🚀 Environment Setup
 
@@ -132,7 +98,7 @@ npm install -g @modelcontextprotocol/inspector
 npx @modelcontextprotocol/inspector --version
 ```
 
-### Step 5: Set Up Ollama (Optional)
+### Step 5: Set Up Ollama
 
 If you want to run local LLMs for testing:
 
@@ -281,18 +247,7 @@ npm cache clean --force
 npm install -g @modelcontextprotocol/inspector --force
 ```
 
-### Browser Connection Issues
 
-```bash
-# Clear Chrome cache
-./scripts/clear_chrome_cache.sh
-
-# Use incognito mode
-open -na "Google Chrome" --args --incognito "http://localhost:6274"
-
-# Try Firefox instead
-open -na "Firefox" "http://localhost:6274"
-```
 
 ### Port Conflicts
 
