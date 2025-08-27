@@ -276,9 +276,10 @@ source ~/.bashrc
 <br><br>
 
 
-5. Now, in that terminal, make sure you are in the *lab3* directory, and start the secure **mcp** server.
+5. Now, in that second terminal, make sure you are in the *lab3* directory, and start the secure **mcp** server.
 
 ```
+cd ../lab3 (if needed)
 python secure_server.py
 ```
 <br><br>
@@ -330,7 +331,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
 ```
 </br></br>
-Then look back at the terminal with the authorization server running and you should see an error message.
+Then look back at the terminal with the secure server running and you should see an error message.
 </br></br>
 
 ![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
