@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.03 - 08/26/25
+## Revision 2.04 - 08/26/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -532,6 +532,10 @@ scripts/local_mcpi.sh SERVER_URL
 5. This should eventually open up a browser with the inspector running in the tab on localhost:6274. (You may also see a failed browser open for the proxy port on 6277. You can ignore that.)
 
 6. Click connect to connect to the server and continue with the lab.
+
+7. If you still can't connect, make sure that the URL you copied in step 2 is in the URL area on the left and that the protocol is set to Streamable HTTP.
+
+![Correct fields](./images/mcp91.png?raw=true "Correct fields")
 
 <br><br>
 **THE END**
