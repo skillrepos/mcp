@@ -353,7 +353,7 @@ Then look back at the terminal with the secure server running and you should see
 1. Change into the *lab4* directory in a terminal (and in any other terminals you use along the way).
    
 ```
-cd lab4
+cd ../lab4
 ```
 
 2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it with the command "ollama serve &".
