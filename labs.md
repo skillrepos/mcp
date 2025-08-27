@@ -389,6 +389,7 @@ python mcp_server.py
 7. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
 
 ```
+cd ../lab4 
 code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 ```
 </br></br>
