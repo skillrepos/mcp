@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.04 - 08/26/25
+## Revision 2.05 - 08/26/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -395,7 +395,7 @@ code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 </br></br>
 ![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
 
-8. Once you've completed the merge and closed the tab, run the client and select one of the commands and enter some text for it. For example you might select the "expand" command and then enter some basic text like "MCP stands for Model Context Protocol." After a few moments you should see some output from the client.
+8. Once you've completed the merge and closed the tab, run the client and select one of the commands and enter some text for it. For example you might select the "*expand*" command and then enter some basic text like "*MCP stands for Model Context Protocol*." After a few moments you should see some output from the client.
 
 ```
 python mcp_client_agent.py
