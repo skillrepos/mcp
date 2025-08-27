@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.02 - 08/26/25
+## Revision 2.03 - 08/26/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -140,9 +140,9 @@ python agent_mcp.py
 </p>
 </br></br></br>
 
-**Lab 2 - MCP Capabilities**
+**Lab 2 - MCP Features**
 
-**Purpose: - In this lab, we'll use the Inspector tool to understand more about the different capabilities that can be provided by MCP servers**
+**Purpose: - In this lab, we'll use the Inspector tool to understand more about the different features that can be provided by MCP servers**
 
 1. Change into the *lab2* directory in the terminal.
    
