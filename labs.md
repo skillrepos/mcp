@@ -368,7 +368,7 @@ ollama list
 
 3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). The agent takes input text and then allows you to choose to have the text summarized, expanded or reworded by picking which option you want.
 </br></br>
-To complete the implementation in each of these files, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. For this lab, we have the outline of an agent in a file called *agent1.py* in that directory. 
+To complete the implementation in each of these files, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server. 
 
 ```
 code -d ../extra/mcp_server.txt mcp_server.py
