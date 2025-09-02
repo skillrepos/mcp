@@ -272,9 +272,9 @@ echo "export TOKEN=$TOKEN" >> ~/.bashrc
 source ~/.bashrc 
 ```
 </br></br>
-![curl and add new terminal](./images/mcp61.png?raw=true "curl and add new terminal") 
+![curl and add new terminal](./images/mcp95.png?raw=true "curl and add new terminal") 
 
-(Optional) If you want to look deeper at the token, you can grab the token string from the output and paste it in at https://jwt.io 
+(Optional) If you want to look deeper at the token, you can echo the token string and paste it in at https://jwt.io 
 <br><br>
 
 
