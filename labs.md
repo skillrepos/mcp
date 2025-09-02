@@ -237,7 +237,7 @@ cd ../lab3
 
 2. In this directory, we have an example authorization server, a secure MCP server, and a secure MCP client. "Secure" here simply means they use a bearer token running on localhost, so they are not production-ready, but will serve us for this lab. It's designed as a "travel assistant" example.
 
-To look at the code for the files, you can open any of them by clicking on them in the explorer view to the left in the codespace or click on the table item, or using the "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table below suggests some things to notice about each.
+   To look at the code for the files, you can open any of them by clicking on them in the explorer view to the left in the codespace or click on the table item, or using the  "code <filename>" command in the terminal. The numbered comments in each file highlight the key parts. Also, the table below suggests some things to notice about each.
 
 </br></br>   
 
