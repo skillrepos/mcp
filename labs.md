@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.05 - 08/26/25
+## Revision 2.06 - 09/02/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -158,33 +158,33 @@ code mcp_travel_server.py
 ```
 <br><br>
 
-3. Now, let's start the server running. Issue the command below in the terminal. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000.
+3. Now, let's start the server running. Issue the command below in the terminal to run a startup script. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000. (The startup script is used instead of a straight Python command because we need to ensure some environment variables are set to match what the inspector is using.)
 
 ```
-python mcp_travel_server.py
+../scripts/start_server.sh
 ```
 
-![Running server](./images/mcp36.png?raw=true "Running server")
+![Running server](./images/mcp90.png?raw=true "Running server")
 <br><br>
 
 
-4. Let's use the MCP Inspector tool to look at items in the server. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going.
+4. Let's use the MCP Inspector tool to look at items in the server. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going. **After this runs, there will be a URL printed near the end.**
 
 ```
-../scripts/start_mcpi.sh
+../scripts/start_inspector.sh
 ```
 
-![Copy URL](./images/mcp76.png?raw=true "Copy URL")
+![Start inspector](./images/mcp94.png?raw=true "Start inspector")
 <br><br>
 
 
-5. After this runs, there will be a URL printed at the end. Click on the link to open it or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
+5.  Click on the URL to open it (may need to hit Cmd or Option key and click) or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
 
 ![Confirmation](./images/mcp86.png?raw=true "Confirmation")
 <br><br>
    
 
-**If you can't get the inspector to run in the codespace, there is an alternative approach listed at the end of the document where you can try to run a local instance. See directions in this doc after the last lab.**
+**If you can't get the inspector to connect, there are a couple of suggestions at the end of the script output. You can also try going to the PORTS tab, hovering over the "Port" column in the rows for port 6274 and 6277 and clicking "X" to remove them. Then run the *start_inspector.sh* script again.**
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
