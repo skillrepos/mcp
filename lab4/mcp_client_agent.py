@@ -1,7 +1,7 @@
-# mcp_client_agent.py – version for FastMCP 2.10.4 and Ollama
-import asyncio
+# mcp_client_agent.py – FastMCP 2.11.x & Ollama, robust + timeouts + retries
+import asyncio, json, typing
 import httpx
-import json
+
 from fastmcp import Client
 
 # ANSI color codes for terminal output
@@ -9,34 +9,88 @@ BLUE = "\033[94m"     # Bright blue for requests
 GREEN = "\033[92m"    # Bright green for responses
 RESET = "\033[0m"     # Reset color
 
-# MCP server endpoint
+# MCP server endpoint (streamable HTTP)
 SERVER_URL = "http://127.0.0.1:8000/mcp/"
 
 # Ollama chat endpoint
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
-async def call_ollama(system_prompt, user_input, model_name):
-    }
 
-    async with httpx.AsyncClient(timeout=60) as client:
+async def call_ollama(system_prompt: str, user_input: str, model: str) -> str:
+    """Call Ollama /api/chat with a simple system+user exchange."""
+    # Longer timeouts for CPU-only cold starts (Codespaces).
+    timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
+    limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
+    async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
+    payload = {
+            "model": model,
+            # Treat the rendered prompt as the user message (pre-baked instruction + text)
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input},
+            ],
+            "stream": False,
+        }
 
-    return (
-        result.get("message", {}).get("content")
-        or result.get("response")
-        or str(result)
-    ).strip()
+        # Retry on cold starts / transient failures
+        attempts = 0
+        last_exc = None
+        while attempts < 4:
+            try:
+                resp = await client.post(OLLAMA_URL, json=payload)
+                resp.raise_for_status()
+                break
+            except (httpx.TimeoutException, httpx.ConnectError) as e:
+                last_exc = e
+                attempts += 1
+                await asyncio.sleep(1.5 * attempts)
+                continue
+            except httpx.HTTPStatusError as e:
+                if 500 <= e.response.status_code < 600 and attempts < 3:
+                    last_exc = e
+                    attempts += 1
+                    await asyncio.sleep(1.5 * attempts)
+                    continue
+                raise
+        if attempts >= 4 and last_exc:
+            raise last_exc
+
+        data = resp.json()
+
+        # Ollama native response: {"message": {"content": "..."}}
+        if isinstance(data, dict) and "message" in data and isinstance(data["message"], dict):
+            return data["message"].get("content", "") or ""
+
+        # OpenAI-compatible fallback: {"choices": [{"message": {"content": "..."}}]}
+        if isinstance(data, dict) and "choices" in data:
+            choices = data["choices"]
+            if choices and isinstance(choices[0], dict):
+                msg = choices[0].get("message", {})
+                if isinstance(msg, dict):
+                    return msg.get("content", "") or ""
+
+        return ""
+
 
 async def main():
-    # Create an async MCP client context
     async with Client(SERVER_URL) as client:
-        print(f"{GREEN}Connected to MCP server.{RESET}")
-
         print(f"{BLUE}Available tools: {', '.join(tool_names)}{RESET}\n")
 
-        # Request model resource from server
+        # Request model resource from server (robust to varying shapes)
 
-        print(f"{BLUE}Model name returned from server: {model_name_raw!r}{RESET}")
         print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
+
+        # Optional one-time warm-up to avoid first interactive timeout
+        try:
+            print(f"{BLUE}Warming up Ollama model {model_name}...{RESET}")
+            _ = await call_ollama(
+                system_prompt="You are a helpful assistant.",
+                user_input="Reply with 'ready'.",
+                model=model_name,
+            )
+            print(f"{GREEN}Warm-up complete.{RESET}")
+        except Exception as e:
+            print(f"Warm-up skipped due to: {type(e).__name__}: {e!r}")
 
         while True:
             cmd = input("\nEnter tool name (or 'exit'): ").strip().lower()
@@ -52,24 +106,51 @@ async def main():
                 continue
 
             try:
-                # Get the prompt template for this tool from the server
-                print(f"{BLUE}Requesting prompt for tool: {cmd}{RESET}")
+              
 
-                # Extract user role template from the prompt
+                # Extract a 'user' message template robustly across shapes
+                def _iter_messages(res):
+                    msgs = getattr(res, "messages", None)
+                    if msgs is None and isinstance(res, dict):
+                        msgs = res.get("messages")
+                    if msgs is None:
+                        if isinstance(res, dict) and "role" in res and "content" in res:
+                            msgs = [res]
+                    return msgs or []
+
+                def _first_text_from_content(content):
+                    if isinstance(content, str):
+                        return content
+                    if hasattr(content, "text"):
+                        return content.text
+                    if isinstance(content, dict) and "text" in content:
+                        return content["text"]
+                    if isinstance(content, (list, tuple)):
+                        for part in content:
+                            if isinstance(part, str):
+                                return part
+                            if hasattr(part, "text"):
+                                return part.text
+                            if isinstance(part, dict) and "text" in part:
+                                return part["text"]
+                    return ""
+
                 user_msg_template = ""
-                for msg in prompt_result.messages:
-                    if msg.role == "user":
-                        user_msg_template = msg.content.text
+                for msg in _iter_messages(prompt_result):
+                    role = getattr(msg, "role", msg.get("role") if isinstance(msg, dict) else None)
+                    if role == "user":
+                        content = getattr(msg, "content", msg.get("content") if isinstance(msg, dict) else None)
+                        user_msg_template = _first_text_from_content(content)
+                        if user_msg_template:
                         break
 
-                # Fill in user input to generate final prompt
 
-                # Send the prompt and input to the Ollama model
                 # Display result in green
                 print(f"\n{GREEN}[{cmd.upper()} RESULT]\n{result}{RESET}\n")
 
             except Exception as e:
-                print("Unexpected error:", e)
+                print(f"Unexpected error: {type(e).__name__}: {e!r}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
