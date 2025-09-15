@@ -15,39 +15,39 @@ server = FastMCP()
 # ───────────────────────────────────────────────
 
 @server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
-def prompt_summarize(**context):
+def prompt_summarize(text: str = "{text}", context: dict | None = None):
     print(f"{BLUE}[PROMPT REQUEST] summarize called with context: {context}{RESET}")
     result = {
         "role": "user",
         "content": (
             "You are a helpful assistant. Summarize the following text in one sentence.\n\n"
-            f"{context.get('text', '')}"
+            f"{text}"
         )
     }
     print(f"{GREEN}[PROMPT RETURN] summarize response: {result}{RESET}")
     return result
 
 @server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
-def prompt_reword(**context):
+def prompt_reword(text: str = "{text}", context: dict | None = None):
     print(f"{BLUE}[PROMPT REQUEST] reword called with context: {context}{RESET}")
     result = {
         "role": "user",
         "content": (
             "You are a helpful assistant. Reword the following text using clearer and simpler language.\n\n"
-            f"{context.get('text', '')}"
+            f"{text}"
         )
     }
     print(f"{GREEN}[PROMPT RETURN] reword response: {result}{RESET}")
     return result
 
 @server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
-def prompt_expand(**context):
+def prompt_expand(text: str = "{text}", context: dict | None = None):
     print(f"{BLUE}[PROMPT REQUEST] expand called with context: {context}{RESET}")
     result = {
         "role": "user",
         "content": (
             "You are a helpful assistant. Expand on the following idea with additional detail and explanation.\n\n"
-            f"{context.get('text', '')}"
+            f"{text}"
         )
     }
     print(f"{GREEN}[PROMPT RETURN] expand response: {result}{RESET}")
@@ -77,7 +77,7 @@ def expand_tool(text: str) -> str:
     return text
 
 # ───────────────────────────────────────────────
-# Resource endpoint – used to expose model metadata
+# Resource – lets the client discover the model to use
 # ───────────────────────────────────────────────
 
 @server.resource("resource://model")
