@@ -30,7 +30,7 @@ def prompt_expand(**context):
 
 
 # ───────────────────────────────────────────────
-# Resource endpoint – used to expose model metadata
+# Resource – lets the client discover the model to use
 # ───────────────────────────────────────────────
 
 @server.resource("resource://model")
@@ -42,3 +42,4 @@ def prompt_expand(**context):
 if __name__ == "__main__":
     print(f"{BLUE}Starting FastMCP server on streamable HTTP...{RESET}")
     server.run(transport="streamable-http")
+
