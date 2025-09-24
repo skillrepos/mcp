@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.06 - 09/02/25
+## Revision 2.07 - 09/24/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -68,9 +68,9 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 ![Running remote MCP server](./images/mcp5.png?raw=true "Running remote MCP server")
 <br><br>
 
-6. Now, let's open an additional terminal so we can run our custom code. Right-click and select *Split terminal*.
+6. Now, let's open an additional terminal so we can run our custom code. You can use the "+" control in the upper right of the terminal to add a new terminal or just split the terminal. As shown here, we're splitting the terminal by clicking on the "down arrow" to the immediate right of the plus and selecting *Split terminal*.
 
-![Splitting terminal](./images/mcp6.png?raw=true "Splitting terminal")
+![Splitting terminal](./images/mcp96.png?raw=true "Splitting terminal")
 <br><br>
 
 7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow. Save your changes when done.
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 ```
 <br><br>
 
-9. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. Run the client with the command below and you should see output similar to the screenshot below. 
+9. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. In the second terminal, run the client with the command below and you should see output similar to the screenshot below. 
 
 ```
 python mcp_client.py
@@ -112,10 +112,7 @@ python mcp_client.py
 ![Running client](./images/mcp7-new.png?raw=true "Running client")
 </br></br>
 
-10. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt.
-   To save time, we already have the code for the agent in the file *agent_mcp.py*. You can browse the code to see what it is doing.
-   To make it easier to see the **differences from the simple client**, run the command below and you can scroll down through the differences.
-   *Do not make any changes in the files here.* When done, just click the "X" in the tab at the top to close this view.
+10. Finally, let's create a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt. To save time, we already have the code for the agent in the file *agent_mcp.py*. You can browse the code to see what it is doing.To make it easier to see the **differences from the simple client**, run the command below and you can scroll down through the differences. *Do not make any changes in the files here.* When done, just click the "X" in the tab at the top to close this view.
 
 ```
 code -d mcp_client.py agent_mcp.py
