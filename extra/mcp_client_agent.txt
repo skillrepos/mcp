@@ -22,7 +22,7 @@ async def call_ollama(system_prompt: str, user_input: str, model: str) -> str:
     timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
     limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
     async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
-    payload = {
+        payload = {
             "model": model,
             # Treat the rendered prompt as the user message (pre-baked instruction + text)
             "messages": [
@@ -108,17 +108,6 @@ async def main():
 
         print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
 
-        # Optional one-time warm-up to avoid first interactive timeout
-        try:
-            print(f"{BLUE}Warming up Ollama model {model_name}...{RESET}")
-            _ = await call_ollama(
-                system_prompt="You are a helpful assistant.",
-                user_input="Reply with 'ready'.",
-                model=model_name,
-            )
-            print(f"{GREEN}Warm-up complete.{RESET}")
-        except Exception as e:
-            print(f"Warm-up skipped due to: {type(e).__name__}: {e!r}")
 
         while True:
             cmd = input("\nEnter tool name (or 'exit'): ").strip().lower()
@@ -173,7 +162,7 @@ async def main():
                         content = getattr(msg, "content", msg.get("content") if isinstance(msg, dict) else None)
                         user_msg_template = _first_text_from_content(content)
                         if user_msg_template:
-                        break
+                           break
 
                 if not user_msg_template:
                     user_msg_template = "You are a helpful assistant. Please operate on the following text:\n\n{text}"
