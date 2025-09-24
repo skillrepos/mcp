@@ -441,7 +441,7 @@ Link:  Generate classic personal access token (repo & workflow scopes) https://g
 ![Copying token](./images/mcp11.png?raw=true "Copying token")
 <br><br>
 
-3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom. (**NOTE:** If you don't see *Ask* mode or an option to switch to another mode, you may need to complete a setup step as shown in the third screenshot below. Click on the Copilot icon in the bottom status bar and look for a button that says "*Finish setup*" and click on that. Then you should see the options.)
+3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom. (**NOTE:** If you don't see *Ask* mode or an option to switch to another mode, you may need to complete a setup step as shown in the second screenshot below. Click on the Copilot icon in the bottom status bar and look for a button that says "*Finish setup*" and click on that. Then you should see the options.)
 
 **Opening Chat if not open**
 
