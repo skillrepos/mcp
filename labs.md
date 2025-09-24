@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.07 - 09/24/25
+## Revision 2.08 - 09/24/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -502,6 +502,15 @@ Show info on recent changes in <repo path> on GitHub
 8. Notice the mention of "Ran <tool name> - GitHub MCP Server (MCP Server) early in the output for each.
 
 ![Example usage](./images/mcp26.png?raw=true "Example usage")
+
+
+9. If you click on the *Extensions* icon on the left (#1 in the screenshot below), you'll see a category for *MCP SERVERS - INSTALLED*. This should show the GitHub MCP Server since we just connected to that.   
+
+![Extensions and browser](./images/mcp97.png?raw=true "Extensions and browser")
+
+10. If you then click on the globe icon (#2 in the screenshot above), you can get to another page that shows a list of available MCP servers to use.
+
+![MCP Servers](./images/mcp98.png?raw=true "MCP Servers")
 
  <p align="center">
 **[END OF LAB]**
