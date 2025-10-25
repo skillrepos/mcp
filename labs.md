@@ -181,7 +181,7 @@ code mcp_travel_server.py
 <br><br>
    
 
-**If you can't get the inspector to connect, there are a couple of suggestions at the end of the script output. You can also try going to the PORTS tab, hovering over the "Port" column in the rows for port 6274 and 6277 and clicking "X" to remove them. Then run the *start_inspector.sh* script again.**
+**If you can't get the inspector to connect, you can try the steps (A-D) in this lab after step 10.** 
 
 **NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
 
@@ -213,6 +213,27 @@ code mcp_travel_server.py
 <br><br>
 
 10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the inspector running in it.
+
+<br><br>
+
+**Alternate approach to get inspector going**
+
+A. In the bottom section of the codespace, switch to the *PORTS* tab (next to *TERMINAL*). Find the row for Port **6277**, and in the *Forwarded Address* column, click on the *globe* icon to open the URL.
+
+![Open url for 6277](./images/mcp100.png?raw=true "Open url for 6277") 
+<br><br>
+
+B. You should see a screen like the one below. Click *Continue*.
+
+![Confirmation](./images/mcp86.png?raw=true "Confirmation")
+<br><br>
+
+C. Now, go back to the *PORTS* tab. Find the row for Port **6274**, and in the *Forwarded Address* column, click on the *globe* icon to open the URL.
+
+![Open url for 6274](./images/mcp101.png?raw=true "Open url for 6274") 
+<br><br>
+
+D. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server and then continue with step 7 above. 
 
 <p align="center">
 **[END OF LAB]**
