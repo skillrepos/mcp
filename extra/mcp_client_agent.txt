@@ -74,37 +74,9 @@ async def call_ollama(system_prompt: str, user_input: str, model: str) -> str:
 
 async def main():
     async with Client(SERVER_URL) as client:
-        # Discover prompts/tools (support wrapper objects OR raw lists)
-        prompt_list = await client.list_prompts()
-        tool_list = await client.list_tools()
-
-        prompts = getattr(prompt_list, "prompts", prompt_list)
-        tools = getattr(tool_list, "tools", tool_list)
-
-        def _name(x):
-            return getattr(x, "name", x.get("name") if isinstance(x, dict) else str(x))
-
-        prompt_names = [_name(p) for p in prompts]
-        tool_names = [_name(t) for t in tools]
-
-        print(f"{BLUE}Available prompts: {', '.join(prompt_names)}{RESET}")
         print(f"{BLUE}Available tools: {', '.join(tool_names)}{RESET}\n")
 
         # Request model resource from server (robust to varying shapes)
-        model_res = await client.read_resource("resource://model")
-
-        def _as_text(content):
-            if hasattr(content, "text"):
-                return content.text
-            if isinstance(content, dict) and "text" in content:
-                return content["text"]
-            if isinstance(content, str):
-                return content
-            return json.dumps(content)
-
-        first = model_res[0] if isinstance(model_res, (list, tuple)) and model_res else model_res
-        model_json = json.loads(_as_text(first))
-        model_name = model_json.get("model", "llama3.2:latest")
 
         print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
 
@@ -134,10 +106,6 @@ async def main():
                 continue
 
             try:
-                # Get the prompt template for this tool from the server
-                print(f"{BLUE}Requesting prompt for tool: {cmd}{RESET}")
-                # Provide a placeholder so server-side 'text' param (if required) is satisfied
-                prompt_result = await client.get_prompt(cmd, arguments={"text": "{text}"})
 
                 # Extract a 'user' message template robustly across shapes
                 def _iter_messages(res):
@@ -175,17 +143,6 @@ async def main():
                         if user_msg_template:
                            break
 
-                if not user_msg_template:
-                    user_msg_template = "You are a helpful assistant. Please operate on the following text:\n\n{text}"
-
-                rendered_prompt = user_msg_template.format(text=user_input)
-
-                print(f"{BLUE}Calling Ollama with user content: {rendered_prompt!r}{RESET}")
-                result = await call_ollama(
-                    system_prompt="You are a helpful assistant.",
-                    user_input=rendered_prompt,
-                    model=model_name,
-                )
 
                 # Display result in green
                 print(f"\n{GREEN}[{cmd.upper()} RESULT]\n{result}{RESET}\n")
