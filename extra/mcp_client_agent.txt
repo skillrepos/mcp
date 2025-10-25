@@ -108,6 +108,17 @@ async def main():
 
         print(f"{BLUE}Model name used for Ollama: {model_name!r}{RESET}")
 
+        # Optional one-time warm-up to avoid first interactive timeout
+        try:
+            print(f"{BLUE}Warming up Ollama model {model_name}...{RESET}")
+            _ = await call_ollama(
+                system_prompt="You are a helpful assistant.",
+                user_input="Reply with 'ready'.",
+                model=model_name,
+            )
+            print(f"{GREEN}Warm-up complete.{RESET}")
+        except Exception as e:
+            print(f"Warm-up skipped due to: {type(e).__name__}: {e!r}")
 
         while True:
             cmd = input("\nEnter tool name (or 'exit'): ").strip().lower()
