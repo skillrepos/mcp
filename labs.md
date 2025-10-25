@@ -466,7 +466,7 @@ Link:  Generate classic personal access token (repo & workflow scopes) https://g
 
 **Opening Chat if not open**
 
-![Opening chat panel](./images/mcp69.png?raw=true "Opening chat panel")
+![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
 <br>
 
 **Completing setup - if needed**
@@ -477,11 +477,8 @@ Link:  Generate classic personal access token (repo & workflow scopes) https://g
 **Switching to Agent mode**
 
 ![Switching to Agent mode](./images/mcp12.png?raw=true "Switching to Agent mode")
+
 <br><br>
-
-
-
-
 
 4. Now we need to add the GitHub MCP Server configuration in our IDE. You could fill most of this out via IDE prompts, but for simplicity, we already have a sample configuration file that we can just copy in. Run the commands below in the terminal. The last one will open the file in the editor.
 
