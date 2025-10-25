@@ -106,7 +106,6 @@ async def main():
                 continue
 
             try:
-              
 
                 # Extract a 'user' message template robustly across shapes
                 def _iter_messages(res):
@@ -154,4 +153,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
