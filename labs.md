@@ -415,7 +415,7 @@ code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
 </br></br>
 ![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
 
-8. Once you've completed the merge and closed the tab, run the client and select one of the commands and enter some text for it. For example you might select the "*expand*" command and then enter some basic text like "*MCP stands for Model Context Protocol*." After a few moments you should see some output from the client.
+8. Once you've completed the merge and closed the tab, run the client and select one of the commands and enter some text for it. For example you might select the "*expand*" command and then enter some basic text like "*MCP stands for Model Context Protocol*." After a few moments you should see some output from the client. What's worth noticing here is the *REQUEST* and *RETURN* lines that print out in the server side showing requests and results for getting resources and prompts. **This will take a long time to run, so you can just leave it running while we move on.**
 
 ```
 python mcp_client_agent.py
@@ -426,7 +426,7 @@ python mcp_client_agent.py
 9. (Optional) Start up the MCP inspector again and see the resources in the server. To do this, you'll need to start a new instance of the inspector. If the old one is running, you can close/stop it.  Then run the scripts/start_mcpi.sh script again to start a new instance.  (If you get a warning message from GitHub about connecting, just click *Continue*.) Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
 
 ```
-../scripts/start_mcpi.sh
+../scripts/start_inspector.sh
 ```
 
 ![Starting the inspector](./images/mcp77-new.png?raw=true "Starting the inspector")
