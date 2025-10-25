@@ -22,7 +22,7 @@ async def call_ollama(system_prompt: str, user_input: str, model: str) -> str:
     timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
     limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
     async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
-    payload = {
+        payload = {
             "model": model,
             # Treat the rendered prompt as the user message (pre-baked instruction + text)
             "messages": [
@@ -142,7 +142,7 @@ async def main():
                         content = getattr(msg, "content", msg.get("content") if isinstance(msg, dict) else None)
                         user_msg_template = _first_text_from_content(content)
                         if user_msg_template:
-                        break
+                           break
 
 
                 # Display result in green
@@ -154,3 +154,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
