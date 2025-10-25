@@ -73,7 +73,7 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 ![Splitting terminal](./images/mcp96.png?raw=true "Splitting terminal")
 <br><br>
 
-7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. Then paste in the code for it from the lines that follow. Save your changes when done.
+7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. We'll add code for this in the next step.
 
 ```
 code mcp_client.py
