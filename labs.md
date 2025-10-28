@@ -403,19 +403,27 @@ python mcp_client_agent.py
 
 ![Trying out the client](./images/mcp74-new.png?raw=true "Trying out the client")
 
-9. (Optional) Start up the MCP inspector again and see the resources in the server. To do this, you'll need to start a new instance of the inspector. If the old one is running, you can close/stop it.  Then run the scripts/start_mcpi.sh script again to start a new instance.  (If you get a warning message from GitHub about connecting, just click *Continue*.) Then go to the URL it displays at the end and click *Connect*. After a few moments, it should connect to the server.
+9. (Optional) Start up the MCP explorer again and see the resources in the server. To do this, you'll need to start a new instance of the explorer. If the old one is running, you can close/stop it.  Then run the command below again to start a new instance. (Remember to adjust the path if you're not in /workspaces/mcp.)
 
 ```
-../scripts/start_inspector.sh
+python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ```
 
-![Starting the inspector](./images/mcp77-new.png?raw=true "Starting the inspector")
+![Starting the inspector](./images/mcp109.png?raw=true "Starting the inspector")
 
-10. (Optional) If you did step 10, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. Due to some limitations, if you select *Get Prompts* you won't be able to see the full text of the prompt. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+10. (Optional) If you did step 9, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. If you choose to *Get Prompt*, you can use JSON like in the text below. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
 
-![Running the inspector](./images/mcp75.png?raw=true "Running the inspector")
+```
+{"text": "This is a long paragraph that I want to summarize into one sentence."}
+```
 
-11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. 
+![Running the inspector](./images/mcp114.png?raw=true "Running the inspector")
+
+Here's the prompt result if you used the previous entry.
+
+![Running the inspector](./images/mcp115.png?raw=true "Running the inspector")
+
+11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. And you can close the Explorer tab if you did the optional exercises.
 
 
  <p align="center">
