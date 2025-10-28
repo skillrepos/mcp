@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 2.08 - 10/25/25
+## Revision 3.00 - 10/27/25
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -139,7 +139,7 @@ python agent_mcp.py
 
 **Lab 2 - MCP Features**
 
-**Purpose: - In this lab, we'll use the Inspector tool to understand more about the different features that can be provided by MCP servers**
+**Purpose: - In this lab, we'll use the Explorer tool to understand more about the different features that can be provided by MCP servers**
 
 1. Change into the *lab2* directory in the terminal.
    
@@ -155,85 +155,65 @@ code mcp_travel_server.py
 ```
 <br><br>
 
-3. Now, let's start the server running. Issue the command below in the terminal to run a startup script. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000. (The startup script is used instead of a straight Python command because we need to ensure some environment variables are set to match what the inspector is using.)
+3. Now, let's start the server running. Issue the command below in the terminal to run a startup script. You should see the code start up and say it is running on localhost (127.0.0.1) and availale on port 8000. (
 
 ```
-../scripts/start_server.sh
+python mcp_travel_server.py
 ```
 
-![Running server](./images/mcp90.png?raw=true "Running server")
+![Running server](./images/mcp111.png?raw=true "Running server")
 <br><br>
 
 
-4. Let's use the MCP Inspector tool to look at items in the server. We have a script that will do that with the settings we need to use it in the codespace. In another terminal, run the command below to get the processes going. **After this runs, there will be a URL printed near the end.**
+4. Let's use the MCP Explorer tool to look at items in the server. The server will be running in one terminal. In another terminal, start the explorer with the command below. Once it starts, you'll see a popup with a button to "*Open in Browser". Click on that to open it. (As shown the command assumes you are in the root directory. If not, use *../scripts* instead of *scripts*.)
 
 ```
-../scripts/start_inspector.sh
+python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ```
 
-![Start inspector](./images/mcp94.png?raw=true "Start inspector")
+![Start explorer](./images/mcp109.png?raw=true "Start explorer")
 <br><br>
 
 
-5.  Click on the URL to open it (may need to hit Cmd or Option key and click) or copy and paste the URL into a new browser tab. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server. (If you get a screen from GitHub warning about connecting to a codespace, just click *Continue*.)
+4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *List Prompts*.)
 
-![Confirmation](./images/mcp86.png?raw=true "Confirmation")
-<br><br>
-   
-
-**If you can't get the inspector to connect, you can try the steps (A-D) in this lab after step 10.** 
-
-**NOTE: When interacting with the inspector in the remaining steps, it may take a couple of seconds for the interface to respond after you click on an item in the UI.**
-
-![Connecting](./images/mcp34.png?raw=true "Connecting")
-<br><br>
-
-   
-6. If all goes well, you'll now be connected to the server. Now you can start exploring the various items the server makes available. First, let's look at the *Resources*. As shown in the screenshot, click on *Resources* in the top gray bar, then click on *List Resources*. This should show a resource named *major_cities*. Click on that and you should see a display of the actual resource as defined in the server we started earlier.
-
-![Resources](./images/mcp27.png?raw=true "Resources") 
+![Resources](./images/mcp110.png?raw=true "Resources") 
 <br><br>
 
 
-7. Next up, you can take a look at the prompt from the server. In the gray bar at the top of the inspector, click on *Prompts*, then *List Prompts* in the box below. You should see a prompt with the name of "recommend_sightseeing" listed. Click on that item and then you should see an item for that displayed to the right. In the box on the right, click on "Get Prompt" and you'll see the specification of the prompt.
+5. As shown in the *Arguments* section below the prompt text, this prompt takes a *city* as an argument. Click on the *Get Prompt* button and you'll see a dialog pop up at the top. It's asking for an argument to fill in to show what the instantiated prompt would look like. Enter the text below (note this is in JSON format).
 
-![Prompt](./images/mcp28.png?raw=true "Prompt") 
+```
+{"city": "Paris"}
+```
+
+![Prompt](./images/mcp104.png?raw=true "Prompt") 
+<br><br>
+
+6. Click *OK* and you'll see the prompt result (with your argument) displayed.
+
+![Completed prompt](./images/mcp105.png?raw=true "Completed prompt") 
+<br><br>
+
+7. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
+
+![Resources](./images/mcp106.png?raw=true "Resources") 
+<br><br>
+
+8. Finally, let's take a look at the tools available from the server. Click on *Tools*. You'll see two tools defined - one to calculate distance and one to convert currency.
+
+![Tools](./images/mcp112.png?raw=true "Tools") 
 <br><br>
 
 
-8. Finally, let's take a look at the tools available from the server. Click on *Tools* in the gray bar, then *List Tools* in the box below. You'll see two tools defined - one to calculate distance and one to convert currency.
+9. Let's try running the distance_between tool. Select the tool in the list. Underneath, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click *Execute to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
-![Tools](./images/mcp37.png?raw=true "Tools") 
+![Running tool](./images/mcp113.png?raw=true "Running tool") 
 <br><br>
 
-
-9. Let's try running the distance_between tool. Select the tool in the list. On the right side, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click "Run Tool" to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
-
-![Running tool](./images/mcp38.png?raw=true "Running tool") 
-<br><br>
-
-10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the inspector running in it.
+10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the explorer running in it.
 
 <br><br>
-
-**Alternate approach to get inspector going**
-
-A. In the bottom section of the codespace, switch to the *PORTS* tab (next to *TERMINAL*). Find the row for Port **6277**, and in the *Forwarded Address* column, click on the *globe* icon to open the URL.
-
-![Open url for 6277](./images/mcp100.png?raw=true "Open url for 6277") 
-<br><br>
-
-B. You should see a screen like the one below. Click *Continue*.
-
-![Confirmation](./images/mcp86.png?raw=true "Confirmation")
-<br><br>
-
-C. Now, go back to the *PORTS* tab. Find the row for Port **6274**, and in the *Forwarded Address* column, click on the *globe* icon to open the URL.
-
-![Open url for 6274](./images/mcp101.png?raw=true "Open url for 6274") 
-<br><br>
-
-D. You should see the MCP Inspector displayed. **Click on the Connect button** to connect to the server and then continue with step 7 above. 
 
 <p align="center">
 **[END OF LAB]**
@@ -534,36 +514,6 @@ Show info on recent changes in <repo path> on GitHub
 **[END OF LAB]**
 </p>
 </br></br></br>
-
-**Alternative approach to run inspector locally, if needed**
-
-1. Clone down this repository
-
-```
-git clone https://github.com/skillrepos/mcp
-```
-
-2. If you are running in the codespace, in an available terminal, get the name of the codespace with the command below. Copy this to use in the next step.
-
-```
-echo https://${CODESPACE_NAME}-8000.app.github.dev/mcp
-```
-
-3. If you are not running in the codespace but running the server local, grab the URL for the host and port where the server is running - most likely something like *http://127.0.0.1:8000/mcp*
-
-4. In your local clone, change to the mcp directory and run the command below (substituting in the value you copied in step 2 or 3 for SERVER_URL.
-
-```
-cd mcp
-scripts/local_mcpi.sh SERVER_URL
-```
-5. This should eventually open up a browser with the inspector running in the tab on localhost:6274. (You may also see a failed browser open for the proxy port on 6277. You can ignore that.)
-
-6. Click connect to connect to the server and continue with the lab.
-
-7. If you still can't connect, make sure that the URL you copied in step 2 is in the URL area on the left and that the protocol is set to Streamable HTTP.
-
-![Correct fields](./images/mcp91.png?raw=true "Correct fields")
 
 <br><br>
 **THE END**
