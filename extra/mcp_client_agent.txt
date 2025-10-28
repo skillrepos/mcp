@@ -136,10 +136,10 @@ async def main():
             try:
                 # Get the prompt template for this tool from the server
                 print(f"{BLUE}Requesting prompt for tool: {cmd}{RESET}")
-                # Provide a placeholder so server-side 'text' param (if required) is satisfied
-                prompt_result = await client.get_prompt(cmd, arguments={"text": "{text}"})
+                # Pass the actual user input as the 'text' argument
+                prompt_result = await client.get_prompt(cmd, arguments={"text": user_input})
 
-                # Extract a 'user' message template robustly across shapes
+                # Extract the rendered content robustly across shapes
                 def _iter_messages(res):
                     msgs = getattr(res, "messages", None)
                     if msgs is None and isinstance(res, dict):
@@ -166,19 +166,17 @@ async def main():
                                 return part["text"]
                     return ""
 
-                user_msg_template = ""
+                rendered_prompt = ""
                 for msg in _iter_messages(prompt_result):
                     role = getattr(msg, "role", msg.get("role") if isinstance(msg, dict) else None)
                     if role == "user":
                         content = getattr(msg, "content", msg.get("content") if isinstance(msg, dict) else None)
-                        user_msg_template = _first_text_from_content(content)
-                        if user_msg_template:
+                        rendered_prompt = _first_text_from_content(content)
+                        if rendered_prompt:
                            break
 
-                if not user_msg_template:
-                    user_msg_template = "You are a helpful assistant. Please operate on the following text:\n\n{text}"
-
-                rendered_prompt = user_msg_template.format(text=user_input)
+                if not rendered_prompt:
+                    rendered_prompt = f"You are a helpful assistant. Please operate on the following text:\n\n{user_input}"
 
                 print(f"{BLUE}Calling Ollama with user content: {rendered_prompt!r}{RESET}")
                 result = await call_ollama(
