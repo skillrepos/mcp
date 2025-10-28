@@ -14,9 +14,10 @@ server = FastMCP()
 # These are used by clients to fetch structured prompts
 # ───────────────────────────────────────────────
 
-@server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
-def prompt_summarize(text: str = "{text}", context: dict | None = None):
-    print(f"{BLUE}[PROMPT REQUEST] summarize called with context: {context}{RESET}")
+@server.prompt("summarize")
+def prompt_summarize(text: str) -> dict:
+    """You are a helpful assistant. Summarize the following text in one sentence."""
+    print(f"{BLUE}[PROMPT REQUEST] summarize called with text: {text!r}{RESET}")
     result = {
         "role": "user",
         "content": (
@@ -27,9 +28,10 @@ def prompt_summarize(text: str = "{text}", context: dict | None = None):
     print(f"{GREEN}[PROMPT RETURN] summarize response: {result}{RESET}")
     return result
 
-@server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
-def prompt_reword(text: str = "{text}", context: dict | None = None):
-    print(f"{BLUE}[PROMPT REQUEST] reword called with context: {context}{RESET}")
+@server.prompt("reword")
+def prompt_reword(text: str) -> dict:
+    """You are a helpful assistant. Reword the following text using clearer and simpler language."""
+    print(f"{BLUE}[PROMPT REQUEST] reword called with text: {text!r}{RESET}")
     result = {
         "role": "user",
         "content": (
@@ -40,9 +42,10 @@ def prompt_reword(text: str = "{text}", context: dict | None = None):
     print(f"{GREEN}[PROMPT RETURN] reword response: {result}{RESET}")
     return result
 
-@server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
-def prompt_expand(text: str = "{text}", context: dict | None = None):
-    print(f"{BLUE}[PROMPT REQUEST] expand called with context: {context}{RESET}")
+@server.prompt("expand")
+def prompt_expand(text: str) -> dict:
+    """You are a helpful assistant. Expand on the following idea with additional detail and explanation."""
+    print(f"{BLUE}[PROMPT REQUEST] expand called with text: {text!r}{RESET}")
     result = {
         "role": "user",
         "content": (
@@ -94,4 +97,5 @@ def model_name():
 if __name__ == "__main__":
     print(f"{BLUE}Starting FastMCP server on streamable HTTP...{RESET}")
     server.run(transport="streamable-http")
+
 
