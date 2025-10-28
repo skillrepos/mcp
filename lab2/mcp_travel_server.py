@@ -71,9 +71,9 @@ def major_cities() -> dict:
 # 4)  Prompt
 # ──────────────────────────────────────────────────────────────
 @server.prompt("recommend_sightseeing")
-def recommend_sightseeing() -> str:
-    """You are a travel guide. List the top 3 attractions in {city}, one per line."""
-    return "You are a travel guide. List the top 3 attractions in {city}, one per line."
+def recommend_sightseeing(city: str) -> str:
+    """You are a travel guide. List the top 3 attractions in the given city, one per line."""
+    return f"You are a travel guide. List the top 3 attractions in {city}, one per line."
 
 # ──────────────────────────────────────────────────────────────
 # 5)  Run  (Streamable-HTTP ⇒ plain JSON when Accept: application/json)
