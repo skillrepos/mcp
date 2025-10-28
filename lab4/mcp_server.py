@@ -15,13 +15,13 @@ server = FastMCP()
 # ───────────────────────────────────────────────
 
 @server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
-def prompt_summarize(**context):
+def prompt_summarize(text: str = "{text}", context: dict | None = None):
 
 @server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
-def prompt_reword(**context):
+def prompt_reword(text: str = "{text}", context: dict | None = None):
 
 @server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
-def prompt_expand(**context):
+def prompt_expand(text: str = "{text}", context: dict | None = None):
 
 # ───────────────────────────────────────────────
 # Tool handlers – used to expose tool names to the client
