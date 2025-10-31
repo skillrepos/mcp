@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 """
 Simple MCP Explorer - Interactive web-based client for exploring MCP servers
 """
@@ -177,7 +176,13 @@ async def index_handler(request):
 
     <div class="section">
         <h2>Connection</h2>
-        <button onclick="connect()">Connect to MCP Server</button>
+        <div style="margin-bottom: 15px;">
+            <label for="server-url" style="font-weight: bold; display: block; margin-bottom: 5px;">MCP Server URL:</label>
+            <input type="text" id="server-url" placeholder="http://localhost:8000/mcp"
+                   style="width: 70%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+            <button onclick="connect()">Connect</button>
+        </div>
+        <div id="current-server" style="color: #666; font-size: 14px; margin-top: 10px;"></div>
         <span id="connect-loading" class="loading" style="display:none;">Connecting...</span>
     </div>
 
@@ -190,7 +195,6 @@ async def index_handler(request):
     <div id="prompts" class="tab-content active">
         <div class="section">
             <h2>Prompts <span class="badge" id="prompts-count">0</span></h2>
-            <button onclick="listPrompts()">List Prompts</button>
             <div id="prompts-list"></div>
         </div>
     </div>
@@ -198,7 +202,6 @@ async def index_handler(request):
     <div id="tools" class="tab-content">
         <div class="section">
             <h2>Tools <span class="badge" id="tools-count">0</span></h2>
-            <button onclick="listTools()">List Tools</button>
             <div id="tools-list"></div>
         </div>
     </div>
@@ -206,7 +209,6 @@ async def index_handler(request):
     <div id="resources" class="tab-content">
         <div class="section">
             <h2>Resources <span class="badge" id="resources-count">0</span></h2>
-            <button onclick="listResources()">List Resources</button>
             <div id="resources-list"></div>
         </div>
     </div>
@@ -226,16 +228,29 @@ async def index_handler(request):
 
         async function connect() {
             const loading = document.getElementById('connect-loading');
+            const serverUrlInput = document.getElementById('server-url');
+            const serverUrl = serverUrlInput.value.trim();
+
+            if (!serverUrl) {
+                alert('Please enter a server URL');
+                return;
+            }
+
             loading.style.display = 'inline';
 
             try {
-                const response = await fetch('/api/connect', { method: 'POST' });
+                const response = await fetch('/api/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ serverUrl: serverUrl })
+                });
                 const data = await response.json();
 
                 if (data.success) {
                     sessionId = data.sessionId;
                     document.getElementById('status-text').textContent = '✅ Connected';
                     document.getElementById('status-text').style.color = '#4caf50';
+                    document.getElementById('current-server').textContent = `Connected to: ${serverUrl}`;
 
                     // Auto-load all lists
                     await listPrompts();
@@ -243,9 +258,13 @@ async def index_handler(request):
                     await listResources();
                 } else {
                     alert('Failed to connect: ' + data.error);
+                    document.getElementById('status-text').textContent = '❌ Connection failed';
+                    document.getElementById('status-text').style.color = '#f44336';
                 }
             } catch (error) {
                 alert('Error connecting: ' + error);
+                document.getElementById('status-text').textContent = '❌ Connection failed';
+                document.getElementById('status-text').style.color = '#f44336';
             } finally {
                 loading.style.display = 'none';
             }
@@ -547,8 +566,19 @@ async def index_handler(request):
             }
         }
 
-        // Auto-connect on page load
-        window.onload = () => connect();
+        // Set default server URL from backend and auto-connect
+        window.onload = async () => {
+            try {
+                const response = await fetch('/api/server-url');
+                const data = await response.json();
+                if (data.serverUrl) {
+                    document.getElementById('server-url').value = data.serverUrl;
+                    connect();
+                }
+            } catch (error) {
+                console.error('Failed to get default server URL:', error);
+            }
+        };
     </script>
 </body>
 </html>
@@ -585,12 +615,20 @@ def get_headers_with_session():
 
 async def connect_handler(request):
     """Connect to the MCP server"""
-    global MCP_SESSION_ID
+    global MCP_SESSION_ID, MCP_SERVER_URL
 
     try:
         import uuid
 
-        server_url = MCP_SERVER_URL
+        # Get server URL from request body if provided
+        data = await request.json()
+        new_server_url = data.get('serverUrl')
+
+        if new_server_url:
+            # Update the global server URL
+            MCP_SERVER_URL = new_server_url
+            # Reset session ID for new server
+            MCP_SESSION_ID = None
 
         # Initialize connection
         init_request = {
@@ -848,6 +886,11 @@ async def read_resource_handler(request):
         return web.json_response({'success': False, 'error': str(e)})
 
 
+async def get_server_url_handler(request):
+    """Get the current MCP server URL"""
+    return web.json_response({'serverUrl': MCP_SERVER_URL})
+
+
 def create_app(server_url):
     """Create the web application"""
     global MCP_SERVER_URL
@@ -857,6 +900,7 @@ def create_app(server_url):
 
     # Routes
     app.router.add_get('/', index_handler)
+    app.router.add_get('/api/server-url', get_server_url_handler)
     app.router.add_post('/api/connect', connect_handler)
     app.router.add_get('/api/prompts/list', list_prompts_handler)
     app.router.add_get('/api/tools/list', list_tools_handler)
@@ -882,13 +926,11 @@ if __name__ == '__main__':
     app = create_app(server_url)
 
     print(f"🚀 MCP Explorer starting on http://localhost:{port}")
-    print(f"📡 Connecting to MCP server: {server_url}")
+    print(f"📡 Default MCP server: {server_url}")
     print(f"🌐 Open http://localhost:{port} in your browser")
+    print(f"💡 You can connect to different servers through the UI")
 
     web.run_app(app, host='0.0.0.0', port=port)
-
-
-
 
 
 
