@@ -9,20 +9,12 @@
     "storage": "32gb"
   },
 
-  "forwardPorts": [8000, 6274, 6277],
+  "forwardPorts": [8000],
   "portsAttributes": {
     "8000": {
       "label": "MCP Server",
       "visibility": "public"
-    },
-    "6474": {
-      "label": "MCP Inspector Interface",
-      "visibility": "public"
-    },
-    "6477": {
-      "label": "MCP Inspector proxy",
-      "visibility": "public"
-      }
+    }
   },
 
   // Dev Container Features
@@ -53,7 +45,10 @@
       },
       "extensions": [
         "mathematic.vscode-pdf"
-      ]
+       ]
     }
-  }
+  },
+  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
+  "postStartCommand" : "nohup bash -c 'ollama serve &'"
 }
+
