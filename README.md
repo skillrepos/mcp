@@ -25,7 +25,14 @@ Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/b
 
 ![Creating new codespace from button](./images/mcp1.png?raw=true "Creating new codespace from button")
 
-This will run for a few minutes while it gets the virtual environment ready. You'll then need to run a setup script to finalize the installation.
+This will run for a few minutes while it gets the virtual environment ready. When the main portion is done, it will still need to do some post-processing. That will look like this:
+
+![Post-processing](./images/mcp117.png?raw=true "post-processing")
+
+It will be done when you see output similar to this in the terminal.
+
+![Ready](./images/mcp116.png?raw=true "ready")
+
 
 <br><br>
 
