@@ -27,8 +27,6 @@
 
   // Dev Container Features
   "features": {
-    "ghcr.io/devcontainers/features/docker-from-docker:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/python:1": {},
     "node": {
       "version": "lts",
@@ -41,7 +39,7 @@
     "vscode": {
       "settings": {
         "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/py_env/bin/python",
         "github.copilot.enable": {
           "*": false,
           "plaintext": false,
@@ -54,8 +52,7 @@
         }
       },
       "extensions": [
-        "mathematic.vscode-pdf",
-        "vstirbu.vscode-mermaid-preview"
+        "mathematic.vscode-pdf"
       ]
     }
   }
