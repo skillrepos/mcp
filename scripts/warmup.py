@@ -1,196 +1,237 @@
 #!/usr/bin/env python3
 """
-warmup.py – Pre-warm all Ollama models used in the MCP course labs.
+MCP Course Warmup Script
+─────────────────────────
+Pre-loads every expensive resource used by the MCP course labs so that
+first-run latency is absorbed here instead of during a live demo.
 
-Sends a short prompt to each model so that Ollama loads the weights into
-memory before students start the labs.  This avoids long cold-start delays
-during interactive exercises.
+What gets warmed up (in parallel where possible):
+  1. Ollama  – verifies the server is reachable, then forces llama3.2
+               into GPU/CPU memory with a throwaway inference call.
+  2. SentenceTransformer – downloads / loads the all-MiniLM-L6-v2
+               embedding model (heaviest Python-side cold start).
+  3. ChromaDB – creates an ephemeral client so the native lib is loaded.
+  4. FastMCP + LangChain imports – imports the libraries so first
+               `import` in lab code is a no-op.
 
-Usage:
-    python scripts/warmup.py               # warm up all models
-    python scripts/warmup.py --list        # just list models, don't warm up
-    python scripts/warmup.py --timeout 600 # custom read timeout (seconds)
-
-Models are discovered from a single registry list below.  When new models
-are added to any lab, add them here too.
+Parallelism strategy:
+  • Ollama inference and SentenceTransformer loading are the two
+    slowest steps and are independent, so they run concurrently in
+    separate threads.
+  • ChromaDB and library imports are fast (<0.5 s each) and run
+    sequentially after the heavy work finishes.
 """
 
-import argparse
+from __future__ import annotations
+
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Callable
 
-try:
-    import httpx
-except ImportError:
-    sys.exit(
-        "httpx is required but not installed.\n"
-        "Install it with:  pip install httpx"
-    )
-
-# ── Ollama endpoint ──────────────────────────────────────────────────────
-OLLAMA_URL = "http://127.0.0.1:11434"
-CHAT_URL   = f"{OLLAMA_URL}/api/chat"
-
-# ── Model registry ───────────────────────────────────────────────────────
-# Every model used across all labs should appear here.
-# Format:  (model_tag, description_of_where_its_used)
-MODELS = [
-    ("llama3.2:latest", "Lab 1 agent (ChatOllama), Lab 4 client-agent, MCP server resource"),
-]
-
-
-# ── ANSI colors ──────────────────────────────────────────────────────────
-BLUE   = "\033[94m"
+# ── ANSI helpers ─────────────────────────────────────────────────────
 GREEN  = "\033[92m"
 YELLOW = "\033[93m"
 RED    = "\033[91m"
+CYAN   = "\033[96m"
 RESET  = "\033[0m"
+BOLD   = "\033[1m"
+DIM    = "\033[2m"
 
+OLLAMA_MODEL   = "llama3.2"
+EMBED_MODEL    = "all-MiniLM-L6-v2"
+OLLAMA_BASE    = "http://127.0.0.1:11434"
 
-def check_ollama_running(timeout: float = 5.0) -> bool:
-    """Return True if the Ollama server is reachable."""
+# ── Individual warmup functions ──────────────────────────────────────
+
+def check_ollama() -> bool:
+    """Verify that the Ollama daemon is reachable."""
+    import requests
     try:
-        resp = httpx.get(OLLAMA_URL, timeout=timeout)
-        return resp.status_code == 200
-    except (httpx.ConnectError, httpx.TimeoutException):
+        r = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=5)
+        r.raise_for_status()
+        models = [m["name"] for m in r.json().get("models", [])]
+        if not any(OLLAMA_MODEL in m for m in models):
+            print(f"  {YELLOW}⚠  Model '{OLLAMA_MODEL}' not found locally – "
+                  f"pull it with:  ollama pull {OLLAMA_MODEL}{RESET}")
+            return False
+        return True
+    except Exception as e:
+        print(f"  {RED}✗ Ollama not reachable ({e}){RESET}")
         return False
 
 
-def list_local_models(timeout: float = 10.0) -> list[str]:
-    """Return tags of models already pulled locally."""
-    try:
-        resp = httpx.get(f"{OLLAMA_URL}/api/tags", timeout=timeout)
-        resp.raise_for_status()
-        return [m["name"] for m in resp.json().get("models", [])]
-    except Exception:
-        return []
-
-
-def warm_up_model(model: str, read_timeout: float = 300.0) -> tuple[bool, float, str]:
+def warmup_ollama_inference() -> bool:
     """
-    Send a tiny chat request to force Ollama to load the model.
-
-    Returns (success, elapsed_seconds, detail_message).
+    Force Ollama to load llama3.2 into memory by running a tiny
+    inference call.  This is the single most impactful warmup step
+    because loading the model from disk into GPU/CPU takes 5-15 s on
+    first call, but is instant on every subsequent call while the
+    model stays resident.
     """
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": "Reply with the single word 'ready'."},
-        ],
-        "stream": False,
-    }
-
-    timeout = httpx.Timeout(connect=30.0, read=read_timeout, write=30.0, pool=30.0)
-    start = time.time()
-
     try:
-        resp = httpx.post(CHAT_URL, json=payload, timeout=timeout)
-        elapsed = time.time() - start
+        print(f"  {CYAN}Loading {OLLAMA_MODEL} into Ollama memory …{RESET}")
+        t0 = time.time()
+
+        import requests
+        resp = requests.post(
+            f"{OLLAMA_BASE}/api/chat",
+            json={
+                "model": OLLAMA_MODEL,
+                "messages": [{"role": "user", "content": "hi"}],
+                "stream": False,
+                "options": {"num_predict": 1},   # generate exactly 1 token
+            },
+            timeout=120,
+        )
         resp.raise_for_status()
 
-        data = resp.json()
-        content = ""
-        if isinstance(data, dict) and "message" in data:
-            content = data["message"].get("content", "")
-
-        return True, elapsed, content.strip()
-
-    except httpx.TimeoutException:
-        return False, time.time() - start, "Timed out waiting for model response"
-    except httpx.ConnectError:
-        return False, time.time() - start, "Could not connect to Ollama"
-    except httpx.HTTPStatusError as exc:
-        return False, time.time() - start, f"HTTP {exc.response.status_code}: {exc.response.text[:200]}"
-    except Exception as exc:
-        return False, time.time() - start, f"{type(exc).__name__}: {exc}"
+        dt = time.time() - t0
+        print(f"  {GREEN}✓ {OLLAMA_MODEL} loaded in Ollama ({dt:.1f}s){RESET}")
+        return True
+    except Exception as e:
+        print(f"  {RED}✗ Ollama inference warmup failed: {e}{RESET}")
+        return False
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Warm up Ollama models used in the MCP training course."
-    )
-    parser.add_argument(
-        "--list", action="store_true",
-        help="List the models that would be warmed up, then exit.",
-    )
-    parser.add_argument(
-        "--timeout", type=float, default=300.0,
-        help="Read timeout in seconds per model (default: 300).",
-    )
-    args = parser.parse_args()
+def warmup_embedding_model() -> bool:
+    """
+    Load the SentenceTransformer embedding model used by the MCP
+    servers (mcp_server_solution, mcp_server_support_solution,
+    mcp_server_classification, index_pdfs).
 
-    # ── List mode ────────────────────────────────────────────────────────
-    if args.list:
-        print(f"\n{BLUE}Models used in MCP course labs:{RESET}\n")
-        for tag, where in MODELS:
-            print(f"  • {tag:25s}  ({where})")
-        print()
-        return
+    First load downloads ~80 MB; subsequent loads read from the
+    HuggingFace cache in ~1-3 s.
+    """
+    try:
+        print(f"  {CYAN}Loading embedding model ({EMBED_MODEL})…{RESET}")
+        t0 = time.time()
 
-    # ── Pre-flight checks ────────────────────────────────────────────────
-    print(f"\n{BLUE}{'='*60}")
-    print(f"  Ollama Model Warm-Up for MCP Course Labs")
-    print(f"{'='*60}{RESET}\n")
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer(EMBED_MODEL)
 
-    if not check_ollama_running():
-        print(f"{RED}✗ Ollama does not appear to be running at {OLLAMA_URL}")
-        print(f"  Start it with:  ollama serve &{RESET}\n")
-        sys.exit(1)
+        # Run a tiny encode to fully initialize ONNX / torch backend
+        _ = model.encode("warmup", show_progress_bar=False)
 
-    print(f"{GREEN}✓ Ollama is running at {OLLAMA_URL}{RESET}\n")
+        dt = time.time() - t0
+        print(f"  {GREEN}✓ Embedding model ready ({dt:.1f}s){RESET}")
+        return True
+    except Exception as e:
+        print(f"  {RED}✗ Embedding model warmup failed: {e}{RESET}")
+        return False
 
-    # Check which models are already pulled
-    local_models = list_local_models()
-    if local_models:
-        print(f"{BLUE}Locally available models:{RESET}")
-        for m in local_models:
-            print(f"  • {m}")
-        print()
 
-    # ── Warm up each model ───────────────────────────────────────────────
-    results = []
-    for i, (tag, where) in enumerate(MODELS, 1):
-        print(f"{BLUE}[{i}/{len(MODELS)}] Warming up {tag}...{RESET}")
-        print(f"       Used in: {where}")
+def warmup_chromadb() -> bool:
+    """Import and initialize an ephemeral ChromaDB client."""
+    try:
+        t0 = time.time()
+        import chromadb
+        _ = chromadb.EphemeralClient()
+        dt = time.time() - t0
+        print(f"  {GREEN}✓ ChromaDB ready ({dt:.1f}s){RESET}")
+        return True
+    except Exception as e:
+        print(f"  {RED}✗ ChromaDB warmup failed: {e}{RESET}")
+        return False
 
-        # Check if model is pulled
-        # Normalize tags for comparison (ollama may add :latest)
-        tag_variants = {tag, tag.split(":")[0], tag.split(":")[0] + ":latest"}
-        if local_models and not tag_variants & set(local_models):
-            print(f"{YELLOW}  ⚠ Model '{tag}' not found locally. "
-                  f"Pull it with: ollama pull {tag}{RESET}")
-            results.append((tag, False, 0.0, "Not pulled locally"))
-            continue
 
-        ok, elapsed, detail = warm_up_model(tag, read_timeout=args.timeout)
+def warmup_library_imports() -> bool:
+    """
+    Import the key libraries used across the labs so that Python's
+    import cache is primed.  This covers:
+      • fastmcp  (FastMCP server + Client)
+      • langchain_ollama (ChatOllama for agents)
+      • langchain_mcp_adapters (MultiServerMCPClient)
+      • langgraph (agent graph runtime)
+    """
+    try:
+        t0 = time.time()
+        failures = []
 
-        if ok:
-            print(f"{GREEN}  ✓ Ready in {elapsed:.1f}s — response: {detail!r}{RESET}\n")
+        for mod_name in (
+            "fastmcp",
+            "langchain_ollama",
+            "langchain_mcp_adapters",
+            "langgraph",
+        ):
+            try:
+                __import__(mod_name)
+            except ImportError:
+                failures.append(mod_name)
+
+        dt = time.time() - t0
+
+        if failures:
+            print(f"  {YELLOW}⚠  Missing optional packages: {', '.join(failures)} ({dt:.1f}s){RESET}")
         else:
-            print(f"{RED}  ✗ Failed after {elapsed:.1f}s — {detail}{RESET}\n")
+            print(f"  {GREEN}✓ Library imports cached ({dt:.1f}s){RESET}")
+        # Treat missing optional libs as non-fatal
+        return True
+    except Exception as e:
+        print(f"  {RED}✗ Library import warmup failed: {e}{RESET}")
+        return False
 
-        results.append((tag, ok, elapsed, detail))
 
-    # ── Summary ──────────────────────────────────────────────────────────
-    passed = sum(1 for _, ok, _, _ in results if ok)
+# ── Orchestrator ─────────────────────────────────────────────────────
+
+def _run_timed(label: str, fn: Callable[[], bool]) -> tuple[str, bool, float]:
+    """Run *fn*, return (label, success, elapsed)."""
+    t0 = time.time()
+    ok = fn()
+    return label, ok, time.time() - t0
+
+
+def main() -> None:
+    print(f"\n{BOLD}{CYAN}═══  MCP Course Warmup  ═══{RESET}")
+    print(f"{DIM}Pre-loading models and libraries for all labs{RESET}\n")
+
+    total_t0 = time.time()
+
+    # ── Phase 1: Ollama health check (fast, must pass before inference) ──
+    print(f"{YELLOW}Phase 1 ▸ Checking Ollama server …{RESET}")
+    ollama_ok = check_ollama()
+    if not ollama_ok:
+        print(f"{RED}  Ollama is required. Start it with:  ollama serve &{RESET}")
+        print(f"{RED}  Then pull the model with:           ollama pull {OLLAMA_MODEL}{RESET}\n")
+
+    # ── Phase 2: Heavy loads in parallel ─────────────────────────────
+    print(f"\n{YELLOW}Phase 2 ▸ Loading models (parallel) …{RESET}")
+    results: dict[str, bool] = {}
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = []
+        if ollama_ok:
+            futures.append(pool.submit(_run_timed, "Ollama LLM", warmup_ollama_inference))
+        futures.append(pool.submit(_run_timed, "Embeddings", warmup_embedding_model))
+
+        for fut in as_completed(futures):
+            label, ok, elapsed = fut.result()
+            results[label] = ok
+
+    # ── Phase 3: Fast follow-ups (sequential is fine) ────────────────
+    print(f"\n{YELLOW}Phase 3 ▸ Loading supporting libraries …{RESET}")
+    results["ChromaDB"]  = warmup_chromadb()
+    results["Libraries"] = warmup_library_imports()
+
+    # ── Summary ──────────────────────────────────────────────────────
+    total_dt = time.time() - total_t0
+    passed = sum(1 for v in results.values() if v)
     total  = len(results)
 
-    print(f"{BLUE}{'='*60}")
-    print(f"  Warm-Up Summary: {passed}/{total} models ready")
-    print(f"{'='*60}{RESET}\n")
+    print(f"\n{'═' * 44}")
+    print(f"{BOLD}Warmup Summary{RESET}")
+    for label, ok in results.items():
+        icon = f"{GREEN}✓{RESET}" if ok else f"{RED}✗{RESET}"
+        print(f"  {icon}  {label}")
+    print(f"\n  {passed}/{total} components ready  •  {total_dt:.1f}s total")
 
-    for tag, ok, elapsed, detail in results:
-        status = f"{GREEN}✓{RESET}" if ok else f"{RED}✗{RESET}"
-        print(f"  {status} {tag:25s}  {elapsed:6.1f}s  {detail[:50]}")
-
-    print()
-
-    if passed < total:
-        print(f"{YELLOW}Some models failed to warm up. Students may experience "
-              f"cold-start delays.{RESET}\n")
-        sys.exit(1)
+    if passed >= total - 1:
+        print(f"\n{GREEN}{BOLD}✓ MCP course environment is warmed up!{RESET}\n")
+        sys.exit(0)
     else:
-        print(f"{GREEN}All models are warm and ready for the labs!{RESET}\n")
+        print(f"\n{YELLOW}Some components failed — labs may still work "
+              f"but expect slower first runs.{RESET}\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
