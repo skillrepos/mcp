@@ -73,14 +73,25 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 ![Splitting terminal](./images/mcp96.png?raw=true "Splitting terminal")
 <br><br>
 
-7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. We'll add code for this in the next step.
+7. We have a small program that uses a MCP client to connect to a server and display information about available tools from the server. Let's use it to see what functions this MCP server provides. It assumes localhost and takes a port and transport as arguments. Run it with the command below:
+
+```
+python ../tools/discover_tools.py  8931 sse
+```
+
+![Discovering tools](./images/aia-2-38.png?raw=true "Discovering tools")
+
+<br><br>
+
+
+8. Next, let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py*. We'll add code for this in the next step.
 
 ```
 code mcp_client.py
 ```
 </br></br>
 
-8. Now paste the code below into the file. Make sure to save your changes when done.
+9. Now paste the code below into the file. Make sure to save your changes when done.
 
 ```
 import asyncio
@@ -88,7 +99,7 @@ from fastmcp import Client
 
 # latest version of FastMCP is async, so we need the async block
 async def main():
-    # The string URL is enough – FastMCP picks Streamable HTTP/SSE transport
+    # The string URL is enough – FastMCP auto-detects the transport
     async with Client("http://127.0.0.1:8931/sse") as client:
         # Discover available tools
         tools = await client.list_tools()
@@ -103,7 +114,7 @@ if __name__ == "__main__":
 ```
 <br><br>
 
-9. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. In the second terminal, run the client with the command below and you should see output similar to the screenshot below. 
+10. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. In the second terminal, run the client with the command below and you should see output similar to the screenshot below. 
 
 ```
 python mcp_client.py
@@ -112,7 +123,7 @@ python mcp_client.py
 ![Running client](./images/mcp7-new.png?raw=true "Running client")
 </br></br>
 
-10. Finally, let's build out a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt. We'll assemble the agent code again using the *diff and merge* approach. Run the command below and you can scroll down through the differences and merge them in to complete the code. When done, just click the "X" in the tab at the top to close this view.
+11. Finally, let's build out a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt. We'll assemble the agent code again using the *diff and merge* approach. Run the command below and you can scroll down through the differences and merge them in to complete the code. When done, just click the "X" in the tab at the top to close this view.
 
 ```
 code -d ../extra/agent_mcp.txt agent_mcp.py
@@ -121,7 +132,7 @@ code -d ../extra/agent_mcp.txt agent_mcp.py
 ![Diff view](./images/ae60.png?raw=true "Diff view")
 </br></br>
 
-11. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
+12. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
 
 ```
 python agent_mcp.py
@@ -130,10 +141,10 @@ python agent_mcp.py
 ![Running agent](./images/mcp81.png?raw=true "Running agent")
 </br></br>
 
-12. You can stop the MCP server in the original terminal via CTRL-C.
+You can stop the MCP server in the original terminal via CTRL-C.
 
 <p align="center">
-**[END OF LAB]**
+<b>[END OF LAB]</b>
 </p>
 </br></br></br>
 
@@ -175,9 +186,9 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 <br><br>
 
 
-4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *List Prompts*.)
+4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *Prompts*.)
 
-![Resources](./images/mcp110.png?raw=true "Resources") 
+![Resources](./images/aia2b4.png?raw=true "Resources") 
 <br><br>
 
 
@@ -190,25 +201,25 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ![Prompt](./images/mcp104.png?raw=true "Prompt") 
 <br><br>
 
-6. Click *OK* and you'll see the prompt result (with your argument) displayed.
+6. Click *OK* and you'll see the prompt result (with your argument) displayed. Click OK when done.
 
 ![Completed prompt](./images/mcp105.png?raw=true "Completed prompt") 
 <br><br>
 
 7. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
 
-![Resources](./images/mcp106.png?raw=true "Resources") 
+![Resources](./images/aia2b5.png?raw=true "Resources") 
 <br><br>
 
 8. Finally, let's take a look at the tools available from the server. Click on *Tools*. You'll see two tools defined - one to calculate distance and one to convert currency.
 
-![Tools](./images/mcp112.png?raw=true "Tools") 
+![Tools](./images/aia2b6.png?raw=true "Tools") 
 <br><br>
 
 
 9. Let's try running the distance_between tool. Select the tool in the list. Underneath, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click *Execute to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
-![Running tool](./images/mcp113.png?raw=true "Running tool") 
+![Running tool](./images/aia2b7.png?raw=true "Running tool") 
 <br><br>
 
 10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the explorer running in it.
@@ -216,14 +227,14 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 <br><br>
 
 <p align="center">
-**[END OF LAB]**
+<b>[END OF LAB]</b>
 </p>
 </br></br></br>
 
 
 **Lab 3 - Security and Authorization in MCP**
 
-**Purpose: In this lab, we'll demonstrate how to introduce an external authorization server and work with it to verify the difference between authorized and unauthorized requests when calling MCP tools.
+**Purpose: This lab shows how to add an external authorization server and verify how authorized and unauthorized MCP requests are handled.**
 
 1. Change into the *lab3* directory in the terminal.
    
@@ -256,7 +267,7 @@ python auth_server.py
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 <br><br>
 
-4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (** Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
+4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (**Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
 
 ```
 export TOKEN=$(
@@ -285,7 +296,7 @@ python secure_server.py
 <br><br>
 
 
-6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. (When you run this you will see a "500 Internal Server Error" response. But if you switch back to the terminal where the server is running, you'll see that it's really a "401" error. It shows as a 500 error because the 401 is "swallowed" before it gets back to the client.
+6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. When you run this you will see a "401 Unauthorized" response with a detailed error message noting "Missing token".
 
 ```
 cd lab3 
@@ -299,7 +310,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 <br><br>
 
 
-7. Back in the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
+7. In the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
 
 ```
 python secure_client.py
@@ -331,7 +342,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
 ```
 </br></br>
-Then look back at the terminal with the secure server running and you should see an error message.
+Then look back at the body of the response from running that, you should see an error message.
 </br></br>
 
 ![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
@@ -341,7 +352,7 @@ Then look back at the terminal with the secure server running and you should see
 10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
 <p align="center">
-**[END OF LAB]**
+<b>[END OF LAB]</b>
 </p>
 </br></br></br>
 
