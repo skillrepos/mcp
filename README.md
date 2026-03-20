@@ -29,29 +29,17 @@ This will run for a few minutes while it gets the virtual environment ready. You
 
 <br><br>
 
-**4. Run setup script to finalize the installation.**
-
-In the codespace *TERMINAL* panel at the bottom, run the following command.
+**4. Run the warmup script in the TERMINAL to make the LLM interactions faster.**
 
 ```
-scripts/setup.sh
+python scripts/warmup.py &
 ```
 
-This will setup the python environment, install needed python pieces, install Ollama, and then download the model we will use. This will take several more minutes to run. 
-
-![Final prep](./images/mcp89.png?raw=true "Final prep")
+![warmup](./images/aia2b3.png?raw=true "warmup")
 
 <br><br>
 
-**5. Open a new terminal.**
-
-When the script is completed (after a long run), you can just click on the "+" sign on the far right to get a new terminal with the provided Python environment to work in.
-
-![New terminal](./images/atoa3.png?raw=true "New terminal")
-
-<br><br>
-
-**6. Open the labs file.**
+**5. Open the labs file.**
 
 You can open the [labs.md](./labs.md) file either in your codespace or in a separate browswer tab/instance.**
 
