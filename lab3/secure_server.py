@@ -1,4 +1,5 @@
-# secure_server.py  – FastMCP ≥ 2.3
+# secure_server.py  – FastMCP ≥ 3.0
+# Updated 2026-03-20: Updated version reference to FastMCP 3.x
 # Provides a single "add" tool protected by bearer-token auth (JWT).
 
 import warnings

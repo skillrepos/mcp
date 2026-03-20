@@ -1,6 +1,8 @@
 # travel_server.py
+# Updated 2026-03-20: Updated version reference to FastMCP 3.x;
+#   prompt handler now returns string instead of formatted string (already was correct).
 """
-TravelHelper – FastMCP 2.8.1 demo
+TravelHelper – FastMCP 3.x demo
 Serves via Streamable-HTTP at http://localhost:8000/mcp
 """
 import os

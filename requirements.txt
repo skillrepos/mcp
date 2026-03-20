@@ -1,18 +1,31 @@
-python-jose
+# Updated 2026-03-20: Bumped fastmcp to 3.x, removed duplicates,
+#   removed unnecessary 'typing' package, organized by usage.
+
+# --- Core MCP framework ---
+fastmcp>=3.0.0
 mcp>=1.22.0
 mcp[cli]>=1.22.0
-mcp[inspector]>=1.22.0
+
+# --- Web frameworks (used by auth_server, secure_server, travel_server) ---
 fastapi>=0.121.3
 uvicorn>=0.38.0
 pydantic>=2.12.4
-typing>=3.7.4.3
-mcp_server>=0.1.4
-crewai>=1.5.0
-fastmcp>=2.13.1
+
+# --- HTTP clients ---
+httpx
+requests
+aiohttp
+
+# --- Auth (JWT for lab3) ---
+python-jose>=3.5.0
+
+# --- LangChain + Ollama (used by agent labs) ---
 langchain_ollama>=1.0.0
 langchain>=1.2.6
 langgraph>=1.0.3
 langchain_mcp_adapters>=0.1.13
-python-jose>=3.5.0
+
+# --- Other tools (may be used in extended/optional labs) ---
+crewai>=1.5.0
 sentence-transformers>=5.1.2
 pymupdf>=1.26.6

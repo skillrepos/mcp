@@ -1,5 +1,7 @@
-# mcp_server.py – FastMCP 2.10.4-compatible server
-from mcp.server.fastmcp import FastMCP
+# mcp_server.py – FastMCP 3.x-compatible server
+# Updated 2026-03-20: Migrated from mcp.server.fastmcp to fastmcp 3.x;
+#   prompt handlers now return strings instead of dicts.
+from fastmcp import FastMCP
 
 # ANSI color codes
 BLUE = "\033[94m"
@@ -15,44 +17,35 @@ server = FastMCP()
 # ───────────────────────────────────────────────
 
 @server.prompt("summarize")
-def prompt_summarize(text: str) -> dict:
+def prompt_summarize(text: str) -> str:
     """You are a helpful assistant. Summarize the following text in one sentence."""
     print(f"{BLUE}[PROMPT REQUEST] summarize called with text: {text!r}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Summarize the following text in one sentence.\n\n"
-            f"{text}"
-        )
-    }
+    result = (
+        "You are a helpful assistant. Summarize the following text in one sentence.\n\n"
+        f"{text}"
+    )
     print(f"{GREEN}[PROMPT RETURN] summarize response: {result}{RESET}")
     return result
 
 @server.prompt("reword")
-def prompt_reword(text: str) -> dict:
+def prompt_reword(text: str) -> str:
     """You are a helpful assistant. Reword the following text using clearer and simpler language."""
     print(f"{BLUE}[PROMPT REQUEST] reword called with text: {text!r}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Reword the following text using clearer and simpler language.\n\n"
-            f"{text}"
-        )
-    }
+    result = (
+        "You are a helpful assistant. Reword the following text using clearer and simpler language.\n\n"
+        f"{text}"
+    )
     print(f"{GREEN}[PROMPT RETURN] reword response: {result}{RESET}")
     return result
 
 @server.prompt("expand")
-def prompt_expand(text: str) -> dict:
+def prompt_expand(text: str) -> str:
     """You are a helpful assistant. Expand on the following idea with additional detail and explanation."""
     print(f"{BLUE}[PROMPT REQUEST] expand called with text: {text!r}{RESET}")
-    result = {
-        "role": "user",
-        "content": (
-            "You are a helpful assistant. Expand on the following idea with additional detail and explanation.\n\n"
-            f"{text}"
-        )
-    }
+    result = (
+        "You are a helpful assistant. Expand on the following idea with additional detail and explanation.\n\n"
+        f"{text}"
+    )
     print(f"{GREEN}[PROMPT RETURN] expand response: {result}{RESET}")
     return result
 

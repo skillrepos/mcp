@@ -1,4 +1,6 @@
-# mcp_client_agent.py – FastMCP 2.11.x & Ollama, robust + timeouts + retries
+# mcp_client_agent.py – FastMCP 3.x & Ollama, robust + timeouts + retries
+# Updated 2026-03-20: Migrated to fastmcp 3.x; updated prompt result parsing
+#   for string returns (FastMCP 3.x prompts return strings, not dicts).
 import asyncio, json, typing
 import httpx
 
@@ -107,7 +109,9 @@ async def main():
 
             try:
 
-                # Extract a 'user' message template robustly across shapes
+                # Extract a 'user' message template robustly across shapes.
+                # In FastMCP 3.x, prompt handlers return strings which are
+                # wrapped as UserMessage with TextContent by the framework.
                 def _iter_messages(res):
                     msgs = getattr(res, "messages", None)
                     if msgs is None and isinstance(res, dict):

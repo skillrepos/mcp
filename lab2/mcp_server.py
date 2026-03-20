@@ -1,5 +1,6 @@
+# Updated 2026-03-20: Migrated from mcp.server.fastmcp to fastmcp 3.x
 import requests
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 mcp = FastMCP("WeatherService")
 

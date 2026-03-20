@@ -1,3 +1,5 @@
+# Updated 2026-03-20: Updated for FastMCP 3.x compatibility.
+#   Note: calculator-mcp (wrtnlabs) still uses SSE transport at /sse.
 import asyncio
 import re
 

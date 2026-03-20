@@ -1,5 +1,7 @@
-# mcp_server.py – FastMCP 2.10.4-compatible server
-from mcp.server.fastmcp import FastMCP
+# mcp_server.py – FastMCP 3.x-compatible server
+# Updated 2026-03-20: Migrated from mcp.server.fastmcp to fastmcp 3.x;
+#   prompt handlers now return strings instead of dicts.
+from fastmcp import FastMCP
 
 # ANSI color codes
 BLUE = "\033[94m"
@@ -10,18 +12,21 @@ RESET = "\033[0m"
 server = FastMCP()
 
 # ───────────────────────────────────────────────
-# Prompt handlers – return single message templates
+# Prompt handlers – return string templates
 # These are used by clients to fetch structured prompts
 # ───────────────────────────────────────────────
 
-@server.prompt("summarize", "You are a helpful assistant. Summarize the following text in one sentence.")
-def prompt_summarize(text: str = "{text}", context: dict | None = None):
+@server.prompt("summarize")
+def prompt_summarize(text: str) -> str:
+    """You are a helpful assistant. Summarize the following text in one sentence."""
 
-@server.prompt("reword", "You are a helpful assistant. Reword the following text using clearer and simpler language.")
-def prompt_reword(text: str = "{text}", context: dict | None = None):
+@server.prompt("reword")
+def prompt_reword(text: str) -> str:
+    """You are a helpful assistant. Reword the following text using clearer and simpler language."""
 
-@server.prompt("expand", "You are a helpful assistant. Expand on the following idea with additional detail and explanation.")
-def prompt_expand(text: str = "{text}", context: dict | None = None):
+@server.prompt("expand")
+def prompt_expand(text: str) -> str:
+    """You are a helpful assistant. Expand on the following idea with additional detail and explanation."""
 
 # ───────────────────────────────────────────────
 # Tool handlers – used to expose tool names to the client
