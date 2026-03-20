@@ -1,5 +1,3 @@
-# Updated 2026-03-20: Updated for FastMCP 3.x compatibility.
-#   Note: calculator-mcp (wrtnlabs) still uses SSE transport at /sse.
 import asyncio
 import re
 
@@ -189,3 +187,8 @@ async def main():
 
     print("\n=== FINAL NATURAL LANGUAGE ANSWER ===")
     print(final_text)
+
+
+if __name__ == "__main__":
+    # Standard pattern for running async Python code.
+    asyncio.run(main())
