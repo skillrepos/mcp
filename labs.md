@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 3.02 - 03/20/26
+## Revision 3.05 - 03/20/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -57,6 +57,9 @@ print("Result :", requests.get(url, timeout=10).text)
 ```
 python classic_calc.py
 ```
+
+![Running classic_calc.py](./images/mcp119.png?raw=true "Running classic_calc.py")
+
 <br><br>
 
 5. Now, let's see how we can use an MCP server to do this. There is an existing MCP server for simple calculator functions that we're going to be using in this lab. It is named *calculator-mcp* from *wrtnlabs*. (The code for it is in GitHub at https://github.com/wrtnlabs/calculator-mcp if you are interested.) Start a running instance of the server by using *npx* (a Node.js CLI). We'll start it running on port 8931. Run the command below and you should see output like the screenshot shown.
@@ -79,7 +82,7 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 python ../tools/discover_tools.py  8931 sse
 ```
 
-![Discovering tools](./images/aia-2-38.png?raw=true "Discovering tools")
+![Discovering tools](./images/mcp120.png?raw=true "Discovering tools")
 
 <br><br>
 
@@ -129,7 +132,7 @@ python mcp_client.py
 code -d ../extra/agent_mcp.txt agent_mcp.py
 ```
 
-![Diff view](./images/ae60.png?raw=true "Diff view")
+![Diff view](./images/mcp122.png?raw=true "Diff view")
 </br></br>
 
 12. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
