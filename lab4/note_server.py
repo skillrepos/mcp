@@ -1,5 +1,6 @@
 # note_server.py – FastMCP 3.x note-taking MCP server
 # Demonstrates: tools with state, static resources, resource templates, prompts
+import json
 from fastmcp import FastMCP
 
 server = FastMCP("NoteService")
