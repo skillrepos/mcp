@@ -300,20 +300,23 @@ async def index_handler(request):
                     if (prompts.length === 0) {
                         container.innerHTML = '<p>No prompts available</p>';
                     } else {
-                        container.innerHTML = prompts.map(prompt => `
+                        container.innerHTML = prompts.map(prompt => {
+                            const hasArgs = prompt.arguments && prompt.arguments.length > 0;
+                            return `
                             <div class="item">
                                 <h3>${prompt.name}</h3>
                                 ${prompt.description ? `<div class="item-description">${prompt.description}</div>` : ''}
-                                ${prompt.arguments ? `
+                                ${hasArgs ? `
                                     <div class="item-meta">
                                         Arguments: ${prompt.arguments.map(arg =>
                                             `${arg.name}${arg.required ? '*' : ''} (${arg.description || 'no description'})`
                                         ).join(', ')}
                                     </div>
                                 ` : ''}
-                                <button onclick="getPrompt('${prompt.name}')">Get Prompt</button>
+                                <button onclick="getPrompt('${prompt.name}', ${hasArgs})">Get Prompt</button>
+                                <div id="prompt-result-${prompt.name}"></div>
                             </div>
-                        `).join('');
+                        `}).join('');
                     }
                 } else {
                     container.innerHTML = `<div class="error">${data.error}</div>`;
@@ -510,47 +513,60 @@ async def index_handler(request):
             }
         }
 
-        async function getPrompt(promptName) {
-            const args = prompt('Enter arguments as JSON (or leave empty):', '{}');
-            if (args === null) return;
+        async function getPrompt(promptName, hasArgs) {
+            let parsedArgs = {};
+
+            if (hasArgs) {
+                const args = prompt('Enter arguments as JSON:', '{}');
+                if (args === null) return;
+                parsedArgs = JSON.parse(args);
+            }
+
+            const resultContainer = document.getElementById(`prompt-result-${promptName}`);
+            resultContainer.innerHTML = '<p>Loading prompt...</p>';
 
             try {
                 const response = await fetch('/api/prompts/get', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: promptName, arguments: JSON.parse(args) })
+                    body: JSON.stringify({ name: promptName, arguments: parsedArgs })
                 });
                 const data = await response.json();
 
                 if (data.success) {
-                    // Show the result in a more readable format
                     const result = data.result;
                     let displayText = '';
 
                     if (result.messages && Array.isArray(result.messages)) {
                         displayText = result.messages.map(msg => {
-                            if (msg.role) displayText += `[${msg.role}]\\n`;
+                            let part = '';
+                            if (msg.role) part += `[${msg.role}]\\n`;
                             if (msg.content) {
                                 if (typeof msg.content === 'string') {
-                                    displayText += msg.content;
+                                    part += msg.content;
                                 } else if (msg.content.text) {
-                                    displayText += msg.content.text;
+                                    part += msg.content.text;
                                 } else {
-                                    displayText += JSON.stringify(msg.content, null, 2);
+                                    part += JSON.stringify(msg.content, null, 2);
                                 }
                             }
-                            return displayText;
+                            return part;
                         }).join('\\n\\n');
                     } else {
                         displayText = JSON.stringify(result, null, 2);
                     }
 
-                    alert('Prompt result:\\n\\n' + displayText);
+                    resultContainer.innerHTML = `
+                        <div class="result">
+                            <strong>Prompt result:</strong>
+                            <pre>${displayText}</pre>
+                        </div>
+                    `;
                 } else {
-                    alert('Error: ' + JSON.stringify(data.error, null, 2));
+                    resultContainer.innerHTML = `<div class="error">${JSON.stringify(data.error, null, 2)}</div>`;
                 }
             } catch (error) {
-                alert('Error: ' + error);
+                resultContainer.innerHTML = `<div class="error">Error: ${error}</div>`;
             }
         }
 
@@ -1030,9 +1046,9 @@ if __name__ == '__main__':
 
     app = create_app(server_url)
 
-    print(f"🚀 MCP Explorer starting on http://localhost:{port}")
-    print(f"📡 Default MCP server: {server_url}")
-    print(f"🌐 Open http://localhost:{port} in your browser")
-    print(f"💡 You can connect to different servers through the UI")
+    print(f"MCP Explorer starting on http://localhost:{port}")
+    print(f"Default MCP server: {server_url}")
+    print(f"Open http://localhost:{port} in your browser")
+    print(f"You can connect to different servers through the UI")
 
     web.run_app(app, host='0.0.0.0', port=port)
