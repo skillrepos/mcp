@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 3.05 - 03/20/26
+## Revision 4.0 - 03/20/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -57,9 +57,6 @@ print("Result :", requests.get(url, timeout=10).text)
 ```
 python classic_calc.py
 ```
-
-![Running classic_calc.py](./images/mcp119.png?raw=true "Running classic_calc.py")
-
 <br><br>
 
 5. Now, let's see how we can use an MCP server to do this. There is an existing MCP server for simple calculator functions that we're going to be using in this lab. It is named *calculator-mcp* from *wrtnlabs*. (The code for it is in GitHub at https://github.com/wrtnlabs/calculator-mcp if you are interested.) Start a running instance of the server by using *npx* (a Node.js CLI). We'll start it running on port 8931. Run the command below and you should see output like the screenshot shown.
@@ -76,25 +73,14 @@ npx -y @wrtnlabs/calculator-mcp@latest --port 8931
 ![Splitting terminal](./images/mcp96.png?raw=true "Splitting terminal")
 <br><br>
 
-7. We have a small program that uses a MCP client to connect to a server and display information about available tools from the server. Let's use it to see what functions this MCP server provides. It assumes localhost and takes a port and transport as arguments. Run it with the command below:
-
-```
-python ../tools/discover_tools.py  8931 sse
-```
-
-![Discovering tools](./images/mcp120.png?raw=true "Discovering tools")
-
-<br><br>
-
-
-8. Next, let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py*. We'll add code for this in the next step.
+7. Let's see how we can create a minimal client to use the MCP server. Create a new file called *mpc_client.py* with the first command. We'll add code for this in the next step.
 
 ```
 code mcp_client.py
 ```
 </br></br>
 
-9. Now paste the code below into the file. Make sure to save your changes when done.
+8. Now paste the code below into the file. Make sure to save your changes when done.
 
 ```
 import asyncio
@@ -102,7 +88,7 @@ from fastmcp import Client
 
 # latest version of FastMCP is async, so we need the async block
 async def main():
-    # The string URL is enough – FastMCP auto-detects the transport
+    # The string URL is enough – FastMCP picks Streamable HTTP/SSE transport
     async with Client("http://127.0.0.1:8931/sse") as client:
         # Discover available tools
         tools = await client.list_tools()
@@ -117,7 +103,7 @@ if __name__ == "__main__":
 ```
 <br><br>
 
-10. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. In the second terminal, run the client with the command below and you should see output similar to the screenshot below. 
+9. Notice that within this code we didn't have to code in endpoint formats, juggle query strings, or handcraft JSON schemas. Also, the server advertises all tools dynamically. In the second terminal, run the client with the command below and you should see output similar to the screenshot below. 
 
 ```
 python mcp_client.py
@@ -126,16 +112,16 @@ python mcp_client.py
 ![Running client](./images/mcp7-new.png?raw=true "Running client")
 </br></br>
 
-11. Finally, let's build out a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt. We'll assemble the agent code again using the *diff and merge* approach. Run the command below and you can scroll down through the differences and merge them in to complete the code. When done, just click the "X" in the tab at the top to close this view.
+10. Finally, let's build out a simple agent implementation that uses tools from this server in conjunction with a local LLM to respond to a prompt. We'll assemble the agent code again using the *diff and merge* approach. Run the command below and you can scroll down through the differences and merge them in to complete the code. When done, just click the "X" in the tab at the top to close this view.
 
 ```
 code -d ../extra/agent_mcp.txt agent_mcp.py
 ```
 
-![Diff view](./images/mcp122.png?raw=true "Diff view")
+![Diff view](./images/ae60.png?raw=true "Diff view")
 </br></br>
 
-12. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
+11. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
 
 ```
 python agent_mcp.py
@@ -144,10 +130,10 @@ python agent_mcp.py
 ![Running agent](./images/mcp81.png?raw=true "Running agent")
 </br></br>
 
-You can stop the MCP server in the original terminal via CTRL-C.
+12. You can stop the MCP server in the original terminal via CTRL-C.
 
 <p align="center">
-<b>[END OF LAB]</b>
+**[END OF LAB]**
 </p>
 </br></br></br>
 
@@ -189,9 +175,9 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 <br><br>
 
 
-4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *Prompts*.)
+4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *List Prompts*.)
 
-![Resources](./images/aia2b4.png?raw=true "Resources") 
+![Resources](./images/mcp110.png?raw=true "Resources") 
 <br><br>
 
 
@@ -201,28 +187,28 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 {"city": "Paris"}
 ```
 
-![Prompt](./images/mcp123.png?raw=true "Prompt") 
+![Prompt](./images/mcp104.png?raw=true "Prompt") 
 <br><br>
 
-6. Click *OK* and you'll see the prompt result (with your argument) displayed. Click OK when done.
+6. Click *OK* and you'll see the prompt result (with your argument) displayed.
 
-![Completed prompt](./images/mcp124.png?raw=true "Completed prompt") 
+![Completed prompt](./images/mcp105.png?raw=true "Completed prompt") 
 <br><br>
 
 7. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
 
-![Resources](./images/aia2b5.png?raw=true "Resources") 
+![Resources](./images/mcp106.png?raw=true "Resources") 
 <br><br>
 
 8. Finally, let's take a look at the tools available from the server. Click on *Tools*. You'll see two tools defined - one to calculate distance and one to convert currency.
 
-![Tools](./images/aia2b6.png?raw=true "Tools") 
+![Tools](./images/mcp112.png?raw=true "Tools") 
 <br><br>
 
 
 9. Let's try running the distance_between tool. Select the tool in the list. Underneath, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click *Execute to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
-![Running tool](./images/aia2b7.png?raw=true "Running tool") 
+![Running tool](./images/mcp113.png?raw=true "Running tool") 
 <br><br>
 
 10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the explorer running in it.
@@ -230,14 +216,14 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 <br><br>
 
 <p align="center">
-<b>[END OF LAB]</b>
+**[END OF LAB]**
 </p>
 </br></br></br>
 
 
 **Lab 3 - Security and Authorization in MCP**
 
-**Purpose: This lab shows how to add an external authorization server and verify how authorized and unauthorized MCP requests are handled.**
+**Purpose: In this lab, we'll demonstrate how to introduce an external authorization server and work with it to verify the difference between authorized and unauthorized requests when calling MCP tools.
 
 1. Change into the *lab3* directory in the terminal.
    
@@ -270,7 +256,7 @@ python auth_server.py
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 <br><br>
 
-4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (**Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
+4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (** Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
 
 ```
 export TOKEN=$(
@@ -299,7 +285,7 @@ python secure_server.py
 <br><br>
 
 
-6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. When you run this you will see a "401 Unauthorized" response with a detailed error message noting "Missing token".
+6. Open another new terminal (you can use the "+" again) and run the curl below to demonstrate that requests with no tokens fail. (When you run this you will see a "500 Internal Server Error" response. But if you switch back to the terminal where the server is running, you'll see that it's really a "401" error. It shows as a 500 error because the 401 is "swallowed" before it gets back to the client.
 
 ```
 cd lab3 
@@ -309,11 +295,11 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":"bad","method":"list_tools","params":[]}'
 ```
 
-![401 error and switching terminals](./images/mcp125.png?raw=true "401 error and switching terminals") 
+![500 error and switching terminals](./images/mcp56.png?raw=true "500 error and switching terminals") 
 <br><br>
 
 
-7. In the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
+7. Back in the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
 
 ```
 python secure_client.py
@@ -345,194 +331,202 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":2,"method":"add","params":{"a":1,"b":1}}'
 ```
 </br></br>
-Then look back at the body of the response from running that, you should see an error message.
+Then look back at the terminal with the secure server running and you should see an error message.
 </br></br>
 
-![Invalid token](./images/mcp126.png?raw=true "Invalid token") 
+![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
 
 </br></br>
 
 10. When you're done, you can stop (CTRL+C) the running authorization server and the secure mcp server.
    
 <p align="center">
-<b>[END OF LAB]</b>
+**[END OF LAB]**
 </p>
 </br></br></br>
 
 
-**Lab 4 - Best Practices and Patterns for using MCP in Agents**
+**Lab 4 - Building and Composing MCP Servers**
 
-**Purpose: In this lab, we'll look at some best practices and patterns in implementing MCP in an agent.**
+**Purpose: In this lab, we'll build a real MCP server from scratch — with stateful tools, static and dynamic resources, and a prompt — then compose multiple servers behind a single gateway endpoint.**
 
-1. Change into the *lab4* directory in a terminal (and in any other terminals you use along the way).
-   
+1. Change into the *lab4* directory in a terminal.
+
 ```
 cd ../lab4
 ```
+<br><br>
 
-2. For this lab, we need to make sure our local ollama server is running to serve the local llama3.2 LLM we'll be using. Check this by running the command below. If you see the output shown in the screenshot, you're good. Otherwise, if you see a message that Ollama is not running, you can start it with the command "ollama serve &".
-
-```
-ollama list
-```
-</br></br>
-![Checking Ollama](./images/mcp48-new.png?raw=true "Checking Ollama")
-
-3. In this directory, we have two partially implemented files - one for an MCP server named [**lab4/mcp_server.py**](./lab4/mcp_server.py) and one for an agent that uses the MCP server - named [**lab4/mcp_client_agent.py**](./lab4/mcp_client_agent.py). The agent takes input text and then allows you to choose to have the text summarized, expanded or reworded by picking which option you want.
-</br></br>
-To complete the implementation in each of these files, we're going to use an approach of doing a side-by-side diff of the completed code with our partial code and then merging the changes in to complete the implementation. Let's start with the server build-out by using the command below. 
+2. In this directory we have a partially implemented note-taking MCP server. Open the file and take a quick look at the skeleton — you'll see TODO comments where the implementations will go.
 
 ```
-code -d ../extra/mcp_server.txt mcp_server.py
+code note_server.py
 ```
+<br><br>
 
-4. Once you have run the command, you'll have a side-by-side view in your editor of the completed code and the mcp_server.py file. You can merge each section of code into the mcp_server.py file by hovering over the middle bar and clicking on the arrows pointing right. Go through each section, look at the code, and then click to merge the changes in, one at a time.
-
-![Side-by-side merge](./images/mcp70.png?raw=true "Side-by-side merge") 
-
-5. When you have finished merging all the sections in, the files should show no differences. Save the changes simply by clicking on the "X" in the tab name.
-
-![Merge complete](./images/mcp71.png?raw=true "Merge complete") 
-
-6. Now you can run your server with the following command:
+3. Now let's use the diff-merge approach to complete the implementation. Run the command below to open a side-by-side view of the completed code alongside the skeleton.
 
 ```
-python mcp_server.py
+code -d ../extra/note_server.txt note_server.py
 ```
+<br><br>
 
-7. Switch to another terminal and repeat the same process with the *mcp_client_agent.py* file. Review and merge in the changes, then save the changes by closing the tab at the top. Note in the code that tool names and model names and prompts are used as resources from the server, but LLM interaction is done in the client - as we would expect for a *real* agent.
+4. Merge each section by hovering over the middle bar and clicking the arrows pointing right. As you merge, notice the different kinds of MCP primitives being added:
+
+   - **Tools** (`save_note`, `list_notes`) — these *do work*: they write to and read from an in-memory dictionary. Unlike the read-only tools in earlier labs, these change state on the server.
+   - **Static resource** (`resource://notes/catalog`) — a fixed URI that always returns the full collection of notes.
+   - **Resource template** (`resource://notes/{title}`) — a *dynamic* URI where `{title}` is resolved from what the client requests. This is how real MCP servers expose databases, file systems, and APIs.
+   - **Prompt** (`summarize_notes`) — assembles all stored notes into an LLM-ready prompt.
+
+   When all sections are merged and there are no more differences, close the tab (this saves the file).
+<br><br>
+
+5. Start the server:
 
 ```
-cd ../lab4 
-code -d ../extra/mcp_client_agent.txt mcp_client_agent.py
+python note_server.py
 ```
-</br></br>
-![Side-by-side merge](./images/mcp73.png?raw=true "Side-by-side merge")
+<br><br>
 
-8. Once you've completed the merge and closed the tab, run the client and select one of the commands and enter some text for it. For example you might select the "*expand*" command and then enter some basic text like "*MCP stands for Model Context Protocol*." After a few moments you should see some output from the client. What's worth noticing here is the *REQUEST* and *RETURN* lines that print out in the server side showing requests and results for getting resources and prompts. **This will take a long time to run, so you can just leave it running while we move on.**
-
-```
-python mcp_client_agent.py
-```
-
-![Trying out the client](./images/mcp74-new.png?raw=true "Trying out the client")
-
-9. (Optional) Start up the MCP explorer again and see the resources in the server. To do this, you'll need to start a new instance of the explorer. If the old one is running, you can close/stop it.  Then run the command below again to start a new instance. (Remember to adjust the path if you're not in /workspaces/mcp.)
+6. Open a second terminal and start the MCP Explorer to interact with the server. (Adjust the path if you're not in /workspaces/mcp.)
 
 ```
 python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ```
 
-![Starting the inspector](./images/mcp109.png?raw=true "Starting the inspector")
+   Click *Open in Browser* when the popup appears.
+<br><br>
 
-10. (Optional) If you did step 9, and got the server connected, you can click on the *Prompts* item in the top row and tell it to list the prompts. If you choose to *Get Prompt*, you can use JSON like in the text below. You can also look at the resource with the model name, via the *Resources* option at the top. Finally, if you look at the *Tools* from the server, keep in mind that these are just wrappers around the prompts and won't actually change any text you enter.
+7. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
+<br><br>
+
+8. Now click on *Resources*. You'll see two entries — `resource://notes/catalog` (the static resource) and the template `resource://notes/{title}`. Click *Read Resource* on the catalog to see all your notes. Then, to read a single note, enter `resource://notes/meeting-summary` in the URI field and read it. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
+<br><br>
+
+9. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
+<br><br>
+
+10. Now let's compose multiple servers. Stop the running note_server (CTRL+C). We also have a skeleton for a small math server. Merge the completed code into it the same way:
 
 ```
-{"text": "This is a long paragraph that I want to summarize into one sentence."}
+code -d ../extra/math_server.txt math_server.py
 ```
 
-![Running the inspector](./images/mcp114.png?raw=true "Running the inspector")
+   Merge the changes (just two tools: `add` and `multiply`), then close the tab.
+<br><br>
 
-Here's the prompt result if you used the previous entry.
+11. Finally, let's build the *gateway* — a single server that mounts both servers behind one endpoint. Merge the completed code:
 
-![Running the inspector](./images/mcp115.png?raw=true "Running the inspector")
+```
+code -d ../extra/gateway.txt gateway.py
+```
 
-11. When done, you can stop the server via CTRL+C and the client via typing "exit" at a prompt. And you can close the Explorer tab if you did the optional exercises.
+   Notice the key lines: `gateway.mount(note_service, namespace="notes")` and `gateway.mount(math_service, namespace="math")`. This is how production MCP deployments work — separate, focused servers composed into one endpoint. Merge, close, and then start the gateway:
 
+```
+python gateway.py
+```
+<br><br>
 
- <p align="center">
+12. Back in the Explorer, reconnect to `http://localhost:8000/mcp`. Click on *Tools* and you'll see all tools from both servers, namespaced: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`. Try calling `math_multiply` with `a`: 6 and `b`: 7 to confirm both servers are live. When done, stop the gateway with CTRL+C. **Leave it stopped for now — we'll restart it in Lab 5.**
+
+<p align="center">
 **[END OF LAB]**
 </p>
 </br></br></br>
 
-**Lab 5 - Connecting Applications to MCP Servers**
 
-**Purpose: In this lab, we'll see how to connect GitHub Copilot to the GitHub MCP Server.**
+**Lab 5 - MCP in the Real World — IDE Integration**
 
-1. For authentication to GitHub, we will need a GitHub personal access token (PAT). When logged into GitHub, click on the link below, provide a note and click the green "Generate token" button at the bottom.
+**Purpose: In this lab, we'll connect the gateway server we built in Lab 4 to VS Code's Copilot Chat, then add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
+
+1. First, we need a GitHub personal access token (PAT). When logged into GitHub, click on the link below, provide a note and click the green "Generate token" button at the bottom.
 
 Link:  Generate classic personal access token (repo & workflow scopes) https://github.com/settings/tokens/new?scopes=repo,workflow
 
 ![Creating token](./images/mcp10.png?raw=true "Creating token")
 
 ![Creating token](./images/mcp87.png?raw=true "Creating token")
-
 <br><br>
-   
+
 2. On the next screen, make sure to copy the generated token and save it for use later in the lab. You will not be able to see the actual token again!
 
 ![Copying token](./images/mcp11.png?raw=true "Copying token")
 <br><br>
 
-3. If the Copilot Chat panel is not already open, then click on the Copilot icon at the top. And/or if it is  not already in Agent mode at the bottom (says "Ask" or "Edit" instead), switch to *Agent* mode  via the drop-down at the bottom. (**NOTE:** If you don't see *Ask* mode or an option to switch to another mode, you may need to complete a setup step as shown in the second screenshot below. Click on the Copilot icon in the bottom status bar and look for a button that says "*Finish setup*" and click on that. Then you should see the options.)
+3. Make sure the gateway from Lab 4 is running. If you stopped it, restart it:
 
-**Opening Chat if not open**
-
-![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
-<br>
-
-**Completing setup - if needed**
-
-![Completing setup](./images/mcp88.png?raw=true "Completing setup")
-<br>
-
-**Switching to Agent mode**
-
-![Switching to Agent mode](./images/mcp12.png?raw=true "Switching to Agent mode")
-
+```
+cd ../lab4
+python gateway.py
+```
 <br><br>
 
-4. Now we need to add the GitHub MCP Server configuration in our IDE. You could fill most of this out via IDE prompts, but for simplicity, we already have a sample configuration file that we can just copy in. Run the commands below in the terminal. The last one will open the file in the editor.
+4. Now let's create the IDE configuration that tells VS Code how to connect to our MCP server. Run the commands below. We'll start with just our local gateway — we'll add GitHub in a later step.
 
 ```
 cd /workspaces/mcp
-mkdir .vscode
-cp extra/mcp_github_settings.json  .vscode/mcp.json
+mkdir -p .vscode
+cp extra/mcp_local_settings.json .vscode/mcp.json
 code .vscode/mcp.json
 ```
 
+   Look at the file: `"type": "http"` tells VS Code to use streamable-HTTP transport, and `"url"` points to our gateway. This is the same endpoint the Explorer has been connecting to.
 <br><br>
 
-5. Now, we can start the local MCP server. In the *mcp.json* file, above the name of the server, click on the small *Start* link (see figure below). A dialog will pop up for you to paste in your PAT. Paste the token in there and hit *Enter*. (Note that the token will be masked out.)
+5. If the Copilot Chat panel is not already open, click on the Copilot icon at the top. Make sure it is in *Agent* mode via the drop-down at the bottom. (**NOTE:** If you don't see an option to switch modes, you may need to click the Copilot icon in the bottom status bar and click *Finish setup* first.)
 
-![Starting the server](./images/mcp23.png?raw=true "Starting the server")
+![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
 
-After this, you should see the text above the server name change to "√Running | Stop | Restart | ## tools | More...".
-
-![Starting the server](./images/mcp24.png?raw=true "Starting the server")
-
+   Now, in the *mcp.json* file, click the small *Start* link above the "Lab Gateway" server name. You should see it change to "√Running | Stop | Restart | N tools".
 <br><br>
 
-
-6. To see the tools that are available, in the Copilot Chat dialog, click on the small *tool* icon (see figure) and then scroll down to the *MCP Server: GitHub MCP Server* section. You'll see the available tools we picked up under that.
-
-![Viewing available tools](./images/mcp25.png?raw=true "Viewing available tools")
-
+6. Click the small *tool* icon in Copilot Chat. You should see the namespaced tools from your Lab 4 gateway: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`, plus the resources and prompt.
 <br><br>
 
-
-7. Now that we have these tools available, we can use them in Copilot's Chat interface. (Again, you must be in *Agent* mode.) Here are some example prompts to try:
+7. Try using your own tools from Copilot Chat. Type prompts like these (one at a time):
 
 ```
-Find username for <your name> on GitHub
-Show info on recent changes in <repo path> on GitHub
+Save a note titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
 ```
-</br></br>
 
-8. Notice the mention of "Ran <tool name> - GitHub MCP Server (MCP Server) early in the output for each.
+```
+List all my saved notes
+```
 
-![Example usage](./images/mcp26.png?raw=true "Example usage")
+```
+What is 42 multiplied by 17?
+```
 
+   Watch Copilot call the tools you built in Lab 4. Notice the "Ran notes_save_note" / "Ran math_multiply" confirmations in the output — these are *your* tools, running on *your* server.
+<br><br>
 
-9. If you click on the *Extensions* icon on the left (#1 in the screenshot below), you'll see a category for *MCP SERVERS - INSTALLED*. This should show the GitHub MCP Server since we just connected to that.   
+8. Now let's add a second MCP server — the GitHub MCP Server — alongside our gateway. Copy in the full config and reopen:
 
-![Extensions and browser](./images/mcp97.png?raw=true "Extensions and browser")
+```
+cp extra/mcp_full_settings.json .vscode/mcp.json
+code .vscode/mcp.json
+```
 
-10. If you then click on the globe icon (#2 in the screenshot above), you can get to another page that shows a list of available MCP servers to use.
+   You'll see two servers now: "Lab Gateway" (local) and "GitHub MCP Server" (remote). Click *Start* on the GitHub MCP Server — a dialog will pop up for you to paste in your PAT. Paste the token and hit *Enter*.
+<br><br>
+
+9. Now Copilot has tools from *both* servers. Try a cross-server prompt:
+
+```
+Find the GitHub username for <your name>, then save it as a note titled "my-github-info"
+```
+
+   Watch Copilot call the GitHub search tool first, then call `notes_save_note` with the result. This is multi-server orchestration — the LLM uses tools from different servers in a single conversation, all connected through the standard MCP protocol.
+<br><br>
+
+10. Finally, click the *Extensions* icon on the left sidebar. You'll see a category for *MCP SERVERS - INSTALLED* showing both your Lab Gateway and the GitHub MCP Server. If you click the globe icon, you can browse a list of additional MCP servers available in the marketplace — databases, cloud services, productivity tools, and more. Each one follows the same protocol your servers do.
 
 ![MCP Servers](./images/mcp98.png?raw=true "MCP Servers")
 
- <p align="center">
+   When you're done, you can stop the gateway with CTRL+C and close any extra tabs.
+
+<p align="center">
 **[END OF LAB]**
 </p>
 </br></br></br>
