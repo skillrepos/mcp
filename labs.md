@@ -201,12 +201,12 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 {"city": "Paris"}
 ```
 
-![Prompt](./images/mcp104.png?raw=true "Prompt") 
+![Prompt](./images/mcp123.png?raw=true "Prompt") 
 <br><br>
 
 6. Click *OK* and you'll see the prompt result (with your argument) displayed. Click OK when done.
 
-![Completed prompt](./images/mcp105.png?raw=true "Completed prompt") 
+![Completed prompt](./images/mcp124.png?raw=true "Completed prompt") 
 <br><br>
 
 7. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
