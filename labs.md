@@ -348,7 +348,7 @@ Then look back at the terminal with the secure server running and you should see
 
 **Lab 4 - Building and Composing MCP Servers**
 
-**Purpose: In this lab, we'll build a real MCP server from scratch — with stateful tools, static and dynamic resources, and a prompt — then compose multiple servers behind a single gateway endpoint.**
+**Purpose: In this lab, we'll build a real MCP server from scratch — with stateful tools, static and dynamic resources, and a prompt. Then we'll compose multiple servers behind a single gateway endpoint.**
 
 1. Change into the *lab4* directory. In this directory, we have a partially implemented note-taking MCP server we have. Open the file and take a quick look at the skeleton — you'll see TODO comments where the implementations will go.
 
@@ -470,7 +470,7 @@ python gateway.py
 
 **Lab 5 - MCP in the Real World — IDE Integration**
 
-**Purpose: In this lab, we'll connect the gateway server we built in Lab 4 to VS Code's Copilot Chat, then add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
+**Purpose: In this lab, we'll connect the gateway server we built in Lab 4 to VS Code's Copilot Chat.**
 
 1. First, we need a GitHub personal access token (PAT). When logged into GitHub, click on the link below, provide a note and click the green "Generate token" button at the bottom.
 
@@ -572,7 +572,7 @@ List all my saved notes
 
 **Lab 6 - Using Multiple MCP Servers**
 
-**Purpose: In this lab, we'll connect the gateway server we add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
+**Purpose: In this lab, we'll add the remote GitHub MCP Server alongside our gateway server and look at the MCP Servers Marketplace.**
 
 
 1. Let's add a second MCP server — the GitHub MCP Server — alongside our gateway. Copy in the full config and reopen:
