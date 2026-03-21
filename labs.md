@@ -350,21 +350,15 @@ Then look back at the terminal with the secure server running and you should see
 
 **Purpose: In this lab, we'll build a real MCP server from scratch — with stateful tools, static and dynamic resources, and a prompt — then compose multiple servers behind a single gateway endpoint.**
 
-1. Change into the *lab4* directory in a terminal.
+1. Change into the *lab4* directory. In this directory, we have a partially implemented note-taking MCP server we have. Open the file and take a quick look at the skeleton — you'll see TODO comments where the implementations will go.
 
 ```
 cd ../lab4
-```
-<br><br>
-
-2. In this directory we have a partially implemented note-taking MCP server. Open the file and take a quick look at the skeleton — you'll see TODO comments where the implementations will go.
-
-```
 code note_server.py
 ```
 <br><br>
 
-3. Now let's use the diff-merge approach to complete the implementation. Run the command below to open a side-by-side view of the completed code alongside the skeleton.
+2. Now let's use the diff-merge approach to complete the implementation. Run the command below to open a side-by-side view of the completed code alongside the skeleton.
 
 ```
 code -d ../extra/note_server.txt note_server.py
@@ -374,17 +368,17 @@ code -d ../extra/note_server.txt note_server.py
 
 <br><br>
 
-4. Merge each section by hovering over the middle bar and clicking the arrows pointing right. As you merge, notice the different kinds of MCP primitives being added:
+3. Merge each section by hovering over the middle bar and clicking the arrows pointing right. As you merge, notice the different kinds of MCP primitives being added:
 
    - **Tools** (`save_note`, `list_notes`) — these *do work*: they write to and read from an in-memory dictionary. Unlike the read-only tools in earlier labs, these change state on the server.
    - **Static resource** (`resource://notes/catalog`) — a fixed URI that always returns the full collection of notes.
    - **Resource template** (`resource://notes/{title}`) — a *dynamic* URI where `{title}` is resolved from what the client requests. This is how real MCP servers expose databases, file systems, and APIs.
    - **Prompt** (`summarize_notes`) — assembles all stored notes into an LLM-ready prompt.
 
-   When all sections are merged and there are no more differences, close the tab (this saves the file).
+   When all sections are merged and there are no more differences, close the tab to save the file.
 <br><br>
 
-5. Start the server:
+4. Start the server.
 
 ```
 python note_server.py
@@ -394,7 +388,7 @@ python note_server.py
 
 <br><br>
 
-6. Open a second terminal and start the MCP Explorer to interact with the server. (Adjust the path if you're not in /workspaces/mcp.)
+5. Open a second terminal and start the MCP Explorer to interact with the server. (Adjust the path if you're not in /workspaces/mcp.)
 
 ```
 python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
@@ -406,7 +400,7 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 <br><br>
 
-7. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
+6. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
 
 ![Using a tool](./images/mcp131.png?raw=true "Using a tool")
 
@@ -414,37 +408,57 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 <br><br>
 
-8. Now click on *Resources*. You'll see two sections. Under **Resources** there's one entry — `resource://notes/catalog` (the static resource). Click *Read Resource* on it to see all your notes. Below that, under **Resource Templates**, you'll see `resource://notes/{title}` — this is a dynamic URI pattern. To read a single note, type `resource://notes/meeting-summary` into the URI field and click *Read Resource*. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
+7. Now click on *Resources*. You'll see two sections. Under **Resources** there's one entry — `resource://notes/catalog` (the static resource). Click *Read Resource* on it to see all your notes. Below that, under **Resource Templates**, you'll see `resource://notes/{title}` — this is a dynamic URI pattern. To read a single note, type `resource://notes/meeting-summary` into the URI field and click *Read Resource*. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
 <br><br>
 
 ![resources](./images/mcp133.png?raw=true "resources")
 
-9. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
+8. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
+
+![prompts](./images/mcp134.png?raw=true "prompts")
+
 <br><br>
 
-10. Now let's compose multiple servers. Stop the running note_server (CTRL+C). We also have a skeleton for a small math server. Merge the completed code into it the same way:
+9. Now let's compose multiple servers. Stop the running note_server (CTRL+C). We also have a skeleton for a small math server. Merge the completed code into it the same way:
 
 ```
 code -d ../extra/math_server.txt math_server.py
 ```
 
    Merge the changes (just two tools: `add` and `multiply`), then close the tab.
+
+![math server merge](./images/mcp135.png?raw=true "math server merge")
+
 <br><br>
 
-11. Finally, let's build the *gateway* — a single server that mounts both servers behind one endpoint. Merge the completed code:
+10. Finally, let's build the *gateway* — a single server that mounts both servers behind one endpoint. Merge the completed code.
+
+Notice the key lines: `gateway.mount(note_service, namespace="notes")` and `gateway.mount(math_service, namespace="math")`. This is how production MCP deployments work — separate, focused servers composed into one endpoint. 
 
 ```
 code -d ../extra/gateway.txt gateway.py
 ```
 
-   Notice the key lines: `gateway.mount(note_service, namespace="notes")` and `gateway.mount(math_service, namespace="math")`. This is how production MCP deployments work — separate, focused servers composed into one endpoint. Merge, close, and then start the gateway:
+![gateway server merge](./images/mcp136.png?raw=true "gateway server merge")
+
+
+<br><br>
+
+11. Start the gateway server. 
 
 ```
 python gateway.py
 ```
+
+![gateway server running](./images/mcp137.png?raw=true "gateway server running")
+
 <br><br>
 
-12. Back in the Explorer, reconnect to `http://localhost:8000/mcp`. Click on *Tools* and you'll see all tools from both servers, namespaced: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`. Try calling `math_multiply` with `a`: 6 and `b`: 7 to confirm both servers are live. When done, stop the gateway with CTRL+C. **Leave it stopped for now — we'll restart it in Lab 5.**
+12. Restart the Explorer and connect to the gateway server on `http://localhost:8000/mcp`. Click on *Tools* and you'll see all tools from both servers, namespaced: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`. Try calling `math_multiply` with `a`: 6 and `b`: 7 to confirm both servers are live. When done, stop the gateway with CTRL+C. **Leave it stopped for now — we'll restart it in Lab 5.**
+
+![all tools](./images/mcp138.png?raw=true "all tools")
+
+<br><br>
 
 <p align="center">
 **[END OF LAB]**
