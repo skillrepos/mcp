@@ -211,6 +211,20 @@ async def index_handler(request):
             <h2>Resources <span class="badge" id="resources-count">0</span></h2>
             <div id="resources-list"></div>
         </div>
+        <div class="section">
+            <h2>Resource Templates <span class="badge" id="templates-count">0</span></h2>
+            <p style="color:#666; font-size:14px; margin-bottom:10px;">
+                Templates are dynamic URIs. Replace the <code>{parameter}</code> with a real value, then read.
+            </p>
+            <div id="templates-list"></div>
+            <div id="template-read-section" style="margin-top:15px; display:none;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Read a resource by URI:</label>
+                <input type="text" id="template-uri-input" placeholder="e.g. resource://notes/meeting-summary"
+                       style="width:70%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-right:10px;">
+                <button onclick="readTemplateUri()">Read Resource</button>
+                <div id="template-read-result"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -256,6 +270,7 @@ async def index_handler(request):
                     await listPrompts();
                     await listTools();
                     await listResources();
+                    await listResourceTemplates();
                 } else {
                     alert('Failed to connect: ' + data.error);
                     document.getElementById('status-text').textContent = '❌ Connection failed';
@@ -539,6 +554,70 @@ async def index_handler(request):
             }
         }
 
+        async function listResourceTemplates() {
+            const container = document.getElementById('templates-list');
+            container.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch('/api/resources/templates/list');
+                const data = await response.json();
+
+                if (data.success) {
+                    const templates = data.resourceTemplates;
+                    document.getElementById('templates-count').textContent = templates.length;
+
+                    if (templates.length === 0) {
+                        container.innerHTML = '<p>No resource templates available</p>';
+                    } else {
+                        document.getElementById('template-read-section').style.display = 'block';
+                        container.innerHTML = templates.map(tmpl => `
+                            <div class="item" style="border-left-color: #764ba2;">
+                                <h3>${tmpl.name || tmpl.uriTemplate}</h3>
+                                ${tmpl.description ? `<div class="item-description">${tmpl.description}</div>` : ''}
+                                <div class="item-meta">
+                                    URI Template: <code>${tmpl.uriTemplate}</code>
+                                    ${tmpl.mimeType ? ` | MIME: ${tmpl.mimeType}` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    container.innerHTML = `<div class="error">${data.error}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error: ${error}</div>`;
+            }
+        }
+
+        async function readTemplateUri() {
+            const uri = document.getElementById('template-uri-input').value.trim();
+            if (!uri) { alert('Enter a URI first'); return; }
+            const resultContainer = document.getElementById('template-read-result');
+            resultContainer.innerHTML = '<p>Reading resource...</p>';
+
+            try {
+                const response = await fetch('/api/resources/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uri: uri })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultContainer.innerHTML = `
+                        <div class="result">
+                            <strong>Content for <code>${uri}</code>:</strong>
+                            <pre>${JSON.stringify(data.result, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultContainer.innerHTML = `<div class="error">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultContainer.innerHTML = `<div class="error">Error: ${error}</div>`;
+            }
+        }
+
         async function readResource(uri) {
             const resultContainer = document.getElementById(`resource-result-${btoa(uri)}`);
             resultContainer.innerHTML = '<p>Reading resource...</p>';
@@ -762,6 +841,31 @@ async def list_resources_handler(request):
         return web.json_response({'success': False, 'error': str(e)})
 
 
+async def list_resource_templates_handler(request):
+    """List available resource templates"""
+    try:
+        async with aiohttp.ClientSession() as session:
+            rpc_request = {
+                "jsonrpc": "2.0",
+                "id": 8,
+                "method": "resources/templates/list"
+            }
+
+            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
+                result = await parse_sse_response(resp)
+
+                if 'result' in result:
+                    return web.json_response({
+                        'success': True,
+                        'resourceTemplates': result['result'].get('resourceTemplates', [])
+                    })
+                else:
+                    return web.json_response({'success': False, 'error': str(result)})
+
+    except Exception as e:
+        return web.json_response({'success': False, 'error': str(e)})
+
+
 async def call_tool_handler(request):
     """Call a tool"""
     try:
@@ -905,6 +1009,7 @@ def create_app(server_url):
     app.router.add_get('/api/prompts/list', list_prompts_handler)
     app.router.add_get('/api/tools/list', list_tools_handler)
     app.router.add_get('/api/resources/list', list_resources_handler)
+    app.router.add_get('/api/resources/templates/list', list_resource_templates_handler)
     app.router.add_post('/api/tools/call', call_tool_handler)
     app.router.add_post('/api/prompts/get', get_prompt_handler)
     app.router.add_post('/api/resources/read', read_resource_handler)
@@ -931,10 +1036,3 @@ if __name__ == '__main__':
     print(f"💡 You can connect to different servers through the UI")
 
     web.run_app(app, host='0.0.0.0', port=port)
-
-
-
-
-
-
-
