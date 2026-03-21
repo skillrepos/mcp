@@ -1,6 +1,7 @@
 # mcp_server.py – FastMCP 3.x-compatible server
 # Updated 2026-03-20: Migrated from mcp.server.fastmcp to fastmcp 3.x;
 #   prompt handlers now return strings instead of dicts.
+import json
 from fastmcp import FastMCP
 
 # ANSI color codes
@@ -77,11 +78,11 @@ def expand_tool(text: str) -> str:
 # ───────────────────────────────────────────────
 
 @server.resource("resource://model")
-def model_name():
+def model_name() -> str:
     print(f"{BLUE}[RESOURCE REQUEST] model_name requested{RESET}")
     result = {"model": "llama3.2:latest"}
     print(f"{GREEN}[RESOURCE RETURN] model_name response: {result}{RESET}")
-    return result
+    return json.dumps(result)
 
 # ───────────────────────────────────────────────
 # Entry point – start the FastMCP server with streamable HTTP
