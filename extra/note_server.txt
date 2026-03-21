@@ -1,5 +1,6 @@
 # note_server.py – FastMCP 3.x note-taking MCP server
 # Demonstrates: tools with state, static resources, resource templates, prompts
+import json
 from fastmcp import FastMCP
 
 server = FastMCP("NoteService")
@@ -27,15 +28,15 @@ def list_notes() -> dict:
 # URI is fixed — always returns the full collection.
 
 @server.resource("resource://notes/catalog")
-def notes_catalog() -> dict:
+def notes_catalog() -> str:
     """Full catalog of all stored notes."""
-    return {
+    return json.dumps({
         "notes": {
             k: (v[:80] + "…") if len(v) > 80 else v
             for k, v in notes.items()
         },
         "count": len(notes),
-    }
+    }, indent=2)
 
 
 # ─── Resource template (dynamic URI) ────────────────────────────────
@@ -43,13 +44,13 @@ def notes_catalog() -> dict:
 # e.g. resource://notes/meeting-summary → title="meeting-summary"
 
 @server.resource("resource://notes/{title}")
-def get_note(title: str) -> dict:
+def get_note(title: str) -> str:
     """Retrieve a single note by its title."""
     if title == "catalog":
-        return {"error": "Use resource://notes/catalog for the full catalog."}
+        return json.dumps({"error": "Use resource://notes/catalog for the full catalog."})
     if title not in notes:
-        return {"error": f"Note '{title}' not found"}
-    return {"title": title, "content": notes[title]}
+        return json.dumps({"error": f"Note '{title}' not found"})
+    return json.dumps({"title": title, "content": notes[title]}, indent=2)
 
 
 # ─── Prompt ──────────────────────────────────────────────────────────
