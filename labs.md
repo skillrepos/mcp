@@ -417,6 +417,8 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 8. Now click on *Resources*. You'll see two sections. Under **Resources** there's one entry — `resource://notes/catalog` (the static resource). Click *Read Resource* on it to see all your notes. Below that, under **Resource Templates**, you'll see `resource://notes/{title}` — this is a dynamic URI pattern. To read a single note, type `resource://notes/meeting-summary` into the URI field and click *Read Resource*. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
 <br><br>
 
+![resources](./images/mcp133.png?raw=true "resources")
+
 9. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
 <br><br>
 
