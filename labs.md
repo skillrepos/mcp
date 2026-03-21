@@ -413,6 +413,8 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 ![resources](./images/mcp133.png?raw=true "resources")
 
+<br><br>
+
 8. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
 
 ![prompts](./images/mcp134.png?raw=true "prompts")
@@ -508,51 +510,109 @@ code .vscode/mcp.json
 
 ![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
 
-   Now, in the *mcp.json* file, click the small *Start* link above the "Lab Gateway" server name. You should see it change to "√Running | Stop | Restart | N tools".
 <br><br>
 
-6. Click the small *tool* icon in Copilot Chat. You should see the namespaced tools from your Lab 4 gateway: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`, plus the resources and prompt.
+6. Now, in the *mcp.json* file, click the small *Start* link above the "Lab Gateway" server name. You should see it change to "√Running | Stop | Restart | N tools".
+
+
+![Click start to connect](./images/mcp139.png?raw=true "Click start to connect")
+
+![connection successful](./images/mcp140.png?raw=true "connection successful")
+
+
 <br><br>
 
-7. Try using your own tools from Copilot Chat. Type prompts like these (one at a time):
+7. Click the small *Configure Tools...* icon in Copilot Chat. You should see the namespaced tools from your Lab 4 gateway: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`, plus the resources and prompt.
+
+![Configure tools](./images/mcp141.png?raw=true "Configure tools")
+
+<br><br>
+
+8. In the dialog that opens up at the top of the session, you should see a list of connected tools/MCP servers. Find the one that says *Lab Gateway* and expand it. You should see the namespaced tools from your Lab 4 gateway: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`.
+
+![Lab Gateway tools](./images/mcp142.png?raw=true "Lab Gateway tools")
+
+<br><br>
+
+9. Try using your own tools from Copilot Chat. Type prompts like these (one at a time):
 
 ```
 Save a note titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
 ```
 
+![First tool prompt](./images/mcp143.png?raw=true "First tool prompt")
+
+You'll probably have to *Allow* the operation.
+
+![allow operation](./images/mcp1.png?raw=true "allow operation")
+
+Then you should see that the note was saved.
+
+![saved note](./images/mcp144.png?raw=true "saved note")
+
+<br><br>
+
+10. You can also try another prompt to see more of the tools in action.
+
 ```
 List all my saved notes
 ```
 
-```
-What is 42 multiplied by 17?
-```
+![saved notes](./images/mcp145.png?raw=true "saved notes")
 
    Watch Copilot call the tools you built in Lab 4. Notice the "Ran notes_save_note" / "Ran math_multiply" confirmations in the output — these are *your* tools, running on *your* server.
 <br><br>
 
-8. Now let's add a second MCP server — the GitHub MCP Server — alongside our gateway. Copy in the full config and reopen:
+<p align="center">
+**[END OF LAB]**
+</p>
+</br></br></br>
+
+**The following is an optional lab if you want do it and have time.**
+
+**Lab 6 - MCP in the Real World — IDE Integration**
+
+**Purpose: In this lab, we'll connect the gateway server we built in Lab 4 to VS Code's Copilot Chat, then add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
+
+
+1. Let's add a second MCP server — the GitHub MCP Server — alongside our gateway. Copy in the full config and reopen:
 
 ```
 cp extra/mcp_full_settings.json .vscode/mcp.json
-code .vscode/mcp.json
+code .vscode/mcp.json  (if not already open)
 ```
 
-   You'll see two servers now: "Lab Gateway" (local) and "GitHub MCP Server" (remote). Click *Start* on the GitHub MCP Server — a dialog will pop up for you to paste in your PAT. Paste the token and hit *Enter*.
 <br><br>
 
-9. Now Copilot has tools from *both* servers. Try a cross-server prompt:
+2.  You'll see two servers now: "Lab Gateway" (local) and "GitHub MCP Server" (remote). Click *Start* on the GitHub MCP Server — a dialog will pop up for you to paste in your PAT. Paste the token and hit *Enter*.
+
+![Putting in PAT for token](./images/mcp146.png?raw=true "Putting in PAT for token")
+
+<br><br>
+
+3. Now Copilot has tools from *both* servers. Try a cross-server prompt:
 
 ```
 Find the GitHub username for <your name>, then save it as a note titled "my-github-info"
 ```
 
    Watch Copilot call the GitHub search tool first, then call `notes_save_note` with the result. This is multi-server orchestration — the LLM uses tools from different servers in a single conversation, all connected through the standard MCP protocol.
+
+   ![combined operation](./images/mcp147.png?raw=true "combined operation")
+   
 <br><br>
 
-10. Finally, click the *Extensions* icon on the left sidebar. You'll see a category for *MCP SERVERS - INSTALLED* showing both your Lab Gateway and the GitHub MCP Server. If you click the globe icon, you can browse a list of additional MCP servers available in the marketplace — databases, cloud services, productivity tools, and more. Each one follows the same protocol your servers do.
+4. Finally, click the *Extensions* icon on the left sidebar. You'll see a category for *MCP SERVERS - INSTALLED* showing both your Lab Gateway and the GitHub MCP Server.
 
-![MCP Servers](./images/mcp98.png?raw=true "MCP Servers")
+![Connected servers](./images/mcp150.png?raw=true "Connected servers")
+
+<br><br>
+
+5. If you click on the magnifying glass icon on the upper right above the GitHub MCP server entry, you can approve access to see a broader list of available MCP servers.
+
+![enable MCP Servers Marketplace](./images/mcp148.png?raw=true "enable MCP Servers Marketplace")
+
+![Seeing list of MCP servers](./images/mcp149.png?raw=true "Seeing list of MCP servers")
 
    When you're done, you can stop the gateway with CTRL+C and close any extra tabs.
 
