@@ -4,6 +4,7 @@ TravelHelper – FastMCP 3.x demo
 Serves via Streamable-HTTP at http://localhost:8000/mcp
 """
 import os
+import json
 import math
 from fastmcp import FastMCP
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,14 +60,13 @@ def convert_currency(amount_usd: float, target_currency: str) -> dict:
 @server.resource("resource://major_cities")
 def major_cities() -> str:
     """Static list of cities with coordinates."""
-    import json
     return json.dumps({
         "cities": [
             {"name": "Paris",    "lat": 48.8566,  "lon":   2.3522},
             {"name": "Tokyo",    "lat": 35.6895,  "lon": 139.6917},
             {"name": "New York", "lat": 40.7128,  "lon": -74.0060},
         ]
-    })
+    }, indent=2)
 
 # ──────────────────────────────────────────────────────────────
 # 4)  Prompt
