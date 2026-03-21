@@ -348,7 +348,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 Then look back at the body of the response from running that, you should see an error message.
 </br></br>
 
-![Invalid token](./images/mcp63.png?raw=true "Invalid token") 
+![Invalid token](./images/mcp126.png?raw=true "Invalid token") 
 
 </br></br>
 
