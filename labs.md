@@ -309,7 +309,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":"bad","method":"list_tools","params":[]}'
 ```
 
-![500 error and switching terminals](./images/mcp56.png?raw=true "500 error and switching terminals") 
+![401 error and switching terminals](./images/mcp125.png?raw=true "401 error and switching terminals") 
 <br><br>
 
 
