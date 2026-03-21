@@ -570,9 +570,9 @@ List all my saved notes
 
 **The following is an optional lab if you want do it and have time.**
 
-**Lab 6 - MCP in the Real World — IDE Integration**
+**Lab 6 - Using Multiple MCP Servers**
 
-**Purpose: In this lab, we'll connect the gateway server we built in Lab 4 to VS Code's Copilot Chat, then add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
+**Purpose: In this lab, we'll connect the gateway server we add a remote GitHub MCP Server alongside it to see multi-server orchestration in action.**
 
 
 1. Let's add a second MCP server — the GitHub MCP Server — alongside our gateway. Copy in the full config and reopen:
@@ -598,7 +598,7 @@ Find the GitHub username for <your name>, then save it as a note titled "my-gith
 
    Watch Copilot call the GitHub search tool first, then call `notes_save_note` with the result. This is multi-server orchestration — the LLM uses tools from different servers in a single conversation, all connected through the standard MCP protocol.
 
-   ![combined operation](./images/mcp147.png?raw=true "combined operation")
+![combined operation](./images/mcp147.png?raw=true "combined operation")
    
 <br><br>
 
