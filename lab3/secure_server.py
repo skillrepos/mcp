@@ -1,10 +1,10 @@
 # secure_server.py  – FastMCP ≥ 3.0
-# Updated 2026-03-20: Updated version reference to FastMCP 3.x
 # Provides a single "add" tool protected by bearer-token auth (JWT).
 
 import warnings
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 from jose import jwt, JWTError
 
 from fastmcp import FastMCP
@@ -31,15 +31,20 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/mcp"):
             auth = request.headers.get("authorization", "")
             if not auth.startswith("Bearer "):
-                raise HTTPException(status_code=401, detail="Missing token")
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Missing token"}
+                )
 
             token = auth.removeprefix("Bearer ").strip()
             try:
                 jwt.decode(token, SECRET_KEY,
                            algorithms=[ALGORITHM], audience=AUDIENCE)
             except JWTError as exc:
-                raise HTTPException(status_code=401,
-                                    detail=f"Token invalid: {exc}")
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": f"Token invalid: {exc}"}
+                )
         return await call_next(request)
 
 
