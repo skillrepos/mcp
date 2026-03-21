@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 4.0 - 03/20/26
+## Revision 5.0 - 03/21/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -369,6 +369,9 @@ code note_server.py
 ```
 code -d ../extra/note_server.txt note_server.py
 ```
+
+![Merging notes server](./images/mcp127.png?raw=true "Merging notes server")
+
 <br><br>
 
 4. Merge each section by hovering over the middle bar and clicking the arrows pointing right. As you merge, notice the different kinds of MCP primitives being added:
@@ -386,6 +389,9 @@ code -d ../extra/note_server.txt note_server.py
 ```
 python note_server.py
 ```
+
+![Running note server](./images/mcp128.png?raw=true "Running note server")
+
 <br><br>
 
 6. Open a second terminal and start the MCP Explorer to interact with the server. (Adjust the path if you're not in /workspaces/mcp.)
@@ -395,12 +401,20 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ```
 
    Click *Open in Browser* when the popup appears.
+
+![Starter MCP explorer](./images/mcp129.png?raw=true "Starter MCP explorer")
+
 <br><br>
 
 7. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
+
+![Using a tool](./images/mcp131.png?raw=true "Using a tool")
+
+![Using a tool](./images/mcp132.png?raw=true "Using a tool")
+
 <br><br>
 
-8. Now click on *Resources*. You'll see two entries — `resource://notes/catalog` (the static resource) and the template `resource://notes/{title}`. Click *Read Resource* on the catalog to see all your notes. Then, to read a single note, enter `resource://notes/meeting-summary` in the URI field and read it. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
+8. Now click on *Resources*. You'll see two sections. Under **Resources** there's one entry — `resource://notes/catalog` (the static resource). Click *Read Resource* on it to see all your notes. Below that, under **Resource Templates**, you'll see `resource://notes/{title}` — this is a dynamic URI pattern. To read a single note, type `resource://notes/meeting-summary` into the URI field and click *Read Resource*. Notice the difference: the catalog always returns everything, while the template URI returns just the note matching the `{title}` you specified.
 <br><br>
 
 9. Click on *Prompts* and get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
