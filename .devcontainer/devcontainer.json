@@ -1,54 +1,43 @@
 {
-  // Use the official base image
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-
-  // Host machine requirements
-  "hostRequirements": {
-    "cpus": 4,
-    "memory": "16gb",
-    "storage": "32gb"
-  },
-
-  "forwardPorts": [8000],
-  "portsAttributes": {
-    "8000": {
-      "label": "MCP Server",
-      "visibility": "public"
-    }
-  },
-
-  // Dev Container Features
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {},
-    "node": {
-      "version": "lts",
-      "nodeGypDependencies": true
-    }
-  },
-
-  // VS Code customizations
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/py_env/bin/python",
-        "github.copilot.enable": {
-          "*": false,
-          "plaintext": false,
-          "markdown": false,
-          "scminput": false
-        },
-        "workbench.startupEditor": "none",
-        "workbench.editorAssociations": {
-          "*.md": "vscode.markdown.preview.editor"
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "hostRequirements": {
+        "cpus": 4,
+        "memory": "16gb",
+        "storage": "32gb"
+    },
+    "forwardPorts": [
+        8000
+    ],
+    "portsAttributes": {
+        "8000": {
+            "label": "MCP Server",
+            "visibility": "public"
         }
-      },
-      "extensions": [
-        "mathematic.vscode-pdf"
-       ]
-    }
-  },
-  "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
-  "postStartCommand" : "nohup bash -c 'ollama serve &'"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.terminal.activateEnvInCurrentTerminal": true,
+                "python.defaultInterpreterPath": "${containerWorkspaceFolder}/py_env/bin/python",
+                "github.copilot.enable": {
+                    "*": false,
+                    "plaintext": false,
+                    "markdown": false,
+                    "scminput": false
+                },
+                "workbench.startupEditor": "none",
+                "workbench.editorAssociations": {
+                    "*.md": "vscode.markdown.preview.editor"
+                }
+            },
+            "extensions": [
+                "mathematic.vscode-pdf"
+            ]
+        }
+    },
+    "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
+    "postStartCommand": "nohup bash -c 'ollama serve &'"
 }
-
