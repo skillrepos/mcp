@@ -544,8 +544,6 @@ Save a note titled "lab-recap" with content "MCP lets AI agents discover and cal
 
 You'll probably have to *Allow* the operation.
 
-![allow operation](./images/mcp1.png?raw=true "allow operation")
-
 Then you should see that the note was saved.
 
 ![saved note](./images/mcp144.png?raw=true "saved note")
