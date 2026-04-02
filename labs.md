@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 5.1 - 04/01/26
+## Revision 5.2 - 04/01/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -522,7 +522,7 @@ code .vscode/mcp.json
 
 <br><br>
 
-7. Click the small *Configure Tools...* icon in Copilot Chat. You should see the namespaced tools from your Lab 4 gateway: `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`, plus the resources and prompt.
+7. Click the small *Configure Tools...* icon in Copilot Chat. 
 
 ![Configure tools](./images/mcp141.png?raw=true "Configure tools")
 
