@@ -175,13 +175,13 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 <br><br>
 
 
-4. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *List Prompts*.)
+5. You should automatically be connected to the server. The *Prompts* item will be selected by default. (If the prompt is not shown, you can click on *List Prompts*.)
 
 ![Resources](./images/mcp110.png?raw=true "Resources") 
 <br><br>
 
 
-5. As shown in the *Arguments* section below the prompt text, this prompt takes a *city* as an argument. Click on the *Get Prompt* button and you'll see a dialog pop up at the top. It's asking for an argument to fill in to show what the instantiated prompt would look like. Enter the text below (note this is in JSON format).
+6. As shown in the *Arguments* section below the prompt text, this prompt takes a *city* as an argument. Click on the *Get Prompt* button and you'll see a dialog pop up at the top. It's asking for an argument to fill in to show what the instantiated prompt would look like. Enter the text below (note this is in JSON format).
 
 ```
 {"city": "Paris"}
@@ -190,28 +190,28 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ![Prompt](./images/mcp104.png?raw=true "Prompt") 
 <br><br>
 
-6. Click *OK* and you'll see the prompt result (with your argument) displayed.
+7. Click *OK* and you'll see the prompt result (with your argument) displayed.
 
 ![Completed prompt](./images/mcp105.png?raw=true "Completed prompt") 
 <br><br>
 
-7. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
+8. Next, let's take a look at the resources available from the server. Click on the *Resources* button, then *Read Resource*. What you'll see is the resource with the major cities provided by the server.
 
 ![Resources](./images/mcp106.png?raw=true "Resources") 
 <br><br>
 
-8. Finally, let's take a look at the tools available from the server. Click on *Tools*. You'll see two tools defined - one to calculate distance and one to convert currency.
+9. Finally, let's take a look at the tools available from the server. Click on *Tools*. You'll see two tools defined - one to calculate distance and one to convert currency.
 
 ![Tools](./images/mcp112.png?raw=true "Tools") 
 <br><br>
 
 
-9. Let's try running the distance_between tool. Select the tool in the list. Underneath, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click *Execute to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
+10. Let's try running the distance_between tool. Select the tool in the list. Underneath, you'll see the input fields for the tool. You can try any latitude and longitude values you want and then click *Execute to see the results. (The example used in the screeshot - 40,74 and 51, .12 - equates roughly to New York and London.)
 
 ![Running tool](./images/mcp113.png?raw=true "Running tool") 
 <br><br>
 
-10. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the explorer running in it.
+11. In preparation for other labs, you can stop (CTRL+C) the running instance of mcp_travel_server.py in your terminal to free up port 8000. You can also close the browser tab that has the explorer running in it.
 
 <br><br>
 
