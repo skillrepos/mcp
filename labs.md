@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 5.0 - 03/21/26
+## Revision 5.1 - 04/01/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -118,7 +118,7 @@ python mcp_client.py
 code -d ../extra/agent_mcp.txt agent_mcp.py
 ```
 
-![Diff view](./images/ae60.png?raw=true "Diff view")
+![Diff view](./images/mcp151.png?raw=true "Diff view")
 </br></br>
 
 11. Now, you can run the agent to see it in action. When this runs, it will show you the LLM's output and also the various tool calls and results. Note that it will take a while for the LLM to process things since it is running against a local model in our codespace. Also, since we are not using a very powerful or tuned model here, it is possible that you will see a mistake in the final output. If so, try running the agent code again. (Notice that we are using a different problem this time: 12x8/3)
