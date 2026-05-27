@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 5.7 - 04/29/26
+## Revision 5.8 - 05/26/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -421,7 +421,7 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 <br><br>
 
-8. Click on *Prompts* and use the button to get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
+8. Click on *Prompts* and use the *Get Prompt* button to get the `summarize_notes` prompt. You'll see it has assembled both of your saved notes into a single prompt ready for an LLM. This is the pattern: tools write data, resources expose it, prompts package it for LLMs.
 
 ![prompts](./images/mcp134.png?raw=true "prompts")
 
