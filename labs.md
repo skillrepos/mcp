@@ -414,9 +414,6 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 6. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
 
-![Using a tool](./images/mcp160
-.png?raw=true "Using a tool")
-
 ![Using a tool](./images/mcp160.png?raw=true "Using a tool")
 
 <br><br>
@@ -440,7 +437,7 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 code -d ../extra/math_server.txt math_server.py
 ```
 
-   Merge the changes (just two tools: `add` and `multiply`), then close the tab.
+Merge the changes (just two tools: `add` and `multiply`), then close the tab.
 
 ![math server merge](./images/mcp135.png?raw=true "math server merge")
 
@@ -516,7 +513,7 @@ cp extra/mcp_local_settings.json .vscode/mcp.json
 code .vscode/mcp.json
 ```
 
-   Look at the file: `"type": "http"` tells VS Code to use streamable-HTTP transport, and `"url"` points to our gateway. This is the same endpoint the Explorer has been connecting to.
+Look at the file: `"type": "http"` tells VS Code to use streamable-HTTP transport, and `"url"` points to our gateway. This is the same endpoint the Explorer has been connecting to.
 <br><br>
 
 5. If the Copilot Chat panel is not already open, click on the Copilot icon at the top. Make sure it is in *Agent* mode via the drop-down at the bottom. (**NOTE:** If you don't see an option to switch modes, you may need to click the Copilot icon in the bottom status bar and click *Finish setup* first.)
