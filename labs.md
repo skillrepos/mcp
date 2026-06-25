@@ -168,7 +168,7 @@ python mcp_travel_server.py
 <br><br>
 
 
-4. Let's use the MCP Explorer tool to look at items in the server. The server will be running in one terminal. In another terminal, start the explorer with the command below. Once it starts, you'll see a popup with a button to "*Open in Browser". Click on that to open it. (As shown the command assumes you are in the starting directory (/workspaces/mcp). If not, use *../scripts* in the path instead of *scripts*.)
+4. Let's use the MCP Explorer tool to look at items in the server. The server will be running in one terminal. In another terminal, start the explorer with the command below. Once it starts, you'll see a popup with a button to "*Open in Browser". Click on that to open it. **(As shown the command assumes you are in the starting directory (/workspaces/mcp). If not, use *../scripts* in the path instead of *scripts*.)**
 
 ```
 python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
