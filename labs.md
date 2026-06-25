@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 6.1 - 06/25/26
+## Revision 6.2 - 06/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -311,7 +311,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 <br><br>
 
 
-7. In the terminal where you ran that last curl, you can run the secure client. You should see output showing that it ran the "add" tool and the results. Behind the scenes it will have A) POSTed to /token B) Connected to /mcp  with Authorization: Bearer ...  C) Called the secure tool.
+7. In the terminal where you ran that last curl, you can run the secure client. The client will A) POST to /token B) Connect to /mcp  with Authorization: Bearer ...  C) Call the secure tool. You should see output showing that it ran the "add" tool and the results.
 
 ```
 python secure_client.py
