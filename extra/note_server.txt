@@ -14,7 +14,7 @@ notes: dict[str, str] = {}
 def save_note(title: str, content: str) -> str:
     """Save a note with a title and content."""
     notes[title] = content
-    return f"Saved note: {title}"
+    return f"Saved note: \"{title}\" with content: \"{content}\""
 
 
 @server.tool()
