@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 6.0 - 06/24/26
+## Revision 6.1 - 06/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -259,7 +259,7 @@ python auth_server.py
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 <br><br>
 
-4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. Afterwards you can echo $TOKEN if you want to see the actual value. (** Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
+4. Switch to the other terminal or open a new one. (Over to the far right above the terminals is a "+" to create a new terminal.) Then, let's verify that our authorization server is working with the curl command below and save the token it generates for later use. Run the commands below in the split/new terminal. (** Make sure to run the last two commands so your token env variable will be accessible in new terminals.**)
 
 ```
 export TOKEN=$(
@@ -272,7 +272,13 @@ export TOKEN=$(
 echo "export TOKEN=$TOKEN" >> ~/.bashrc   
 source ~/.bashrc 
 ```
-</br></br>
+
+Afterwards you can echo $TOKEN if you want to see the actual value.
+
+```
+echo $TOKEN
+```
+
 ![curl and add new terminal](./images/mcp95.png?raw=true "curl and add new terminal") 
 
 (Optional) If you want to look deeper at the token, you can echo the token string and paste it in at https://jwt.io 
