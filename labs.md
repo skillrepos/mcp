@@ -414,9 +414,10 @@ python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 
 6. In the Explorer, click on *Tools*. You'll see `save_note` and `list_notes`. Let's use them. Click *Call Tool* on `save_note` and enter values like `title`: "meeting-summary" and `content`: "Discussed MCP architecture and decided to use server composition." Click *Execute*. Then save a second note with `title`: "action-items" and `content`: "Build gateway server and connect to IDE."
 
-![Using a tool](./images/mcp131.png?raw=true "Using a tool")
+![Using a tool](./images/mcp160
+.png?raw=true "Using a tool")
 
-![Using a tool](./images/mcp132.png?raw=true "Using a tool")
+![Using a tool](./images/mcp160.png?raw=true "Using a tool")
 
 <br><br>
 
