@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 5.8 - 05/26/26
+## Revision 6.0 - 06/24/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -16,7 +16,7 @@
 6. VPNs may interfere with the ability to run the codespace. It is recommended to not use a VPN if you run into problems.
 7. When your cursor is in a file in the editor and you need to type a command, be sure to click back in *TERMINAL* before typing so you don't write over file contents. If you do inadvertently write over contents, you can use "git checkout <filename>" to get the most recent committed version.
 </br></br></br>
-
+8. Except where a lab gives specific instructions to click on a button in a pop-up, you can close any pop-up that comes up.
 
 
 **Lab 1 - MCP Jumpstart**
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 python mcp_client.py
 ```
 
-![Running agent](./images/mcp153.png?raw=true "Running agent")
+![Running client](./images/mcp159.png?raw=true "Running client")
 
 </br></br>
 
