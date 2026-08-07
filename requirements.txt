@@ -1,17 +1,36 @@
-# Updated 2026-03-20: Bumped fastmcp to 3.x, removed duplicates,
-#   removed unnecessary 'typing' package, organized by usage.
+# Updated 2026-08-03 for MCP specification revision 2026-07-28.
+#
+# WHY THESE PINS
+#   The 2026-07-28 revision is a breaking protocol change. Support for it landed
+#   in MCP Python SDK v2.0.0 and, for FastMCP, in the 4.0 line. FastMCP 3.4.x
+#   hard-pins mcp<2.0 and therefore cannot speak 2026-07-28 at all - it tops out
+#   at 2025-11-25. So this course runs on FastMCP 4.
+#
+#   FastMCP 4.0.0b1 is a BETA. It is pinned exactly, on purpose: betas move.
+#   Re-verify the labs before delivery if you bump it. `fastmcp` on PyPI is only
+#   a metadata wrapper around `fastmcp-slim`, so the constraint below keeps the
+#   two in lockstep (uv in particular needs the explicit pin).
+#
+#   REMOVED: langchain_mcp_adapters. It imports mcp.server.fastmcp, a module
+#   deleted in SDK v2, so it cannot be installed alongside this stack.
+#   Lab 1's agent now drives the tool-calling loop directly - see
+#   extra/agent_mcp.txt. Track langchain-ai/langchain-mcp-adapters#578 if you
+#   want it back later.
 
-# --- Core MCP framework ---
-fastmcp>=3.0.0
-mcp>=1.22.0
-mcp[cli]>=1.22.0
+# --- Core MCP framework (2026-07-28 capable) ---
+fastmcp==4.0.0b1
+fastmcp-slim==4.0.0b1
+mcp>=2.0.0,<3.0.0
 
-# --- Web frameworks (used by auth_server, secure_server, travel_server) ---
-fastapi>=0.121.3
+# --- Web frameworks (auth_server, travel server, explorer) ---
+# FastMCP 4 requires starlette>=1.0.1, which requires fastapi>=0.133.0.
+fastapi>=0.133.0
 uvicorn>=0.38.0
-pydantic>=2.12.4
+pydantic>=2.12.0
 
 # --- HTTP clients ---
+# FastMCP 4 uses httpx2 internally. Lab code uses plain httpx; both can be
+# installed side by side.
 httpx
 requests
 aiohttp
@@ -19,13 +38,9 @@ aiohttp
 # --- Auth (JWT for lab3) ---
 python-jose>=3.5.0
 
-# --- LangChain + Ollama (used by agent labs) ---
-langchain_ollama>=1.0.0
-langchain>=1.2.6
-langchain_core>=0.3.0
-langchain_mcp_adapters>=0.1.13
+# --- LLM access for the Lab 1 agent ---
+# The agent talks to Ollama over its plain HTTP API - no framework required.
 
 # --- Other tools (may be used in extended/optional labs) ---
-crewai>=1.5.0
 sentence-transformers>=5.1.2
 pymupdf>=1.26.6

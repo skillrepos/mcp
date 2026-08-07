@@ -82,7 +82,15 @@ source py_env/bin/activate
 
 # Install all required packages
 pip install --upgrade pip
-pip install mcp mcp[cli] mcp[inspector] fastapi uvicorn pydantic fastmcp crewai langchain_ollama langgraph langchain_mcp_adapters python-jose
+# Preferred: install exactly what the labs pin
+pip install -r requirements.txt
+
+# Or by hand. Note the pins - the 2026-07-28 protocol revision needs
+# FastMCP 4 (still beta); FastMCP 3.4.x pins mcp<2.0 and cannot speak it.
+# langchain_mcp_adapters is deliberately NOT installed: it imports
+# mcp.server.fastmcp, a module removed in MCP Python SDK v2.
+pip install "fastmcp==4.0.0b1" "fastmcp-slim==4.0.0b1" "mcp>=2.0.0,<3.0.0" \
+            "fastapi>=0.133.0" uvicorn pydantic python-jose httpx requests aiohttp
 
 # Or install from requirements file
 pip install -r requirements.txt
@@ -92,7 +100,7 @@ pip install -r requirements.txt
 
 ```bash
 # Install MCP Inspector globally
-npm install -g @modelcontextprotocol/inspector
+npm install -g @modelcontextprotocol/inspector@latest   # 2.x is the first line supporting 2026-07-28
 
 # Verify installation
 npx @modelcontextprotocol/inspector --version
@@ -244,7 +252,7 @@ npm install -g npx
 
 # If MCP Inspector fails to start
 npm cache clean --force
-npm install -g @modelcontextprotocol/inspector --force
+npm install -g @modelcontextprotocol/inspector@latest   # 2.x is the first line supporting 2026-07-28 --force
 ```
 
 
@@ -261,7 +269,8 @@ kill -9 $(lsof -t -i:6277) 2>/dev/null || true
 ## 📚 Additional Resources
 
 - **MCP Documentation**: https://docs.anthropic.com/claude/docs/mcp
-- **FastMCP Documentation**: https://github.com/jlowin/fastmcp
+- **MCP Specification (2026-07-28)**: https://modelcontextprotocol.io/specification/2026-07-28/
+- **FastMCP Documentation**: https://gofastmcp.com  (see the "Upgrading from FastMCP 3" guide)
 - **MCP Inspector**: https://github.com/modelcontextprotocol/inspector
 - **Python Virtual Environments**: https://docs.python.org/3/tutorial/venv.html
 

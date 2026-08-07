@@ -1,70 +1,162 @@
-# note_server.py – FastMCP 3.x note-taking MCP server
-# Demonstrates: tools with state, static resources, resource templates, prompts
+# note_server.py - FastMCP 4.x note-taking MCP server
+# MCP specification revision 2026-07-28
+#
+# Demonstrates: explicit state handles, tools that change state,
+#               static resources, resource templates, and prompts.
+#
+# WHAT CHANGED IN 2026-07-28 -- READ THIS FIRST
+#   Earlier revisions let a server keep per-connection state, keyed by the
+#   Mcp-Session-Id header. That header is gone. MCP is now stateless: a server
+#   must not infer anything from previous requests, even on the same connection,
+#   because any request may land on any instance behind a plain load balancer.
+#
+#   State that must span requests is now referenced by an EXPLICIT HANDLE that
+#   the server mints and the client passes back on every call. Note what this
+#   buys you beyond scaling: the handle is an ordinary tool argument, so the
+#   model can see it, reason about it, and carry it forward. State that used to
+#   be hidden in the transport is now visible in the conversation.
+#
+# SECURITY (spec: "State Handle Hijacking")
+#   Possessing a handle is NOT authentication. Handles must be unguessable and
+#   bound server-side to the authenticated caller. We use secrets.token_urlsafe
+#   below; a real server would additionally key the store by verified user id.
+
 import json
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from fastmcp import FastMCP
 
-server = FastMCP("NoteService")
+server = FastMCP(
+    "NoteService",
+    instructions="Create a notebook, then save and read notes inside it.",
+    cache_ttl=60,
+    # Notebook contents differ per caller, so their cached representation
+    # must not be shared across authorization contexts.
+    cache_scope="private",
+)
 
-# ─── In-memory note store ────────────────────────────────────────────
-notes: dict[str, str] = {}
+# ─── Notebook store, keyed by explicit handle ────────────────────────
+# In production this would be Redis or a database shared by every replica.
+# The point is that it is keyed by a value the CLIENT supplies, not by a
+# connection the server happens to be holding open.
+notebooks: dict[str, dict] = {}
+
+HANDLE_TTL = timedelta(hours=1)
+
+
+def _new_handle() -> str:
+    # High entropy: handles must not be guessable or enumerable.
+    return f"nb_{secrets.token_urlsafe(16)}"
+
+
+def _get(handle: str) -> dict:
+    nb = notebooks.get(handle)
+    if nb is None:
+        raise ValueError(
+            f"Unknown notebook handle: {handle}. Call open_notebook first."
+        )
+    if datetime.now(timezone.utc) > nb["expires"]:
+        del notebooks[handle]
+        raise ValueError(f"Notebook handle {handle} has expired. Open a new one.")
+    return nb
+
 
 # ─── Tools ───────────────────────────────────────────────────────────
 
-@server.tool()
-def save_note(title: str, content: str) -> str:
-    """Save a note with a title and content."""
-    notes[title] = content
-    return f"Saved note: \"{title}\" with content: \"{content}\""
+@server.tool
+def open_notebook(name: str = "default") -> dict:
+    """Create a notebook and return the handle used for all later calls.
+
+    This is the 2026-07-28 replacement for an implicit session: the server
+    mints an identifier and hands it back as ordinary data.
+    """
+    handle = _new_handle()
+    notebooks[handle] = {
+        "name": name,
+        "notes": {},
+        "expires": datetime.now(timezone.utc) + HANDLE_TTL,
+    }
+    return {
+        "handle": handle,
+        "name": name,
+        "note": "Pass this handle to save_note and list_notes.",
+    }
 
 
-@server.tool()
-def list_notes() -> dict:
-    """List all saved note titles and count."""
-    return {"notes": list(notes.keys()), "count": len(notes)}
+@server.tool
+def save_note(handle: str, title: str, content: str) -> dict:
+    """Save a note into the notebook identified by `handle`."""
+    nb = _get(handle)
+    nb["notes"][title] = content
+    return {"saved": title, "handle": handle, "total_notes": len(nb["notes"])}
+
+
+@server.tool
+def list_notes(handle: str) -> dict:
+    """List the titles of every note in the notebook identified by `handle`."""
+    nb = _get(handle)
+    return {
+        "notebook": nb["name"],
+        "titles": sorted(nb["notes"]),
+        "count": len(nb["notes"]),
+    }
 
 
 # ─── Static resource ────────────────────────────────────────────────
-# Returns a catalog of all notes (titles + previews).
-# URI is fixed — always returns the full collection.
+# A fixed URI that always returns the same shape. Note the exact rule:
+# 2026-07-28 forbids list results from varying *per connection*, but they MAY
+# still vary by the authorization presented on the request - returning only the
+# tools a caller's scopes permit is explicitly allowed, because credentials are
+# per-request input rather than connection state. This lab has no auth, so ours
+# is simply the same for everyone.
 
-@server.resource("resource://notes/catalog")
+@server.resource("resource://catalog")
 def notes_catalog() -> str:
-    """Full catalog of all stored notes."""
-    return json.dumps({
-        "notes": {
-            k: (v[:80] + "…") if len(v) > 80 else v
-            for k, v in notes.items()
+    """Catalog of open notebooks and how many notes each holds."""
+    return json.dumps(
+        {
+            "notebooks": [
+                {"handle": h, "name": nb["name"], "notes": len(nb["notes"])}
+                for h, nb in notebooks.items()
+            ]
         },
-        "count": len(notes),
-    }, indent=2)
+        indent=2,
+    )
 
 
 # ─── Resource template (dynamic URI) ────────────────────────────────
-# The {title} placeholder is resolved from the URI at request time.
-# e.g. resource://notes/meeting-summary → title="meeting-summary"
+# The handle travels in the URI itself, which is the resource-side equivalent
+# of passing it as a tool argument: explicit, visible, and stateless.
 
-@server.resource("resource://notes/{title}")
-def get_note(title: str) -> str:
-    """Retrieve a single note by its title."""
-    if title == "catalog":
-        return json.dumps({"error": "Use resource://notes/catalog for the full catalog."})
-    if title not in notes:
-        return json.dumps({"error": f"Note '{title}' not found"})
-    return json.dumps({"title": title, "content": notes[title]}, indent=2)
+@server.resource("resource://note/{handle}/{title}")
+def get_note(handle: str, title: str) -> str:
+    """Read one note out of one notebook."""
+    nb = _get(handle)
+    if title not in nb["notes"]:
+        # 2026-07-28 changed resource-not-found from the custom -32002 to the
+        # standard JSON-RPC -32602 (Invalid params). Raising here lets FastMCP
+        # emit the right code for us.
+        raise ValueError(f"No note titled {title!r} in notebook {handle}")
+    return nb["notes"][title]
 
 
 # ─── Prompt ──────────────────────────────────────────────────────────
 
 @server.prompt("summarize_notes")
-def summarize_notes() -> str:
-    """Ask an LLM to summarize all stored notes."""
-    if not notes:
-        return "No notes have been saved yet."
-    all_notes = "\n\n".join(f"## {k}\n{v}" for k, v in notes.items())
-    return f"Please provide a concise summary of the following notes:\n\n{all_notes}"
+def summarize_notes(handle: str) -> str:
+    """Package every note in a notebook into an LLM-ready summary prompt."""
+    nb = _get(handle)
+    if not nb["notes"]:
+        return "There are no notes to summarize yet."
+    body = "\n\n".join(f"## {t}\n{c}" for t, c in nb["notes"].items())
+    return (
+        "Summarize the following notes into three bullet points, "
+        f"then list any action items.\n\n{body}"
+    )
 
 
 # ─── Entry point ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    server.run(transport="streamable-http")
+    server.run(transport="http", host="0.0.0.0", port=8000)

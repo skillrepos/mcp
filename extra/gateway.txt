@@ -1,21 +1,34 @@
-# gateway.py – Compose multiple MCP servers behind a single endpoint
-# Demonstrates FastMCP server composition with mount() and namespacing
+# gateway.py - Compose multiple MCP servers behind a single endpoint
+# FastMCP 4.x / MCP specification revision 2026-07-28
+#
+# What changed:
+#   * mount() now takes `namespace=` (FastMCP 3.x called it `prefix=`).
+#   * A gateway is far simpler to operate under 2026-07-28: with no sessions
+#     to pin, requests can be fanned out across replicas by an ordinary
+#     round-robin load balancer. The Mcp-Method and Mcp-Name headers let that
+#     balancer route and rate-limit per tool without parsing the JSON body.
+#   * A component that actually executes the request MUST re-validate that the
+#     headers match the body. That is what stops a gateway routing on one value
+#     while the server executes another.
 
 from fastmcp import FastMCP
 
-# Import the two servers we built
+# 1) Import the two servers we built. These are ordinary Python objects,
+#    so composing them needs no network hop.
 from note_server import server as note_service
-from math_server import math   as math_service
+from math_server import math_service
 
-# Create the gateway and mount both servers with namespaces
-gateway = FastMCP("Gateway")
+# 2) Create the gateway and mount both servers under namespaces.
+gateway = FastMCP("Lab Gateway", instructions="Notes and math behind one endpoint.")
+
 gateway.mount(note_service, namespace="notes")
 gateway.mount(math_service, namespace="math")
 
-# Now all tools are available at one endpoint:
-#   notes_save_note, notes_list_notes
-#   math_add, math_multiply
-# And all resources/prompts from note_service are also available.
+# Tools are now exposed as notes_open_notebook, notes_save_note,
+# notes_list_notes, math_add and math_multiply. Resource URIs are namespaced
+# the same way: resource://catalog becomes resource://notes/catalog, and the
+# template resource://note/{handle}/{title} becomes
+# resource://notes/note/{handle}/{title}.
 
 if __name__ == "__main__":
-    gateway.run(transport="streamable-http")
+    gateway.run(transport="http", host="0.0.0.0", port=8000)

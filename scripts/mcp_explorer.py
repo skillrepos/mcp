@@ -1,6 +1,26 @@
 #!/usr/bin/env python3
 """
-Simple MCP Explorer - Interactive web-based client for exploring MCP servers
+Simple MCP Explorer - Interactive web-based client for exploring MCP servers.
+
+Updated 2026-08-03 for MCP specification revision 2026-07-28.
+
+What changed:
+  * No initialize/initialized handshake and no Mcp-Session-Id. Every request is
+    self-describing: protocol version, client info and client capabilities all
+    travel in params._meta on each call.
+  * "Connect" now calls the mandatory server/discover RPC, which returns the
+    server's supported protocol versions, capabilities and instructions in one
+    round trip.
+  * Streamable HTTP now requires the Mcp-Method header on every request, plus
+    Mcp-Name on tools/call, resources/read and prompts/get, so gateways can
+    route without parsing the JSON body.
+  * List and read results carry ttlMs / cacheScope caching hints, which the
+    Explorer displays.
+  * BACKWARD COMPATIBILITY: if server/discover fails the way a pre-2026 server
+    fails (it has no such method and, over HTTP, demands a session id), the
+    Explorer falls back to the legacy initialize handshake and carries the
+    Mcp-Session-Id header on every later call. The status bar tells you which
+    era you landed in.
 """
 
 import asyncio
@@ -9,9 +29,22 @@ from aiohttp import web
 import json
 from datetime import datetime
 
-# Store the MCP server URL and session ID
+# Store the MCP server URL and the protocol version we negotiated.
 MCP_SERVER_URL = None
-MCP_SESSION_ID = None
+MCP_PROTOCOL_VERSION = "2026-07-28"
+
+# Which era of the spec the connected server speaks.
+#   "2026-07-28" - stateless; _meta + Mcp-Method headers on every request
+#   "legacy"     - 2025-11-25 or earlier; initialize handshake + Mcp-Session-Id
+MCP_ERA = "2026-07-28"
+MCP_SESSION_ID = None          # only used in legacy mode
+LEGACY_ASK_VERSION = "2025-11-25"   # newest pre-stateless revision we offer
+
+# Identity we advertise on every request (self-reported, not verified).
+CLIENT_INFO = {"name": "mcp-explorer", "version": "2.0.0"}
+
+# Methods whose params carry a name/uri that must be mirrored into Mcp-Name.
+_NAME_BEARING = {"tools/call": "name", "prompts/get": "name", "resources/read": "uri"}
 
 async def index_handler(request):
     """Serve the main HTML page"""
@@ -228,7 +261,7 @@ async def index_handler(request):
     </div>
 
     <script>
-        let sessionId = null;
+        let protocolVersion = null;
 
         function switchTab(tabName) {
             // Hide all tabs
@@ -261,10 +294,25 @@ async def index_handler(request):
                 const data = await response.json();
 
                 if (data.success) {
-                    sessionId = data.sessionId;
-                    document.getElementById('status-text').textContent = '✅ Connected';
+                    // 2026-07-28: no session id. We record the protocol version
+                    // that server/discover told us this server speaks.
+                    protocolVersion = data.protocolVersion;
+                    const info = data.serverInfo || {};
+                    const name = info.name ? `${info.name} ${info.version || ''}` : 'server';
+                    const eraTag = data.era === 'legacy'
+                        ? ' — legacy mode: initialize handshake + Mcp-Session-Id'
+                        : ' — stateless';
+                    document.getElementById('status-text').textContent =
+                        `✅ Connected (${data.protocolVersion}${eraTag})`;
                     document.getElementById('status-text').style.color = '#4caf50';
-                    document.getElementById('current-server').textContent = `Connected to: ${serverUrl}`;
+                    let detail = `Connected to: ${serverUrl} — ${name}`;
+                    if (data.supportedVersions && data.supportedVersions.length) {
+                        detail += ` · supports: ${data.supportedVersions.join(', ')}`;
+                    }
+                    if (data.cache && data.cache.ttlMs != null) {
+                        detail += ` · discover cache: ttlMs=${data.cache.ttlMs}, scope=${data.cache.cacheScope}`;
+                    }
+                    document.getElementById('current-server').textContent = detail;
 
                     // Auto-load all lists
                     await listPrompts();
@@ -695,316 +743,322 @@ async def parse_sse_response(response):
     return json.loads(text)
 
 
-def get_headers_with_session():
-    """Get headers with session ID if needed"""
+def build_request(method, params=None, req_id=1):
+    """Build a spec-correct JSON-RPC request for whichever era we negotiated.
+
+    2026-07-28: every request carries its own protocol version and client
+    capabilities in _meta - there is no handshake that establishes them once.
+    Legacy: the handshake already established them, so params stay bare.
+    """
+    body_params = dict(params or {})
+    if MCP_ERA == "2026-07-28":
+        body_params["_meta"] = {
+            "io.modelcontextprotocol/protocolVersion": MCP_PROTOCOL_VERSION,
+            "io.modelcontextprotocol/clientInfo": CLIENT_INFO,
+            "io.modelcontextprotocol/clientCapabilities": {},
+        }
+    return {"jsonrpc": "2.0", "id": req_id, "method": method, "params": body_params}
+
+
+def build_headers(method, params=None):
+    """Build the HTTP headers Streamable HTTP requires - era dependent.
+
+    2026-07-28: MCP-Protocol-Version and Mcp-Method are mandatory on every
+    request; Mcp-Name on tools/call, resources/read and prompts/get. A server
+    MUST reject a request whose headers disagree with its body
+    (HeaderMismatchError, JSON-RPC -32020, HTTP 400).
+
+    Legacy (2025-11-25 and earlier): no Mcp-Method/Mcp-Name; instead every
+    request after initialize carries the Mcp-Session-Id the server issued.
+    """
     headers = {
-        'Accept': 'text/event-stream, application/json',
-        'Content-Type': 'application/json'
+        "Accept": "application/json, text/event-stream",
+        "Content-Type": "application/json",
+        "MCP-Protocol-Version": MCP_PROTOCOL_VERSION,
     }
-
-    if MCP_SESSION_ID:
-        headers['MCP-Session-ID'] = MCP_SESSION_ID
-
+    if MCP_ERA == "2026-07-28":
+        headers["Mcp-Method"] = method
+        key = _NAME_BEARING.get(method)
+        if key and params and params.get(key):
+            headers["Mcp-Name"] = str(params[key])
+    elif MCP_SESSION_ID:
+        headers["Mcp-Session-Id"] = MCP_SESSION_ID
     return headers
 
 
+def cache_info(result):
+    """Pull the SEP-2549 caching hints out of a result, if present."""
+    if not isinstance(result, dict):
+        return None
+    if "ttlMs" not in result and "cacheScope" not in result:
+        return None
+    return {"ttlMs": result.get("ttlMs"), "cacheScope": result.get("cacheScope")}
+
+
+async def mcp_call(method, params=None, req_id=1):
+    """POST one JSON-RPC request to the MCP endpoint and return the parsed body."""
+    params = params or {}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            MCP_SERVER_URL,
+            json=build_request(method, params, req_id),
+            headers=build_headers(method, params),
+        ) as resp:
+            return await parse_sse_response(resp)
+
+
+async def legacy_connect():
+    """Fall back to the pre-2026 initialize handshake.
+
+    1. POST initialize (protocolVersion, capabilities, clientInfo in params).
+    2. Read the Mcp-Session-Id response header the server issued.
+    3. POST notifications/initialized with that header.
+    Every later request must carry the same Mcp-Session-Id header.
+    """
+    global MCP_ERA, MCP_PROTOCOL_VERSION, MCP_SESSION_ID
+
+    init_body = {
+        "jsonrpc": "2.0", "id": 1, "method": "initialize",
+        "params": {
+            "protocolVersion": LEGACY_ASK_VERSION,
+            "capabilities": {},
+            "clientInfo": CLIENT_INFO,
+        },
+    }
+    headers = {"Accept": "application/json, text/event-stream",
+               "Content-Type": "application/json"}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(MCP_SERVER_URL, json=init_body,
+                                headers=headers) as resp:
+            session_id = resp.headers.get("mcp-session-id")
+            body = await parse_sse_response(resp)
+        if "result" not in body:
+            raise RuntimeError(f"legacy initialize failed: {body}")
+        r = body["result"]
+
+        # Adopt whatever the handshake negotiated, and pin the session id.
+        MCP_ERA = "legacy"
+        MCP_PROTOCOL_VERSION = r.get("protocolVersion", LEGACY_ASK_VERSION)
+        MCP_SESSION_ID = session_id
+
+        # The old spec requires this notification before normal traffic.
+        note = {"jsonrpc": "2.0", "method": "notifications/initialized"}
+        note_headers = dict(headers)
+        if MCP_SESSION_ID:
+            note_headers["Mcp-Session-Id"] = MCP_SESSION_ID
+        note_headers["MCP-Protocol-Version"] = MCP_PROTOCOL_VERSION
+        async with session.post(MCP_SERVER_URL, json=note,
+                                headers=note_headers):
+            pass
+    return r
+
+
+def looks_pre_2026(result):
+    """Does this server/discover response look like a pre-2026 server?
+
+    A legacy Streamable HTTP server rejects the sessionless POST outright
+    (e.g. -32600 'Missing session ID') or reports the method as unknown
+    (-32601). Either way it never answers -32022, which is what a MODERN
+    server says when it merely lacks our version - that case should not
+    trigger a legacy fallback.
+    """
+    err = result.get('error') if isinstance(result, dict) else None
+    return bool(err) and err.get('code') in (-32600, -32601)
+
+
 async def connect_handler(request):
-    """Connect to the MCP server"""
-    global MCP_SESSION_ID, MCP_SERVER_URL
+    """Connect to the MCP server via the mandatory server/discover RPC.
+
+    In 2026-07-28 there is no initialize handshake and no session to establish.
+    server/discover is simply a normal request that reports what the server
+    supports; calling it is optional for a client, but implementing it is
+    mandatory for a server.
+
+    If the server turns out to be pre-2026, fall through to legacy_connect().
+    """
+    global MCP_SERVER_URL, MCP_PROTOCOL_VERSION, MCP_ERA, MCP_SESSION_ID
 
     try:
-        import uuid
-
-        # Get server URL from request body if provided
         data = await request.json()
         new_server_url = data.get('serverUrl')
-
         if new_server_url:
-            # Update the global server URL
             MCP_SERVER_URL = new_server_url
-            # Reset session ID for new server
-            MCP_SESSION_ID = None
 
-        # Initialize connection
-        init_request = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {
-                    "name": "mcp-explorer",
-                    "version": "1.0.0"
-                }
-            }
-        }
+        # Reset to the modern era for every new connection attempt.
+        MCP_ERA = "2026-07-28"
+        MCP_PROTOCOL_VERSION = "2026-07-28"
+        MCP_SESSION_ID = None
 
-        # MCP server requires both content types to be accepted
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
+        result = await mcp_call("server/discover", {}, req_id=1)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(MCP_SERVER_URL, json=init_request, headers=headers) as resp:
-                # Extract session ID from response headers
-                session_id = resp.headers.get('mcp-session-id') or resp.headers.get('MCP-Session-ID')
-                if session_id:
-                    MCP_SESSION_ID = session_id
+        if looks_pre_2026(result):
+            r = await legacy_connect()
+            return web.json_response({
+                'success': True,
+                'era': 'legacy',
+                'protocolVersion': MCP_PROTOCOL_VERSION,
+                'supportedVersions': [MCP_PROTOCOL_VERSION],
+                'capabilities': r.get('capabilities', {}),
+                'instructions': r.get('instructions'),
+                'serverInfo': r.get('serverInfo', {}),
+                'cache': None,
+            })
 
-                result = await parse_sse_response(resp)
+        if 'result' in result:
+            r = result['result']
+            supported = r.get('supportedVersions', [])
+            # Pin ourselves to a version the server actually supports.
+            if supported and MCP_PROTOCOL_VERSION not in supported:
+                MCP_PROTOCOL_VERSION = supported[0]
 
-                if 'result' in result:
-                    return web.json_response({'success': True, 'sessionId': MCP_SESSION_ID or 'active'})
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+            server_info = (r.get('_meta') or {}).get(
+                'io.modelcontextprotocol/serverInfo', {})
+
+            return web.json_response({
+                'success': True,
+                'era': '2026-07-28',
+                'protocolVersion': MCP_PROTOCOL_VERSION,
+                'supportedVersions': supported,
+                'capabilities': r.get('capabilities', {}),
+                'instructions': r.get('instructions'),
+                'serverInfo': server_info,
+                'cache': cache_info(r),
+            })
+
+        # A modern server that does not speak our version answers with
+        # UnsupportedProtocolVersionError (-32022) and lists what it does speak.
+        err = result.get('error', {})
+        if err.get('code') == -32022:
+            supported = (err.get('data') or {}).get('supported', [])
+            return web.json_response({
+                'success': False,
+                'error': f"Server does not support {MCP_PROTOCOL_VERSION}. "
+                         f"It supports: {', '.join(supported) or 'unknown'}"
+            })
+
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
 
 
 async def list_prompts_handler(request):
-    """List available prompts"""
+    """prompts/list - see build_headers() for the headers 2026-07-28 requires."""
     try:
-        rpc_request = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "prompts/list"
-        }
+        result = await mcp_call("prompts/list", {}, req_id=2)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'prompts': result['result'].get('prompts', [])
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'prompts': result['result'].get('prompts', []),
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def list_tools_handler(request):
-    """List available tools"""
+    """tools/list - see build_headers() for the headers 2026-07-28 requires."""
     try:
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
+        result = await mcp_call("tools/list", {}, req_id=3)
 
-        # Add session ID if available
-        if MCP_SESSION_ID:
-            headers['MCP-Session-ID'] = MCP_SESSION_ID
-
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 3,
-                "method": "tools/list"
-            }
-
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'tools': result['result'].get('tools', [])
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'tools': result['result'].get('tools', []),
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def list_resources_handler(request):
-    """List available resources"""
+    """resources/list - see build_headers() for the headers 2026-07-28 requires."""
     try:
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
+        result = await mcp_call("resources/list", {}, req_id=4)
 
-        # Add session ID if available
-        if MCP_SESSION_ID:
-            headers['MCP-Session-ID'] = MCP_SESSION_ID
-
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 4,
-                "method": "resources/list"
-            }
-
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'resources': result['result'].get('resources', [])
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'resources': result['result'].get('resources', []),
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def list_resource_templates_handler(request):
-    """List available resource templates"""
+    """resources/templates/list - see build_headers() for the headers 2026-07-28 requires."""
     try:
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 8,
-                "method": "resources/templates/list"
-            }
+        result = await mcp_call("resources/templates/list", {}, req_id=8)
 
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'resourceTemplates': result['result'].get('resourceTemplates', [])
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'resourceTemplates': result['result'].get('resourceTemplates', []),
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def call_tool_handler(request):
-    """Call a tool"""
+    """tools/call - see build_headers() for the headers 2026-07-28 requires."""
     try:
         data = await request.json()
-        tool_name = data.get('name')
-        arguments = data.get('arguments', {})
+        params = {"name": data.get('name'), "arguments": data.get('arguments', {})}
+        result = await mcp_call("tools/call", params, req_id=5)
 
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
-
-        # Add session ID if available
-        if MCP_SESSION_ID:
-            headers['MCP-Session-ID'] = MCP_SESSION_ID
-
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 5,
-                "method": "tools/call",
-                "params": {
-                    "name": tool_name,
-                    "arguments": arguments
-                }
-            }
-
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'result': result['result']
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'result': result['result'],
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def get_prompt_handler(request):
-    """Get a prompt"""
+    """prompts/get - see build_headers() for the headers 2026-07-28 requires."""
     try:
         data = await request.json()
-        prompt_name = data.get('name')
-        arguments = data.get('arguments', {})
+        params = {"name": data.get('name'), "arguments": data.get('arguments', {})}
+        result = await mcp_call("prompts/get", params, req_id=6)
 
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
-
-        # Add session ID if available
-        if MCP_SESSION_ID:
-            headers['MCP-Session-ID'] = MCP_SESSION_ID
-
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 6,
-                "method": "prompts/get",
-                "params": {
-                    "name": prompt_name,
-                    "arguments": arguments
-                }
-            }
-
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'result': result['result']
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'result': result['result'],
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def read_resource_handler(request):
-    """Read a resource"""
+    """resources/read - see build_headers() for the headers 2026-07-28 requires."""
     try:
         data = await request.json()
-        uri = data.get('uri')
+        params = {"uri": data.get('uri')}
+        result = await mcp_call("resources/read", params, req_id=7)
 
-        headers = {
-            'Accept': 'text/event-stream, application/json',
-            'Content-Type': 'application/json'
-        }
-
-        # Add session ID if available
-        if MCP_SESSION_ID:
-            headers['MCP-Session-ID'] = MCP_SESSION_ID
-
-        async with aiohttp.ClientSession() as session:
-            rpc_request = {
-                "jsonrpc": "2.0",
-                "id": 7,
-                "method": "resources/read",
-                "params": {
-                    "uri": uri
-                }
-            }
-
-            async with session.post(MCP_SERVER_URL, json=rpc_request, headers=get_headers_with_session()) as resp:
-                result = await parse_sse_response(resp)
-
-                if 'result' in result:
-                    return web.json_response({
-                        'success': True,
-                        'result': result['result']
-                    })
-                else:
-                    return web.json_response({'success': False, 'error': str(result)})
+        if 'result' in result:
+            return web.json_response({
+                'success': True,
+                'result': result['result'],
+                'cache': cache_info(result['result']),
+            })
+        return web.json_response({'success': False, 'error': str(result)})
 
     except Exception as e:
         return web.json_response({'success': False, 'error': str(e)})
-
 
 async def get_server_url_handler(request):
     """Get the current MCP server URL"""

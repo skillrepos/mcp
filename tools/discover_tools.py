@@ -2,71 +2,62 @@
 """
 discover_tools.py
 ────────────────────────────────────────────────────────────────────
-**Purpose**
-Connect to a running FastMCP server and print a one-line summary
-(name + description) of every tool the server currently exposes.
+Connect to a running MCP server and print a summary of everything it
+exposes: supported protocol versions, capabilities, and each tool.
 
-Why you might run this
-----------------------
-* Quick sanity-check that your MCP server is live.
-* See the exact spelling of tool names before calling them.
-* Share a lightweight script with teammates who don't know FastMCP yet.
+Updated 2026-08-03 for MCP specification revision 2026-07-28.
+
+What changed:
+  * There is no initialize handshake to perform first. The client either calls
+    server/discover or simply sends the request it wants.
+  * Tool schema fields are snake_case in the SDK (input_schema, output_schema);
+    they are still inputSchema / outputSchema on the wire.
+  * List results now carry ttlMs / cacheScope caching hints.
 
 Usage
 -----
-python discover_tools.py [port] [transport]
+python discover_tools.py [port] [path]
 
 Arguments:
-  port      - Port number (default: 8000)
-  transport - Transport type (default: mcp)
+  port  - Port number (default: 8000)
+  path  - Endpoint path without a leading slash (default: mcp)
 
 Example:
-  python discover_tools.py 8931 sse
-  # Connects to http://127.0.0.1:8931/sse/
-
-Assumptions
------------
-* The server is reachable at the constructed URL.
-* No authentication is required (default local dev setup).
+  python discover_tools.py 8931 mcp
+  # Connects to http://127.0.0.1:8931/mcp
 """
 
-import asyncio                    # built-in: run asynchronous code
-import sys                        # built-in: command-line arguments
-import re                         # built-in: regular expressions
-from fastmcp import Client        # official async JSON-RPC wrapper
+import asyncio
+import re
+import sys
 
-# ╔════════════════════════════════════════════════════════════════╗
-# 1.  Async entry-point                                           ║
-# ╚════════════════════════════════════════════════════════════════╝
-async def main(port: int = 8000, transport: str = "mcp") -> None:
-    """
-    Open an async connection to the MCP endpoint, retrieve the list of
-    tools, and print formatted information for each.
+from fastmcp import Client
 
-    Args:
-        port: Port number for the MCP server (default: 8000)
-        transport: Transport type for the connection (default: mcp)
-    """
-    # Construct the URL from port and transport arguments
-    url = f"http://127.0.0.1:{port}/{transport}/"
+CYAN = "\033[96m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+
+
+async def main(port: int = 8000, path: str = "mcp") -> None:
+    # No trailing slash: /mcp is the canonical 2026-07-28 endpoint form.
+    url = f"http://127.0.0.1:{port}/{path}"
     print(f"Connecting to: {url}")
 
-    # `Client` is an asynchronous context-manager: it opens the HTTP
-    # connection on entry and closes it on exit.
+    # mode="auto" (the default) speaks 2026-07-28 where available and falls
+    # back to the legacy initialize handshake for older servers.
     async with Client(url) as mcp:
+        print(f"\n{CYAN}Protocol version negotiated:{RESET} {mcp.protocol_version}")
+        info = mcp.server_info
+        if info:
+            print(f"{CYAN}Server:{RESET} {info.name} {info.version or ''}")
+        if mcp.instructions:
+            print(f"{CYAN}Instructions:{RESET} {mcp.instructions}")
+        if mcp.server_capabilities:
+            print(f"{CYAN}Capabilities:{RESET} {mcp.server_capabilities}")
 
-        # `list_tools()` sends a JSON-RPC request {method:"tools/list"}
-        # and returns a list of Tool objects (attributes: name, description…)
         tools = await mcp.list_tools()
-
-        # ANSI color codes
-        CYAN = "\033[96m"       # Cyan for headings (tool name)
-        GREEN = "\033[92m"      # Green for descriptions
-        YELLOW = "\033[93m"     # Yellow for parameters
-        MAGENTA = "\033[95m"    # Magenta for return information
-        RESET = "\033[0m"       # Reset to default color
-
-        # Print formatted catalogue with numbered tools
         print(f"\nDiscovered {len(tools)} tool(s):\n")
 
         for i, tool in enumerate(tools, start=1):
@@ -75,54 +66,45 @@ async def main(port: int = 8000, transport: str = "mcp") -> None:
             print(CYAN + "-" * 70 + RESET)
             print()
 
-            # Description - clean up docstring sections
-            description = tool.description
-            # Remove "Parameters" and "Returns" sections from docstrings
-            # Match patterns like "Parameters\n----------" or "Returns\n-------"
-            description = re.split(r'\n\s*(Parameters|Returns)\s*\n\s*[-=]+\s*\n', description, flags=re.IGNORECASE)[0]
-            description = description.strip()
+            description = tool.description or ""
+            description = re.split(
+                r"\n\s*(Parameters|Returns)\s*\n\s*[-=]+\s*\n",
+                description,
+                flags=re.IGNORECASE,
+            )[0].strip()
 
             print(CYAN + "Description" + RESET)
             print(CYAN + "-----------" + RESET)
-            print(GREEN + description + RESET)
+            print(GREEN + (description or "(none)") + RESET)
             print()
 
-            # Parameters (inputSchema)
-            if hasattr(tool, 'inputSchema') and tool.inputSchema:
+            # SDK v2 exposes this as input_schema (inputSchema on the wire).
+            schema = getattr(tool, "input_schema", None)
+            if schema:
                 print(CYAN + "Parameters" + RESET)
                 print(CYAN + "----------" + RESET)
-                schema = tool.inputSchema
-                if 'properties' in schema:
-                    for param_name, param_info in schema['properties'].items():
-                        param_type = param_info.get('type', 'any')
-                        param_desc = param_info.get('description', 'No description')
-                        required = ' (required)' if param_name in schema.get('required', []) else ''
-                        print(YELLOW + f"  {param_name}: {param_type}{required}" + RESET)
-                        print(YELLOW + f"    {param_desc}" + RESET)
+                props = schema.get("properties", {})
+                if props:
+                    required = schema.get("required", [])
+                    for name, info in props.items():
+                        ptype = info.get("type", "any")
+                        pdesc = info.get("description", "No description")
+                        req = " (required)" if name in required else ""
+                        print(YELLOW + f"  {name}: {ptype}{req}" + RESET)
+                        print(YELLOW + f"    {pdesc}" + RESET)
                 else:
                     print(YELLOW + "  No parameters" + RESET)
                 print()
 
-            # Return information
-            if hasattr(tool, 'returnType') and tool.returnType:
+            out = getattr(tool, "output_schema", None)
+            if out:
                 print(CYAN + "Returns" + RESET)
                 print(CYAN + "-------" + RESET)
-                print(MAGENTA + str(tool.returnType) + RESET)
-                print()
-            elif hasattr(tool, 'outputSchema') and tool.outputSchema:
-                print(CYAN + "Returns" + RESET)
-                print(CYAN + "-------" + RESET)
-                print(MAGENTA + str(tool.outputSchema) + RESET)
+                print(MAGENTA + str(out) + RESET)
                 print()
 
-# ╔════════════════════════════════════════════════════════════════╗
-# 2.  Synchronous bootstrap                                       ║
-# ╚════════════════════════════════════════════════════════════════╝
-# asyncio.run() creates an event-loop, executes `main()`, and
-# automatically shuts everything down when `main()` finishes.
+
 if __name__ == "__main__":
-    # Parse command-line arguments
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    transport = sys.argv[2] if len(sys.argv) > 2 else "mcp"
-
-    asyncio.run(main(port, transport))
+    path = sys.argv[2] if len(sys.argv) > 2 else "mcp"
+    asyncio.run(main(port, path))

@@ -1,131 +1,79 @@
+"""
+agent_mcp.py - a minimal MCP agent, no agent framework involved.
+
+Updated 2026-08-03 for MCP specification revision 2026-07-28.
+
+An "agent" is just this loop:
+  1. tools/list  -> ask the MCP server what it can do
+  2. translate the MCP tool schemas into the LLM's tool-calling format
+  3. send the question + tool list to the model
+  4. the model answers with tool calls -> run them via tools/call
+  5. feed results back and repeat until the model answers in plain text
+
+Merge in the completed code to fill the TODOs below.
+"""
+
 import asyncio
-import re
+import json
 
-from langchain_ollama import ChatOllama
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+import httpx
 
+from fastmcp import Client
 
-# -----------------------------------------------------------------------------
-# Helper: extract the final numeric value from a sentence-like tool response.
-#
-# Your CalcMCP tools may return text like:
-#   "The product of 12 and 8 is 96"
-# We want to pull out "96" so we can feed clean numbers back into later tool calls.
-# -----------------------------------------------------------------------------
-def last_number(text: str) -> str:
-    nums = re.findall(r"-?\d+(?:\.\d+)?", text)
-    return nums[-1] if nums else text
+MCP_URL = "http://127.0.0.1:8931/mcp"
+OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
+MODEL = "llama3.2"
 
+BLUE = "\033[94m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
-# -----------------------------------------------------------------------------
-# Helper: normalize the MCP tool response to plain text.
-#
-# Many MCP servers return "content blocks" like:
-#   [{'type': 'text', 'text': '...'}]
-# This function grabs the text content (or falls back to str(...)).
-# -----------------------------------------------------------------------------
-def tool_text(result) -> str:
-    if isinstance(result, list) and result and isinstance(result[0], dict) and "text" in result[0]:
-        return result[0]["text"]
-    return str(result)
+SYSTEM = (
+    "You are a careful calculator assistant. Use the provided tools for every "
+    "arithmetic step. Do exactly one operation per tool call and never nest "
+    "calls. After you have the final number, state it in one short sentence."
+)
 
 
-# -----------------------------------------------------------------------------
-# Helper: pretty-print tool arguments for the trace output.
-# (Purely for display; does not affect the actual tool call.)
-# -----------------------------------------------------------------------------
-def format_args(args: dict) -> str:
-    out = {}
-    for k, v in (args or {}).items():
-        if isinstance(v, str) and v.isdigit():
-            out[k] = int(v)
-        else:
-            out[k] = v
-    return str(out)
+# TODO: to_ollama_tools() - translate MCP tool definitions (name, description,
+#       input_schema) into the tool format the model API expects
+
+
+async def ask_model(client: httpx.AsyncClient, messages, tools):
+    """One turn with the LLM. Retries because cold local models are slow."""
+    payload = {"model": MODEL, "messages": messages, "tools": tools, "stream": False}
+    for attempt in range(4):
+        try:
+            resp = await client.post(OLLAMA_URL, json=payload)
+            resp.raise_for_status()
+            return resp.json()["message"]
+        except (httpx.TimeoutException, httpx.ConnectError):
+            if attempt == 3:
+                raise
+            await asyncio.sleep(1.5 * (attempt + 1))
+    raise RuntimeError("model unreachable")
 
 
 async def main():
+    timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
 
-    client = MultiServerMCPClient({
-        "CalcMCP": {
-        }
-    })
+    async with Client(MCP_URL) as mcp, httpx.AsyncClient(timeout=timeout) as http:
+        print(f"{BLUE}Connected using protocol {mcp.protocol_version}{RESET}")
 
-    # Ask the MCP server what tools it exposes.
-    # This returns LangChain tool objects that can be invoked with .ainvoke(...)
+        # TODO: discovery - call list_tools() and convert them for the model
 
+        messages = [
+            {"role": "system", "content": SYSTEM},
+            {"role": "user", "content": "What is 12 x 8 / 3 ?"},
+        ]
 
+        # TODO: the agent loop - ask the model, run any tool calls it makes
+        #       via mcp.call_tool(), append the results, and repeat until the
+        #       model replies with plain text
 
-    # =========================================================================
-    # 2) Create an LLM that knows how to "call tools"
-
-
-    # This is the "system message" that sets the rules of behavior.
-    # We emphasize: use tools for math, no nesting, and sequential steps.
-
-
-    # User question. This requires at least two steps: mul(12,8) then div(96,3).
-    user_prompt = "What’s 12×8 / 3 ?"
-
-    # messages is the full conversation history:
-    # - System instructions
-    # - User question
-    # - LLM tool-call messages
-    # - Tool result messages
-
-
-    # =========================================================================
-    # 3) Tool-execution loop (the "agent" behavior)
-    # =========================================================================
-
-    for _ in range(8):
-
-        # Store the model message in the conversation.
-        messages.append(ai)
-
-        # B) IMPORTANT:
-        # The model might emit MULTIPLE tool calls in a single turn.
-        # We execute them one-by-one, in order, and only move to the next after
-        # we have a result for the previous one.
-        #
-
-            # Each tool call has an ID; ToolMessage must reference it.
-            tool_call_id = call.get("id") or call.get("tool_call_id")
-
-            # Normalize to text, then extract a clean number token.
-            text = tool_text(raw_result)
-            numeric_value = last_number(text)
-
-
-    # =========================================================================
-    # 4) Print the full trace 
-    # =========================================================================
-    print("\n=== FULL AGENT TRACE ===")
-    for msg in messages:
-        if isinstance(msg, HumanMessage):
-            print("USER:", msg.content)
-
-        elif isinstance(msg, AIMessage):
-
-        elif isinstance(msg, ToolMessage):
-            # Show what we fed back to the model.
-            print(f"← TOOL RESULT for ID {msg.tool_call_id}:", msg.content)
-
-    # =========================================================================
-    # 5) Print the final natural language answer
-    # =========================================================================
-    # Walk backwards to find the most recent AIMessage with actual text content.
-    final_text = ""
-    for msg in reversed(messages):
-        if isinstance(msg, AIMessage) and (msg.content or "").strip():
-            final_text = msg.content.strip()
-            break
-
-    print("\n=== FINAL NATURAL LANGUAGE ANSWER ===")
-    print(final_text)
+        # TODO: print the full trace and the final natural-language answer
 
 
 if __name__ == "__main__":
-    # Standard pattern for running async Python code.
     asyncio.run(main())

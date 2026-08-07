@@ -1,7 +1,16 @@
 # Understanding MCP
 ## Repository for Understanding MCP (Model Context Protocol) - A hands-on guide 
 
-These instructions will guide you through configuring a GitHub Codespaces environment that you can use to run the code. 
+These instructions will guide you through configuring a GitHub Codespaces environment that you can use to run the code.
+
+> **Updated for MCP specification revision `2026-07-28`.** This is a breaking protocol
+> change: the `initialize` handshake and `Mcp-Session-Id` are gone, servers can no longer
+> push requests to clients, and Roots, Sampling and Logging are deprecated. See the
+> "What changed" section at the top of `labs.md`, and `MCP-2026-07-28-UPDATE-REPORT.md`
+> for the full rundown.
+>
+> The labs run on **FastMCP 4.0.0b1**, which is a beta and is pinned exactly in
+> `requirements.txt`. FastMCP 3.4.x cannot speak this protocol revision. 
 
 <br><br>
 
