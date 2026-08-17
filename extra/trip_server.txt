@@ -1,26 +1,21 @@
 # trip_server.py - Multi Round-Trip Requests (MRTR), SEP-2322
 # FastMCP 4.x / MCP specification revision 2026-07-28
 #
-# THE PROBLEM MRTR SOLVES
-#   Before 2026-07-28, a server that needed something from the client mid-call
-#   (ask the user a question, borrow the client's LLM, list the client's roots)
-#   sent a JSON-RPC *request* back down an SSE stream it was holding open. That
-#   requires a live bidirectional connection, which requires session affinity,
-#   which is exactly what the stateless redesign removed.
-#
-#   Under MRTR the server never initiates anything. Instead it RESPONDS to the
-#   client's request with resultType "input_required", naming what it needs.
-#   The client gathers the answers and RE-SENDS the original request -- with a
-#   NEW JSON-RPC id -- carrying `inputResponses` and echoing `requestState`.
-#   Because everything the server needs travels in that retry, the retry can
-#   land on a completely different server instance and still work.
+# WHAT MRTR IS
+#   A tool sometimes needs something mid-call: a confirmation, a missing
+#   parameter, a choice. The server never initiates that exchange. It RESPONDS
+#   to the client's request with resultType "input_required", naming what it
+#   needs. The client gathers the answers and RE-SENDS the original request --
+#   with a NEW JSON-RPC id -- carrying `inputResponses` and echoing
+#   `requestState`. Because everything the server needs travels in that retry,
+#   the retry can land on a completely different server instance and still work.
 #
 #   Only tools/call, resources/read and prompts/get may return input_required.
 #
-# WHAT THIS MEANS FOR YOUR CODE
-#   ctx.elicit() still works on legacy (<= 2025-11-25) connections but RAISES
-#   on 2026-07-28 connections. The modern shape is the "guard pattern" below:
-#   the tool is called twice, and it branches on whether answers are present.
+# THE GUARD PATTERN
+#   The tool below is called twice for one logical operation, and branches on
+#   whether answers are present. Note that ctx.elicit() RAISES on a 2026-07-28
+#   connection -- the guard pattern is what replaces it.
 #
 # requestState
 #   An opaque server-owned blob. The client MUST echo it back untouched and

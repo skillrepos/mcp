@@ -1,14 +1,9 @@
 """
 agent_mcp.py - a minimal MCP agent, no agent framework involved.
 
-Updated 2026-08-03 for MCP specification revision 2026-07-28.
-
-Why there is no LangChain here anymore:
-  langchain-mcp-adapters imports mcp.server.fastmcp, a module removed in MCP
-  Python SDK v2. It cannot be installed alongside a 2026-07-28-capable stack.
-  Writing the loop by hand is only ~40 lines and shows you exactly what an
-  "agent" is: ask the model, run whatever tool it names, feed the result back,
-  repeat. Every framework you will ever use is a wrapper around this loop.
+There is no framework here on purpose. The whole loop is ~40 lines, and it
+shows you exactly what an "agent" is. Every framework you will ever use is a
+wrapper around this loop.
 
 The loop:
   1. tools/list  -> ask the MCP server what it can do
