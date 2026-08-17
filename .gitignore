@@ -213,12 +213,15 @@ cython_debug/
 *[qQ][aA]*.md
 
 # ALL-CAPS markdown = internal reports/notes, not student-facing docs.
-# (git globs can't express "entirely uppercase", so this matches names starting
-# with two uppercase/digit chars — the all-caps report convention in practice.)
-[A-Z0-9][A-Z0-9._-]*.md
+# NOTE: this repo has core.ignorecase=true (case-insensitive filesystem), so a
+# glob like [A-Z]*.md would also match labs.md. Instead: keep every .md out by
+# default and allow-list the student-facing docs below.
+*.md
 !README.md
 !README-Codespace.md
 !LICENSE.md
+!labs.md
+!.github/copilot-instructions.md
 
 # Scratch / staging subdirectories
 _*/
