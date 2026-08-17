@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.2 - 08/08/26 - QA pass: all labs executed end-to-end in a fresh Codespace; Lab 1 client falls back to text content for text-only servers; new screenshots for Labs 2, 4 and 5; retakes for Explorer and security shots
+## Revision 8.3 - 08/17/26 
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -53,14 +53,9 @@ horizontally scalable - and, as a bonus, it makes state visible to the model ins
 of hiding it inside the transport.
 
 > **A note on versions.** These labs run on **FastMCP 4.0.0b1**, which is a *beta*. It
-> is the only FastMCP release that speaks `2026-07-28`; FastMCP 3.4.x pins `mcp<2.0`
-> and tops out at the older `2025-11-25` revision. The version is pinned exactly in
+> is the only FastMCP release that speaks `2026-07-28`; The version is pinned exactly in
 > `requirements.txt` on purpose.
 >
-> `langchain-mcp-adapters` is **not** in this course any more. It imports
-> `mcp.server.fastmcp`, a module deleted in MCP Python SDK v2, so it cannot be
-> installed alongside a `2026-07-28`-capable stack. Lab 1's agent now drives the
-> tool-calling loop directly instead - which, happily, shows you more of how MCP works.
 
 </br></br>
 

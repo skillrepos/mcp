@@ -7,6 +7,26 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 if [ -d "/opt/py_env" ]; then
     # Symlink to pre-built venv from Docker image (avoids ~1.6 GB copy)
     ln -sfn /opt/py_env ./$PYTHON_ENV
+
+    # The image's venv can lag behind requirements.txt (e.g. FastMCP 3.x baked
+    # into the image while the course now pins 4.0.0b1). Always sync it. This
+    # is a fast no-op when the image is already current. The
+    # fastmcp pair is uninstalled-then-installed (see below) to avoid a
+    # half-removed-3.x "cannot import Client" state.
+    REQ="./requirements.txt"; [ -f "$REQ" ] || REQ="$WORKSPACE_DIR/requirements/requirements.txt"
+    if ! /opt/py_env/bin/python -c "import fastmcp,sys; sys.exit(0 if fastmcp.__version__.startswith('4.') else 1)" 2>/dev/null; then
+        echo "[pysetup] image venv is stale - syncing to requirements.txt (one-time, ~1-2 min)"
+        # Uninstall FIRST, then install. In 3.x the 'fastmcp' dist owns the
+        # whole fastmcp/ package; in 4.x the code lives in 'fastmcp-slim'. If
+        # pip installs slim before removing 3.x, the 3.x uninstall deletes
+        # slim's freshly-written files (incl. fastmcp/__init__.py) -> broken
+        # namespace package. Pins come from requirements.txt (one source of truth).
+        sudo /opt/py_env/bin/pip uninstall -y -q fastmcp fastmcp-slim 2>/dev/null || true
+        sudo /opt/py_env/bin/pip install -q --no-deps \
+            $(grep -E '^fastmcp(-slim)?==' "$REQ") 2>&1 | grep -v -E "^(WARNING|ERROR: pip's dependency|\[notice\])" || true
+    fi
+    sudo /opt/py_env/bin/pip install -q -r "$REQ" 2>&1 | grep -v -E "^(WARNING|ERROR: pip's dependency|opentelemetry|instructor|\[notice\])" || true
+    /opt/py_env/bin/python -c "import fastmcp, mcp; print(f'[pysetup] fastmcp {fastmcp.__version__} / mcp ready')"
 else
     # Fallback: create venv and install from scratch
     python3 -m venv ./$PYTHON_ENV
