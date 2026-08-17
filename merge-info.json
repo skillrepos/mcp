@@ -1,0 +1,180 @@
+{
+  "files": {
+    "extra/agent_mcp.txt": [
+      {
+        "anchor": "def to_ollama_tools(mcp_tools):",
+        "endAnchor": "return out",
+        "title": "Adapting MCP tools for the model",
+        "note": [
+          "**Converts MCP's tool schemas into Ollama's tool-calling format.**",
+          "- The M x N problem in miniature: adapt once per vendor, not per tool",
+          "- `t.input_schema` is already JSON Schema - nothing hand-written"
+        ]
+      },
+      {
+        "anchor": "# 2) Discovery: the server tells us what it offers. We wrote no",
+        "title": "Asking the server what it offers",
+        "note": [
+          "**The tool list comes from the server, not from your code.**",
+          "- No endpoint URLs, query strings, or schemas written by hand"
+        ]
+      },
+      {
+        "anchor": "# 3) The agent loop.",
+        "title": "The agent loop",
+        "note": [
+          "**Up to 8 turns of: ask the model, keep whatever it says.**",
+          "- An \"agent\" is just this loop - no framework involved"
+        ]
+      },
+      {
+        "anchor": "calls = message.get(\"tool_calls\") or []",
+        "endAnchor": "print(final)",
+        "title": "Running the model's tool calls",
+        "note": [
+          "**No tool calls means the model answered in plain text, so stop.**",
+          "- Each tool it names runs via `mcp.call_tool`, results fed back",
+          "- `.data` is the hydrated value; `.content` holds raw blocks"
+        ]
+      }
+    ],
+    "extra/note_server.txt": [
+      {
+        "anchor": "def _new_handle() -> str:",
+        "title": "Minting an unguessable handle",
+        "note": [
+          "**Creates the identifier that replaces a session.**",
+          "- High entropy on purpose: handles must not be guessable or enumerable"
+        ]
+      },
+      {
+        "anchor": "def _get(handle: str) -> dict:",
+        "title": "Resolving and expiring handles",
+        "note": [
+          "**Looks up a handle, rejecting unknown or expired ones.**",
+          "- Holding a handle is not authentication - production also binds it to a user"
+        ]
+      },
+      {
+        "anchor": "@server.tool",
+        "title": "The open_notebook tool",
+        "note": [
+          "**Creates a notebook and hands back its handle as ordinary data.**",
+          "- Because it's a normal argument, the model can see and reuse it"
+        ]
+      },
+      {
+        "anchor": "This is the 2026-07-28 replacement for an implicit session: the server",
+        "title": "What open_notebook returns",
+        "note": [
+          "**Stores the notebook with a TTL and returns the handle to the caller.**",
+          "- The `note` field tells the model what to do with the handle next"
+        ]
+      },
+      {
+        "anchor": "def save_note(handle: str, title: str, content: str) -> dict:",
+        "lines": 5,
+        "title": "The save_note tool",
+        "note": [
+          "**Writes one note into the notebook named by the handle.**",
+          "- Re-resolves the handle every call - nothing is remembered between requests"
+        ]
+      },
+      {
+        "anchor": "def list_notes(handle: str) -> dict:",
+        "lines": 8,
+        "title": "The list_notes tool",
+        "note": [
+          "**Returns the note titles in one notebook, identified by handle.**",
+          "- Change one character of the handle later to see the error"
+        ]
+      },
+      {
+        "anchor": "# A fixed URI that always returns the same shape. Note the exact rule:",
+        "lines": 19,
+        "title": "Static resource: the catalog",
+        "note": [
+          "**A fixed URI listing open notebooks and how many notes each holds.**",
+          "- List results may vary by authorization, never by connection",
+          "- No auth in this lab, so ours is the same for everyone"
+        ]
+      },
+      {
+        "anchor": "# The handle travels in the URI itself, which is the resource-side equivalent",
+        "endAnchor": "return nb[\"notes\"][title]",
+        "title": "Resource template: one note",
+        "note": [
+          "**A dynamic URI with the handle and title embedded in the path.**",
+          "- The resource-side equivalent of passing the handle as an argument",
+          "- A missing note raises -32602 (Invalid params)"
+        ]
+      },
+      {
+        "anchor": "@server.prompt(\"summarize_notes\")",
+        "title": "The summarize_notes prompt",
+        "note": [
+          "**Packages every note in a notebook into one LLM-ready prompt.**",
+          "- Tools write data, resources expose it, prompts package it"
+        ]
+      }
+    ],
+    "extra/trip_server.txt": [
+      {
+        "anchor": "# ---- Round 1: we have no answers yet, so ask for them ----------------",
+        "title": "Round 1: asking for input",
+        "note": [
+          "**Returns `input_required` naming what it needs, rather than asking directly.**",
+          "- Each key is server-assigned; the client answers under the same key",
+          "- `requestState` carries anything needed on the retry"
+        ]
+      },
+      {
+        "anchor": "traveler = answers.get(\"traveler\")",
+        "endAnchor": "return f\"Booked {which} to {destination.title()} for {who}.\"",
+        "title": "Round 2: completing the booking",
+        "note": [
+          "**Runs only on the retry, once the client has attached answers.**",
+          "- Check `action == \"accept\"` and non-empty content - a user may decline"
+        ]
+      }
+    ],
+    "extra/math_server.txt": [
+      {
+        "anchor": "@math_service.tool",
+        "endAnchor": "return a * b",
+        "title": "Two arithmetic tools",
+        "note": [
+          "**The gateway will expose these as `math_add` and `math_multiply`.**",
+          "- Type hints become the JSON Schema that clients discover"
+        ]
+      }
+    ],
+    "extra/gateway.txt": [
+      {
+        "anchor": "# 1) Import the two servers we built. These are ordinary Python objects,",
+        "title": "Importing both servers",
+        "note": [
+          "**Brings in the note and math servers as ordinary Python objects.**",
+          "- Composing them this way needs no network hop"
+        ]
+      },
+      {
+        "anchor": "# 2) Create the gateway and mount both servers under namespaces.",
+        "title": "Creating the gateway",
+        "note": [
+          "**One FastMCP instance fronting both servers on a single endpoint.**"
+        ]
+      },
+      {
+        "anchor": "gateway.mount(note_service, namespace=\"notes\")",
+        "endAnchor": "# resource://notes/note/{handle}/{title}.",
+        "title": "Mounting under namespaces",
+        "note": [
+          "**`namespace=` prefixes every tool name and resource URI from each server.**",
+          "- Tools become `notes_save_note`, `math_multiply`, and so on",
+          "- Resource URIs are namespaced the same way"
+        ]
+      }
+    ]
+  }
+}
