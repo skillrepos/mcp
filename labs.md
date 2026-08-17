@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.1 - 08/07/26 - five core labs for the 3-hour format, each 10-12 steps; updated for MCP specification revision 2026-07-28
+## Revision 8.2 - 08/08/26 - QA pass: all labs executed end-to-end in a fresh Codespace; Lab 1 client falls back to text content for text-only servers; new screenshots for Labs 2, 4 and 5; retakes for Explorer and security shots
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -150,8 +150,10 @@ async def main():
         result = await client.call_tool("mul", {"a": 12, "b": 8})
 
         # FastMCP 4 returns a CallToolResult object, not a bare list.
-        # .data is the hydrated Python value.
-        print("12 x 8 =", result.data)
+        # .data is the hydrated Python value when the server returns
+        # structured content; text-only servers (like this one) populate
+        # .content instead, so fall back to the first content block.
+        print("12 x 8 =", result.data or result.content[0].text)
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -307,6 +309,8 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
 cd lab2   (if needed)
 ./wire_probe.sh
 ```
+
+![Wire probe output](./images/mcp166.png?raw=true "Wire probe output")
 <br><br>
 
 9. Work through the output section by section. **Section 1** is the `server/discover` response. Find these fields:
@@ -591,6 +595,8 @@ code trip_client.py
 ```
 python trip_client.py
 ```
+
+![MRTR booking flow](./images/mcp161.png?raw=true "MRTR booking flow")
 <br><br>
 
 8. Now switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your point of view, a single `book_trip` call. Each of those POSTs is an entirely independent HTTP request. There is no connection being held open between them and no server-side memory linking them - only the signed `requestState` blob that traveled out and came back.
@@ -601,6 +607,8 @@ python trip_client.py
 9. Try declining. Run the client again, and when it asks you to choose a flight, enter something invalid (like `99`). The handler declines, and the server reports a cancelled booking rather than crashing.
 
     The spec requires servers to handle this: a user is always allowed to say no. An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content.
+
+![Declining an elicitation](./images/mcp162.png?raw=true "Declining an elicitation")
 <br><br>
 
 10. Two limits worth remembering:
@@ -658,6 +666,8 @@ cd lab5
 python handle_client.py
 ```
 
+![In-memory state breaking behind the load balancer](./images/mcp163.png?raw=true "In-memory state breaking behind the load balancer")
+
    One `save_note` succeeds and one fails with *"Unknown notebook handle ... In-memory state does not survive load balancing."* Which attempt fails depends purely on where the round-robin happened to send it. Look at the two replica terminals: the handle exists in one process's memory and not the other's.
 <br><br>
 
@@ -691,6 +701,8 @@ python trip_client.py
 [replica-8002] round 2: verified requestState signature, finishing the booking
 ```
 
+![One MRTR call spanning two replicas](./images/mcp164.png?raw=true "One MRTR call spanning two replicas")
+
    And the final result names the finisher: `Booked ... [finished on replica-8002]`. Replica 8002 had never seen this conversation - everything it needed arrived inside `requestState`, carried (unread) by the client. This is the exact flow the memory server couldn't survive, succeeding for the exact reason Lab 4 taught.
 <br><br>
 
@@ -718,6 +730,8 @@ REQUEST_STATE_KEY="a-different-key-on-this-replica!" python replica_server.py 80
 ```
 MCPError: Invalid or expired requestState
 ```
+
+![Mismatched signing key rejection](./images/mcp165.png?raw=true "Mismatched signing key rejection")
 
     Run it a couple of times and you'll see it succeed when both rounds happen to land on the same replica and fail when they don't - **intermittent again**, which is why this is such an unpleasant bug to chase in production. The rule it teaches: `requestState` is integrity-protected, so every replica must hold the same signing key, distributed the way you distribute any shared secret.
 <br><br>
