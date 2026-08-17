@@ -1,0 +1,127 @@
+# trip_server.py - Multi Round-Trip Requests (MRTR), SEP-2322
+# FastMCP 4.x / MCP specification revision 2026-07-28
+#
+# THE PROBLEM MRTR SOLVES
+#   Before 2026-07-28, a server that needed something from the client mid-call
+#   (ask the user a question, borrow the client's LLM, list the client's roots)
+#   sent a JSON-RPC *request* back down an SSE stream it was holding open. That
+#   requires a live bidirectional connection, which requires session affinity,
+#   which is exactly what the stateless redesign removed.
+#
+#   Under MRTR the server never initiates anything. Instead it RESPONDS to the
+#   client's request with resultType "input_required", naming what it needs.
+#   The client gathers the answers and RE-SENDS the original request -- with a
+#   NEW JSON-RPC id -- carrying `inputResponses` and echoing `requestState`.
+#   Because everything the server needs travels in that retry, the retry can
+#   land on a completely different server instance and still work.
+#
+#   Only tools/call, resources/read and prompts/get may return input_required.
+#
+# WHAT THIS MEANS FOR YOUR CODE
+#   ctx.elicit() still works on legacy (<= 2025-11-25) connections but RAISES
+#   on 2026-07-28 connections. The modern shape is the "guard pattern" below:
+#   the tool is called twice, and it branches on whether answers are present.
+#
+# requestState
+#   An opaque server-owned blob. The client MUST echo it back untouched and
+#   MUST NOT parse it. Because it can influence authorization and business
+#   logic, the spec requires it to be integrity protected -- FastMCP does that
+#   for you when you pass RequestStateSecurity with a signing key. In a
+#   multi-replica deployment, every replica must share that key.
+
+import os
+
+from mcp.server.request_state import RequestStateSecurity
+from mcp_types import ElicitRequest, ElicitRequestFormParams, InputRequiredResult
+
+from fastmcp import Context, FastMCP
+
+# A real deployment reads this from a secret manager and shares it across all
+# replicas. 32+ bytes.
+SIGNING_KEY = os.getenv("REQUEST_STATE_KEY", "lab-demo-key-not-for-production!!").encode()
+
+server = FastMCP(
+    "TripBooker",
+    instructions="Books a trip, asking follow-up questions across round trips.",
+    request_state_security=RequestStateSecurity(keys=[SIGNING_KEY]),
+)
+
+FLIGHTS = {
+    "paris": ["AF017 08:15", "DL262 17:40"],
+    "tokyo": ["NH009 11:05", "JL005 13:20"],
+    "london": ["BA178 09:30", "VS004 18:55"],
+}
+
+
+@server.tool
+async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult:
+    """Book a flight. Asks who is travelling and which flight they want."""
+
+    # ctx.input_responses is None on the FIRST call and populated on the retry.
+    answers = ctx.input_responses
+
+    dest = destination.strip().lower()
+    if dest not in FLIGHTS:
+        return f"Sorry, we do not fly to {destination}."
+
+    # ---- Round 1: we have no answers yet, so ask for them ----------------
+    if answers is None:
+        return InputRequiredResult(
+            result_type="input_required",
+            input_requests={
+                # Each key is server-assigned and must be unique within
+                # this result. The client returns answers under the same keys.
+                "traveler": ElicitRequest(
+                    method="elicitation/create",
+                    params=ElicitRequestFormParams(
+                        message=f"Who is travelling to {destination.title()}?",
+                        requested_schema={
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string", "title": "Traveler name"}
+                            },
+                            "required": ["name"],
+                        },
+                    ),
+                ),
+                "flight": ElicitRequest(
+                    method="elicitation/create",
+                    params=ElicitRequestFormParams(
+                        message=f"Which flight to {destination.title()}?",
+                        requested_schema={
+                            "type": "object",
+                            "properties": {
+                                "choice": {
+                                    "type": "string",
+                                    "title": "Flight",
+                                    "enum": FLIGHTS[dest],
+                                }
+                            },
+                            "required": ["choice"],
+                        },
+                    ),
+                ),
+            },
+            # Anything we want back on the retry goes in here. The client
+            # cannot read or alter it.
+            request_state=ctx.request_state or "",
+        )
+
+    # ---- Round 2: the client re-sent the call with the answers -----------
+    traveler = answers.get("traveler")
+    flight = answers.get("flight")
+
+    # The user is always allowed to say no. An ElicitResult carries an action
+    # of "accept", "decline" or "cancel", and only "accept" carries content -
+    # so check both before touching it.
+    for name, ans in (("traveler", traveler), ("flight", flight)):
+        if ans is None or getattr(ans, "action", None) != "accept" or not ans.content:
+            return f"Booking cancelled: no answer given for {name}."
+
+    who = traveler.content["name"]
+    which = flight.content["choice"]
+    return f"Booked {which} to {destination.title()} for {who}."
+
+
+if __name__ == "__main__":
+    server.run(transport="http", host="0.0.0.0", port=8000)

@@ -196,3 +196,29 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# ---------------------------------------------------------------------------
+# TechUpSkills course-repo conventions
+# Slide decks, QA/report docs, and scratch dirs are not student-facing artifacts
+# and stay out of the course repo.
+# ---------------------------------------------------------------------------
+
+# PowerPoint decks (large binaries, distributed separately)
+*.pptx
+*.pptm
+*.potx
+*.ppt
+
+# QA / test-report markdown, any case (qa-report.md, LAB-QA.md, anticipated-qa.md)
+*[qQ][aA]*.md
+
+# ALL-CAPS markdown = internal reports/notes, not student-facing docs.
+# (git globs can't express "entirely uppercase", so this matches names starting
+# with two uppercase/digit chars — the all-caps report convention in practice.)
+[A-Z0-9][A-Z0-9._-]*.md
+!README.md
+!README-Codespace.md
+!LICENSE.md
+
+# Scratch / staging subdirectories
+_*/

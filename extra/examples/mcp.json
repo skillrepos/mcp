@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "codespace": {
+      "type": "http",
+      "url": "https://${CODESPACE_NAME}-8000.app.github.dev/mcp"
+    }
+  }
+}
