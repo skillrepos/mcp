@@ -7,7 +7,7 @@
         "title": "Adapting MCP tools for the model",
         "note": [
           "**Converts MCP's tool schemas into Ollama's tool-calling format.**",
-          "- The M x N problem in miniature: adapt once per vendor, not per tool",
+          "- One adapter, any number of tools - sixty would need no more code",
           "- `t.input_schema` is already JSON Schema - nothing hand-written"
         ]
       },

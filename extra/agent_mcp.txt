@@ -40,9 +40,10 @@ SYSTEM = (
 def to_ollama_tools(mcp_tools):
     """Translate MCP tool definitions into Ollama's tool-calling format.
 
-    This is the M x N problem in miniature, and the reason MCP exists: the
-    tool's schema arrived from the server in a standard shape, and we adapt it
-    once, here, for whichever model vendor we happen to be using.
+    One adapter, any number of tools. The schemas arrived from the server in
+    MCP's standard shape, so converting them to what Ollama expects takes this
+    one function. Point it at a server with sixty tools and it is still this
+    one function. That is the whole economic argument for MCP.
     """
     out = []
     for t in mcp_tools:

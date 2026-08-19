@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.6 - 08/19/26
+## Revision 8.5 - 08/19/26 - Lab 1 agent slimmed: plumbing moved to agent_helpers.py, merge is now the MCP loop only
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -161,7 +161,7 @@ python mcp_client.py
 code -d ../extra/agent_mcp.txt agent_mcp.py
 ```
 
-![Diff view](./images/mcp167.png?raw=true "Diff view")
+![Diff view](./images/mcp155.png?raw=true "Diff view")
 <br><br>
 
 11. Run the agent. It prints each tool call and result, then a final answer. Give it a few minutes - the model runs locally in the codespace. (Different problem this time: 12 x 8 / 3.) If the answer is wrong, run it again; the local model is small.
@@ -179,7 +179,7 @@ python agent_mcp.py
 **What just happened** - worth reading while the agent runs.
 
 - **There is no agent framework here.** No LangChain, no CrewAI. An agent is a loop: ask the server what tools exist, hand the schemas to the model, run whatever it asks for, feed the results back, repeat.
-- **`to_ollama_tools()` is the M x N problem in miniature.** MCP handed us one standard tool description, and we adapt it *once* for a model vendor - not once per tool, per model.
+- **One adapter, any number of tools.** The six tool schemas arrived in MCP's standard shape, so converting them to what Ollama expects took a single function. Point it at a server with sixty tools and it's still one function. That's the whole economic argument for MCP.
 - **That "negotiated protocol version" line** is what your client and this third-party server agreed on. Your client asks for `2026-07-28` and falls back if the server is older, which is why an unfamiliar server just works.
 
 <p align="center">
