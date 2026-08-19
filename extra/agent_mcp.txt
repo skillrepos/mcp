@@ -1,48 +1,39 @@
 """
 agent_mcp.py - a minimal MCP agent, no agent framework involved.
 
-There is no framework here on purpose. The whole loop is ~40 lines, and it
-shows you exactly what an "agent" is. Every framework you will ever use is a
-wrapper around this loop.
-
-The loop:
+An "agent" is just this loop:
   1. tools/list  -> ask the MCP server what it can do
   2. translate the MCP tool schemas into the LLM's tool-calling format
   3. send the question + tool list to the model
   4. the model answers with tool calls -> run them via tools/call
   5. feed results back and repeat until the model answers in plain text
+
+The HTTP plumbing and trace printing live in agent_helpers.py, so everything
+below is MCP.
 """
 
 import asyncio
 import json
-import re
 
 import httpx
 
 from fastmcp import Client
 
+from agent_helpers import (
+    BLUE, GREEN, RESET, TIMEOUT, YELLOW,
+    ask_model, print_trace, resolve_placeholders, to_number,
+)
+
 MCP_URL = "http://127.0.0.1:8931/mcp"
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL = "llama3.2"
 
-BLUE = "\033[94m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
-
-# Small local models sometimes "forget" to substitute a number and instead
-# pass back the word they used for it in the previous turn (e.g. "result").
-# We can't fix the model, but we can catch this one common failure shape
-# before it ever reaches the tool.
-PLACEHOLDER_RE = re.compile(r"^(result|answer|previous|prior|it|that)$", re.IGNORECASE)
+MAX_TURNS = 8  # stops a confused model from looping forever
 
 SYSTEM = (
     "You are a careful calculator assistant. Use the provided tools for every "
     "arithmetic step. Do exactly one operation per tool call and never nest "
     "calls. When a step depends on an earlier tool result, pass the actual "
-    "number that tool returned as the argument - never the word 'result' or "
-    "any other placeholder. After you have the final number, state it in one "
-    "short sentence."
+    "number that tool returned - never the word 'result' or any placeholder. "
+    "After you have the final number, state it in one short sentence."
 )
 
 
@@ -70,28 +61,11 @@ def to_ollama_tools(mcp_tools):
     return out
 
 
-async def ask_model(client: httpx.AsyncClient, messages, tools):
-    """One turn with the LLM. Retries because cold local models are slow."""
-    payload = {"model": MODEL, "messages": messages, "tools": tools, "stream": False}
-    for attempt in range(4):
-        try:
-            resp = await client.post(OLLAMA_URL, json=payload)
-            resp.raise_for_status()
-            return resp.json()["message"]
-        except (httpx.TimeoutException, httpx.ConnectError):
-            if attempt == 3:
-                raise
-            await asyncio.sleep(1.5 * (attempt + 1))
-    raise RuntimeError("model unreachable")
-
-
 async def main():
-    timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
-
     # 1) Connect to the MCP server. mode="auto" (the default) speaks
     #    2026-07-28 when the server does, and falls back to the older
     #    handshake era when it does not.
-    async with Client(MCP_URL) as mcp, httpx.AsyncClient(timeout=timeout) as http:
+    async with Client(MCP_URL) as mcp, httpx.AsyncClient(timeout=TIMEOUT) as http:
         print(f"{BLUE}Connected using protocol {mcp.protocol_version}{RESET}")
 
         # 2) Discovery: the server tells us what it offers. We wrote no
@@ -106,8 +80,8 @@ async def main():
         ]
 
         # 3) The agent loop.
-        last_value = None  # numeric result of the most recent tool call
-        for turn in range(8):
+        last_value = None
+        for turn in range(MAX_TURNS):
             message = await ask_model(http, messages, tools)
             messages.append(message)
 
@@ -115,65 +89,30 @@ async def main():
             if not calls:
                 break  # a plain-text answer means the model is done
 
-            # 4) The model may request several tools in one turn. Run them in
-            #    order and append each result before going back to the model.
+            # 4) Run each tool the model asked for, then feed the results back.
             for call in calls:
-                fn = call["function"]
-                name = fn["name"]
-                args = fn.get("arguments") or {}
+                name = call["function"]["name"]
+                args = call["function"].get("arguments") or {}
                 if isinstance(args, str):
                     args = json.loads(args)
-
-                # Guard against the model echoing a placeholder word (e.g.
-                # "result") instead of the number that word stood for.
-                if last_value is not None:
-                    for key, val in args.items():
-                        if isinstance(val, str) and PLACEHOLDER_RE.match(val.strip()):
-                            args[key] = last_value
+                args = resolve_placeholders(args, last_value)
 
                 print(f"{YELLOW}-> tools/call {name}({args}){RESET}")
                 result = await mcp.call_tool(name, args)
 
-                # FastMCP 4 returns a CallToolResult object. .data is the
-                # hydrated Python value; .content holds raw content blocks.
+                # .data is the hydrated Python value; .content holds raw blocks.
                 value = result.data
                 if value is None and result.content:
                     value = result.content[0].text
                 print(f"{GREEN}<- {value}{RESET}")
 
-                try:
-                    last_value = float(value)
-                    if last_value.is_integer():
-                        last_value = int(last_value)
-                except (TypeError, ValueError):
-                    pass  # non-numeric tool result; leave last_value as-is
-
+                last_value = to_number(value, last_value)
                 messages.append(
                     {"role": "tool", "tool_name": name, "content": str(value)}
                 )
 
         # 5) Show the trace and the final answer.
-        print(f"\n{BLUE}=== FULL AGENT TRACE ==={RESET}")
-        for m in messages:
-            role = m.get("role")
-            if role == "system":
-                continue
-            if role == "tool":
-                print(f"TOOL RESULT ({m.get('tool_name')}): {m.get('content')}")
-            elif m.get("tool_calls"):
-                names = [c["function"]["name"] for c in m["tool_calls"]]
-                print(f"ASSISTANT: (requested tools: {', '.join(names)})")
-            elif m.get("content"):
-                print(f"{role.upper()}: {m['content']}")
-
-        final = ""
-        for m in reversed(messages):
-            if m.get("role") == "assistant" and (m.get("content") or "").strip():
-                final = m["content"].strip()
-                break
-
-        print(f"\n{GREEN}=== FINAL ANSWER ==={RESET}")
-        print(final)
+        print_trace(messages)
 
 
 if __name__ == "__main__":

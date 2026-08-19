@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.4 - 08/17/26 - Lab 1 tightened: action-first steps, explanation moved to end-of-lab notes
+## Revision 8.5 - 08/19/26 - Lab 1 agent slimmed: plumbing moved to agent_helpers.py, merge is now the MCP loop only
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -155,7 +155,7 @@ python mcp_client.py
 ![Running client](./images/mcp159.png?raw=true "Running client")
 <br><br>
 
-10. Now build an agent that uses those tools with a local LLM. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
+10. Now build an agent that uses those tools with a local LLM. The HTTP calls and trace printing are already done for you in *agent_helpers.py* - what you merge in is the MCP loop itself. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
 
 ```
 code -d ../extra/agent_mcp.txt agent_mcp.py

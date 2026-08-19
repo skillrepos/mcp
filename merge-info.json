@@ -29,12 +29,13 @@
       },
       {
         "anchor": "calls = message.get(\"tool_calls\") or []",
-        "endAnchor": "print(final)",
+        "endAnchor": "print_trace(messages)",
         "title": "Running the model's tool calls",
         "note": [
           "**No tool calls means the model answered in plain text, so stop.**",
           "- Each tool it names runs via `mcp.call_tool`, results fed back",
-          "- `.data` is the hydrated value; `.content` holds raw blocks"
+          "- `.data` is the hydrated value; `.content` holds raw blocks",
+          "- `resolve_placeholders` / `print_trace` come from agent_helpers.py"
         ]
       }
     ],
