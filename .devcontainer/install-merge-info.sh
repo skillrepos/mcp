@@ -33,8 +33,9 @@ done
 [ -n "$EXT_DIR" ] || EXT_DIR="$HOME/.vscode-remote/extensions"
 mkdir -p "$EXT_DIR"
 
+# Already there - say nothing. This script can be re-run by hand at any time;
+# silence on the no-op path keeps student terminals clean.
 if compgen -G "$EXT_DIR/techupskills.merge-info-*" >/dev/null; then
-    log "already installed in $EXT_DIR - nothing to do"
     exit 0
 fi
 

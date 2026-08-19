@@ -15,6 +15,7 @@ The loop:
 
 import asyncio
 import json
+import re
 
 import httpx
 
@@ -29,10 +30,19 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
+# Small local models sometimes "forget" to substitute a number and instead
+# pass back the word they used for it in the previous turn (e.g. "result").
+# We can't fix the model, but we can catch this one common failure shape
+# before it ever reaches the tool.
+PLACEHOLDER_RE = re.compile(r"^(result|answer|previous|prior|it|that)$", re.IGNORECASE)
+
 SYSTEM = (
     "You are a careful calculator assistant. Use the provided tools for every "
     "arithmetic step. Do exactly one operation per tool call and never nest "
-    "calls. After you have the final number, state it in one short sentence."
+    "calls. When a step depends on an earlier tool result, pass the actual "
+    "number that tool returned as the argument - never the word 'result' or "
+    "any other placeholder. After you have the final number, state it in one "
+    "short sentence."
 )
 
 
@@ -96,6 +106,7 @@ async def main():
         ]
 
         # 3) The agent loop.
+        last_value = None  # numeric result of the most recent tool call
         for turn in range(8):
             message = await ask_model(http, messages, tools)
             messages.append(message)
@@ -113,6 +124,13 @@ async def main():
                 if isinstance(args, str):
                     args = json.loads(args)
 
+                # Guard against the model echoing a placeholder word (e.g.
+                # "result") instead of the number that word stood for.
+                if last_value is not None:
+                    for key, val in args.items():
+                        if isinstance(val, str) and PLACEHOLDER_RE.match(val.strip()):
+                            args[key] = last_value
+
                 print(f"{YELLOW}-> tools/call {name}({args}){RESET}")
                 result = await mcp.call_tool(name, args)
 
@@ -122,6 +140,13 @@ async def main():
                 if value is None and result.content:
                     value = result.content[0].text
                 print(f"{GREEN}<- {value}{RESET}")
+
+                try:
+                    last_value = float(value)
+                    if last_value.is_integer():
+                        last_value = int(last_value)
+                except (TypeError, ValueError):
+                    pass  # non-numeric tool result; leave last_value as-is
 
                 messages.append(
                     {"role": "tool", "tool_name": name, "content": str(value)}
