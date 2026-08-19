@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.5 - 08/19/26 - Lab 1 agent slimmed: plumbing moved to agent_helpers.py, merge is now the MCP loop only
+## Revision 8.6 - 08/19/26 - All merges reduced to code only (labs 1,2,4,6); lab 3 step 10 split; lab 5 part C corrected
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -210,7 +210,7 @@ code -d ../extra/note_server.txt note_server.py
 ![Merging notes server](./images/mcp127.png?raw=true "Merging notes server")
 <br><br>
 
-3. Merge in **every** difference - hover over the middle bar and click the right-pointing arrows - then close the tab to save. You're assembling all four MCP element types plus the handle that ties them together.
+3. Merge in **every** difference - hover over the middle bar and click the right-pointing arrows - then close the tab to save. The eight functions are declared for you; what you merge in are their bodies - all four MCP element types plus the handle that ties them together.
 
    - **Handle minting** (`open_notebook`) - returns an unguessable `handle` as ordinary data.
    - **Tools** (`save_note`, `list_notes`) - do work, and take the handle as a normal argument.
@@ -414,7 +414,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}'
 ```
 
-   A corrupted token fails too:
+11. Now prove the signature check is real. Get a *valid* token, corrupt it, and watch it fail too.
 
 ```
 export TOKEN=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp" \
@@ -440,14 +440,14 @@ curl -s -X POST http://127.0.0.1:9000/introspect \
 ![Introspecting token](./images/mcp62.png?raw=true "Introspecting token") 
 <br><br>
 
-11. Stop the authorization server and the secure MCP server with CTRL+C.
+12. Stop the authorization server and the secure MCP server with CTRL+C.
 <br><br>
 
 **What just happened** - the security rules behind what you just ran.
 
 - **The 401 bootstraps everything.** Because the challenge names where to find the metadata, a client that has never seen this server before can authenticate against it with no prior configuration.
-- **Three fields in the AS metadata carry weight.** `code_challenge_methods_supported` is PKCE - a client **must** verify `S256` is offered and refuse to proceed if the field is missing. `authorization_response_iss_parameter_supported` is RFC 9207: the authorization server identifies itself on the response and the client checks it *before* redeeming the code, which closes **authorization server mix-up attacks** that PKCE alone does not prevent. `client_id_metadata_document_supported` is CIMD, where a `client_id` is just an HTTPS URL resolving to a JSON metadata document - portable, with no re-registering at every authorization server. CIMD replaces Dynamic Client Registration.
-- **Audience binding is the most important security rule in MCP.** A server **must** reject any token not issued *for it*, and a server that calls an upstream API **must not** pass the client's token through - it obtains its own. Without that you get the **confused deputy**: your server spends a token minted for somebody else, and the downstream API trusts it because your server vouched for it.
+- **The AS metadata is how a client learns the rules.** The one check this lab's client actually performs is that the `issuer` it gets back matches the URL it asked - that is what closes **authorization server mix-up attacks**. The document also advertises PKCE (`code_challenge_methods_supported`) and CIMD (`client_id_metadata_document_supported`); a production client using the authorization-code flow would require both. This lab uses a simple password grant, so you see those two advertised but not exercised.
+- **Audience binding is the most important security rule in MCP.** A server **must** reject any token not issued *for it* - that is the rejection you just triggered in step 10. The same rule applies one hop further out: a server that calls an upstream API **must not** pass the client's token through, it obtains its own. (This lab's server calls nothing upstream, so that half is described rather than demonstrated.) Without it you get the **confused deputy**: your server spends a token minted for somebody else, and the downstream API trusts it because your server vouched for it.
 - **Nothing about the connection carries meaning.** The token, the protocol version, the capabilities and the caller's identity all travel together on every single request. There is no session for a token to be attached to.
 
 <p align="center">
@@ -475,7 +475,7 @@ code trip_server.py
 ```
 <br><br>
 
-3. Merge in **every** difference, then close the tab to save.
+3. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
 
 ```
 code -d ../extra/trip_server.txt trip_server.py
@@ -528,8 +528,7 @@ python trip_client.py
 - **`requestState` is opaque, but not trusted.** The client echoes it back without reading or modifying it - but "the client can't read it" is not "the client can't tamper with it," so the spec requires servers to **integrity-protect** it. `request_state_security=RequestStateSecurity(keys=[SIGNING_KEY])` signs it for you. Every replica must share that key, or a retry landing elsewhere is rejected. Lab 5 shows exactly what that failure looks like.
 - **The guard pattern is the migration gotcha.** `ctx.elicit()` still compiles under FastMCP 4 and still works on legacy connections, but **raises at runtime** on a 2026-07-28 connection.
 - **Declining is required behavior.** An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content. A user is always allowed to say no.
-- **Two limits.** Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`. And a server **must not** ask for an input type the client didn't declare support for - doing so returns `-32021` (`MissingRequiredClientCapability`).
-- **MRTR isn't only for user questions.** The same mechanism carries `sampling/createMessage` (borrowing the client's LLM) and `roots/list` - both of which are deprecated, which is why this lab is built on elicitation.
+- **One limit.** Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`.
 
 <p align="center">
 **[END OF LAB]**
@@ -577,7 +576,10 @@ python handle_client.py
 
 ### Part B - Watch MRTR survive the same setup
 
-4. Stop the two memory servers (CTRL+C in terminals 1 and 2 - **leave the load balancer running**) and start two replicas of the trip server in their place.
+4. Stop the two memory servers - CTRL+C in terminals 1 and 2 only. **Leave the load balancer in terminal 3 running for the rest of this lab**; restarting it resets which replica gets picked next.
+<br><br>
+
+   Now start two replicas of the trip server in their place. If you see "address already in use", wait a second and retry - the old process needs a moment to release the port.
 
 ```
 Terminal 1:   python replica_server.py 8001
@@ -619,7 +621,7 @@ REQUEST_STATE_KEY="a-different-key-on-this-replica!" python replica_server.py 80
 ```
 <br><br>
 
-8. Run `python trip_client.py` again and answer the prompts. When the two rounds straddle the two replicas, the retry is rejected. Run it a couple of times - it succeeds when both rounds land on the same replica.
+8. Run `python trip_client.py` again and answer the prompts. The load balancer alternates, so round 2 always lands on the replica with the different key - and the retry is always rejected. That is the whole argument for sharing the key: one replica cannot verify what another one signed.
 
 ```
 MCPError: Invalid or expired requestState

@@ -152,7 +152,7 @@
     ],
     "extra/gateway.txt": [
       {
-        "anchor": "# 1) Import the two servers we built. These are ordinary Python objects,",
+        "anchor": "from note_server import server as note_service",
         "title": "Importing both servers",
         "note": [
           "**Brings in the note and math servers as ordinary Python objects.**",
@@ -160,7 +160,7 @@
         ]
       },
       {
-        "anchor": "# 2) Create the gateway and mount both servers under namespaces.",
+        "anchor": "gateway = FastMCP(\"Lab Gateway\"",
         "title": "Creating the gateway",
         "note": [
           "**One FastMCP instance fronting both servers on a single endpoint.**"
@@ -168,7 +168,7 @@
       },
       {
         "anchor": "gateway.mount(note_service, namespace=\"notes\")",
-        "endAnchor": "# resource://notes/note/{handle}/{title}.",
+        "endAnchor": "gateway.mount(math_service, namespace=\"math\")",
         "title": "Mounting under namespaces",
         "note": [
           "**`namespace=` prefixes every tool name and resource URI from each server.**",

@@ -4,7 +4,9 @@ from fastmcp import FastMCP
 
 math_service = FastMCP("MathService", cache_ttl=3600, cache_scope="public")
 
+
 # TODO: add tool - add two numbers
+
 
 # TODO: multiply tool - multiply two numbers
 

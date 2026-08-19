@@ -3,26 +3,27 @@
 #
 # WHAT MRTR IS
 #   A tool sometimes needs something mid-call: a confirmation, a missing
-#   parameter, a choice. The server never initiates that exchange. It RESPONDS
-#   to the client's request with resultType "input_required", naming what it
-#   needs. The client gathers the answers and RE-SENDS the original request --
-#   with a NEW JSON-RPC id -- carrying `inputResponses` and echoing
-#   `requestState`. Because everything the server needs travels in that retry,
-#   the retry can land on a completely different server instance and still work.
+#   parameter, a choice. Before 2026-07-28 the server pushed a request back
+#   down an SSE stream it was holding open, which required session affinity.
+#   Now the server never initiates anything. It RESPONDS with resultType
+#   "input_required", naming what it needs. The client gathers the answers and
+#   RE-SENDS the original request -- with a NEW JSON-RPC id -- carrying
+#   `inputResponses` and echoing `requestState`. Because everything the server
+#   needs travels in that retry, the retry can land on a different server
+#   instance and still work.
 #
 #   Only tools/call, resources/read and prompts/get may return input_required.
 #
 # THE GUARD PATTERN
-#   The tool below is called twice for one logical operation, and branches on
-#   whether answers are present. Note that ctx.elicit() RAISES on a 2026-07-28
-#   connection -- the guard pattern is what replaces it.
+#   This tool is called twice for one logical operation and branches on whether
+#   answers are present. (ctx.elicit() RAISES on a 2026-07-28 connection - the
+#   guard pattern is what replaces it.)
 #
 # requestState
 #   An opaque server-owned blob. The client MUST echo it back untouched and
-#   MUST NOT parse it. Because it can influence authorization and business
-#   logic, the spec requires it to be integrity protected -- FastMCP does that
-#   for you when you pass RequestStateSecurity with a signing key. In a
-#   multi-replica deployment, every replica must share that key.
+#   MUST NOT parse it. FastMCP integrity-protects it for you when you pass
+#   RequestStateSecurity with a signing key. Every replica must share that key
+#   - Lab 5 shows what happens when they do not.
 
 import os
 
@@ -50,7 +51,11 @@ FLIGHTS = {
 
 @server.tool
 async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult:
-    """Book a flight. Asks who is travelling and which flight they want."""
+    """Book a flight. Asks who is travelling and which flight they want.
+
+    Returning an InputRequiredResult is what triggers another round trip;
+    returning anything else ends the call.
+    """
 
     # ctx.input_responses is None on the FIRST call and populated on the retry.
     answers = ctx.input_responses
@@ -110,7 +115,7 @@ async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult
     # of "accept", "decline" or "cancel", and only "accept" carries content -
     # so check both before touching it.
     for name, ans in (("traveler", traveler), ("flight", flight)):
-        if ans is None or getattr(ans, "action", None) != "accept" or not ans.content:
+        if ans is None or ans.action != "accept" or not ans.content:
             return f"Booking cancelled: no answer given for {name}."
 
     who = traveler.content["name"]

@@ -1,22 +1,29 @@
 # trip_server.py - Multi Round-Trip Requests (MRTR), SEP-2322
 # FastMCP 4.x / MCP specification revision 2026-07-28
 #
-# THE PROBLEM MRTR SOLVES
-#   Before 2026-07-28, a server that needed something from the client mid-call
-#   sent a JSON-RPC *request* back down an SSE stream it was holding open. That
-#   requires a live bidirectional connection, which requires session affinity,
-#   which is exactly what the stateless redesign removed.
-#
-#   Under MRTR the server never initiates anything. It RESPONDS with
-#   resultType "input_required", naming what it needs. The client gathers the
-#   answers and RE-SENDS the original request with a NEW id, carrying
-#   `inputResponses` and echoing `requestState`.
+# WHAT MRTR IS
+#   A tool sometimes needs something mid-call: a confirmation, a missing
+#   parameter, a choice. Before 2026-07-28 the server pushed a request back
+#   down an SSE stream it was holding open, which required session affinity.
+#   Now the server never initiates anything. It RESPONDS with resultType
+#   "input_required", naming what it needs. The client gathers the answers and
+#   RE-SENDS the original request -- with a NEW JSON-RPC id -- carrying
+#   `inputResponses` and echoing `requestState`. Because everything the server
+#   needs travels in that retry, the retry can land on a different server
+#   instance and still work.
 #
 #   Only tools/call, resources/read and prompts/get may return input_required.
 #
-# NOTE: ctx.elicit() still works on legacy connections but RAISES on
-# 2026-07-28 connections. The modern shape is the "guard pattern": the tool is
-# called twice and branches on whether answers are present.
+# THE GUARD PATTERN
+#   This tool is called twice for one logical operation and branches on whether
+#   answers are present. (ctx.elicit() RAISES on a 2026-07-28 connection - the
+#   guard pattern is what replaces it.)
+#
+# requestState
+#   An opaque server-owned blob. The client MUST echo it back untouched and
+#   MUST NOT parse it. FastMCP integrity-protects it for you when you pass
+#   RequestStateSecurity with a signing key. Every replica must share that key
+#   - Lab 5 shows what happens when they do not.
 
 import os
 
@@ -25,6 +32,8 @@ from mcp_types import ElicitRequest, ElicitRequestFormParams, InputRequiredResul
 
 from fastmcp import Context, FastMCP
 
+# A real deployment reads this from a secret manager and shares it across all
+# replicas. 32+ bytes.
 SIGNING_KEY = os.getenv("REQUEST_STATE_KEY", "lab-demo-key-not-for-production!!").encode()
 
 server = FastMCP(
@@ -42,16 +51,20 @@ FLIGHTS = {
 
 @server.tool
 async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult:
-    """Book a flight. Asks who is travelling and which flight they want."""
+    """Book a flight. Asks who is travelling and which flight they want.
 
-    # ctx.input_responses is None on the FIRST call, populated on the retry.
+    Returning an InputRequiredResult is what triggers another round trip;
+    returning anything else ends the call.
+    """
+
+    # ctx.input_responses is None on the FIRST call and populated on the retry.
     answers = ctx.input_responses
 
     dest = destination.strip().lower()
     if dest not in FLIGHTS:
         return f"Sorry, we do not fly to {destination}."
 
-    # ---- Round 1: no answers yet ----------------------------------------
+    # ---- Round 1: we have no answers yet, so ask for them ----------------
     # TODO: return an InputRequiredResult with result_type="input_required"
     #       and two input_requests keyed "traveler" and "flight":
     #         - "traveler": an ElicitRequest asking for a name (string)
@@ -59,9 +72,9 @@ async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult
     #       Pass request_state=ctx.request_state or "".
 
     # ---- Round 2: the client re-sent the call with the answers -----------
-    # TODO: read answers["traveler"] and answers["flight"], check that each
-    #       has action == "accept" AND non-empty content (a user may decline),
-    #       then return the confirmation string.
+    # TODO: read answers["traveler"] and answers["flight"], check that each has
+    #       action == "accept" AND non-empty content (a user may decline), then
+    #       return the confirmation string.
 
 
 if __name__ == "__main__":
