@@ -22,8 +22,8 @@
 # requestState
 #   An opaque server-owned blob. The client MUST echo it back untouched and
 #   MUST NOT parse it. FastMCP integrity-protects it for you when you pass
-#   RequestStateSecurity with a signing key. Every replica must share that key
-#   - Lab 5 shows what happens when they do not.
+#   RequestStateSecurity with a signing key. Every replica must share that key,
+#   or a retry that lands on a different replica is rejected.
 
 import os
 

@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 8.6 - 08/19/26 - All merges reduced to code only (labs 1,2,4,6); lab 3 step 10 split; lab 5 part C corrected
+## Revision 9.1 - 08/19/26 - Five labs; code-only merges; Ollama now genuinely warmed at container start
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -41,10 +41,10 @@ used MCP before, these are the things that will surprise you:
 released on or after 2027-07-28. The old **HTTP+SSE** transport has been deprecated
 since 2025-03-26 and is on a shorter clock: three months after SEP-2596 reaches Final.
 
-**Course structure:** five core labs fit the 3-hour format - Jumpstart, Building
-Servers & the Wire Protocol, Security, MRTR, and Replicas. Labs 6-8 are an
-**optional track** (composition → IDE integration → multiple servers) for rooms
-that move fast; each builds on the one before it.
+**Course structure:** five labs fit the 3-hour format - Jumpstart, Building Servers
+& the Wire Protocol, MRTR, MCP in the Real World, and Security. Expect to work
+through the first four together; Lab 5 is written to be finished on your own
+afterwards.
 
 **The one idea to hold on to:** the protocol no longer remembers anything between
 requests. Any state that outlives a single call is now an explicit identifier that
@@ -164,7 +164,7 @@ code -d ../extra/agent_mcp.txt agent_mcp.py
 ![Diff view](./images/mcp155.png?raw=true "Diff view")
 <br><br>
 
-11. Run the agent. It prints each tool call and result, then a final answer. Give it a few minutes - the model runs locally in the codespace. (Different problem this time: 12 x 8 / 3.) If the answer is wrong, run it again; the local model is small.
+11. Run the agent. It prints each tool call and result, then a final answer. The model runs locally on the codespace CPU, so expect a wait of a minute or two across the loop's turns. (Different problem this time: 12 x 8 / 3.) If the answer is wrong, run it again; the local model is small.
 
 ```
 python agent_mcp.py
@@ -178,18 +178,19 @@ python agent_mcp.py
 
 **What just happened** - worth reading while the agent runs.
 
-- **There is no agent framework here.** No LangChain, no CrewAI. An agent is a loop: ask the server what tools exist, hand the schemas to the model, run whatever it asks for, feed the results back, repeat.
+- **There is no agent framework here.** No LangChain, no CrewAI. An agent is a loop: ask what tools exist, hand the schemas to the model, run what it asks for, feed the results back, repeat.
 - **One adapter, any number of tools.** The six tool schemas arrived in MCP's standard shape, so converting them to what Ollama expects took a single function. Point it at a server with sixty tools and it's still one function. That's the whole economic argument for MCP.
-- **That "negotiated protocol version" line** is what your client and this third-party server agreed on. Your client asks for `2026-07-28` and falls back if the server is older, which is why an unfamiliar server just works.
+- **That "negotiated protocol version" line** is what your client and this third-party server agreed on - it asks for `2026-07-28` and falls back if the server is older. That is why an unfamiliar server just works.
 
 <p align="center">
 **[END OF LAB]**
 </p>
+
 </br></br></br>
 
 **Lab 2 - Building MCP Servers and the Protocol on the Wire**
 
-**Purpose: In this lab, we'll build a complete MCP server from scratch - tools, a static resource, a resource template, and a prompt, held together by explicit state handles - and then look at the raw 2026-07-28 protocol it speaks on the wire.**
+**Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles - then look at the raw protocol it speaks on the wire.**
 
 ### Part A - Build and explore the server
 
@@ -212,11 +213,11 @@ code -d ../extra/note_server.txt note_server.py
 
 3. Merge in **every** difference - hover over the middle bar and click the right-pointing arrows - then close the tab to save. The eight functions are declared for you; what you merge in are their bodies - all four MCP element types plus the handle that ties them together.
 
-   - **Handle minting** (`open_notebook`) - returns an unguessable `handle` as ordinary data.
-   - **Tools** (`save_note`, `list_notes`) - do work, and take the handle as a normal argument.
+   - **`open_notebook`** - mints an unguessable handle, returns it as ordinary data.
+   - **Tools** (`save_note`, `list_notes`) - take that handle as a normal argument.
    - **Static resource** (`resource://catalog`) - a fixed URI.
-   - **Resource template** (`resource://note/{handle}/{title}`) - a dynamic URI, handle in the path.
-   - **Prompt** (`summarize_notes`) - packages a notebook's notes for an LLM.
+   - **Resource template** (`resource://note/{handle}/{title}`) - handle in the path.
+   - **Prompt** (`summarize_notes`) - packages the notes for an LLM.
 <br><br>
 
 4. Start the server.
@@ -274,14 +275,14 @@ cd lab2   (if needed)
 ![Wire probe output](./images/mcp166.png?raw=true "Wire probe output")
 <br><br>
 
-10. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType: "complete"`, `ttlMs: 60000`, `cacheScope: "private"`, and `_meta`. Then open the script to see what was actually sent.
+10. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType`, `ttlMs`, `cacheScope` and `_meta`. Then open the script to see what was sent.
 
 ```
 code wire_probe.sh
 ```
 <br><br>
 
-   Every request carries its own `_meta` with the protocol version and client capabilities, plus three headers that mirror the body:
+   Every request carries its own `_meta` plus three headers that mirror the body:
 
    | Header | When required | Mirrors |
    |---|---|---|
@@ -299,18 +300,209 @@ code wire_probe.sh
 
 **What just happened** - the ideas this lab was built to show.
 
-- **The handle replaces the session.** A server keeps nothing between requests, so anything spanning calls is named explicitly and passed back. Because the handle is an ordinary tool argument, the model can see it and carry it forward - the state is part of the conversation rather than hidden in the transport.
-- **A handle is not a credential.** Possessing one proves nothing. Handles must be unguessable (`secrets.token_urlsafe` here) and, in production, bound server-side to the authenticated user, so that even a *correct* handle from the wrong user is refused. That's the spec's **State Handle Hijacking** guidance.
-- **Caching hints are mandatory** on `server/discover`, the four list calls, and `resources/read`. Ours is `"private"` because notebook contents vary per user - a shared proxy must never serve one user's listing to another. List results may vary by the authorization on a request, but never by connection.
-- **The headers duplicate the body so infrastructure never has to parse JSON.** A gateway can route, rate-limit, or authorize *per tool* with a plain header rule. Section 4 is why the server that executes the request must re-validate that header and body agree - otherwise an attacker routes past your policy and runs something else.
-- **Order never mattered.** No call depended on an earlier one, and nothing was opened or closed. That's the property the whole revision was designed around.
+- **The handle replaces the session.** The server keeps nothing between requests, so state spanning calls is named explicitly and passed back. Because it's an ordinary tool argument, the model can see it and carry it forward.
+- **A handle is not a credential.** Possessing one proves nothing. Handles must be unguessable, and in production bound server-side to the authenticated user - so even a *correct* handle from the wrong user is refused. That's the spec's **State Handle Hijacking** guidance.
+- **Caching hints are required** on discover, the list calls, and `resources/read`. Ours is `"private"` because notebook contents vary per user - a shared proxy must never serve one user's data to another.
+- **The headers duplicate the body so infrastructure never parses JSON.** A gateway can route or rate-limit per tool with a plain header rule. Section 4 is why the executing server must re-validate that header and body agree.
+- **Order never mattered.** No call depended on an earlier one; nothing was opened or closed. That is the property the whole revision was designed around.
 
 <p align="center">
 **[END OF LAB]**
 </p>
+
 </br></br></br>
 
-**Lab 3 - Security and Authorization in MCP**
+**Lab 3 - Multi Round-Trip Requests (asking the user a question)**
+
+**Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern that replaced server-initiated requests.**
+
+1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. MCP handles that with **Multi Round-Trip Requests (MRTR)**, in which the server never initiates anything:
+
+   1. Client sends `tools/call` (id 1).
+   2. Server responds with `resultType: "input_required"`, carrying `inputRequests` (what it needs) and an opaque `requestState` (what it wants to remember).
+   3. Client gathers the answers, then **re-sends the original request with a new id**, adding `inputResponses` and echoing `requestState` back untouched.
+   4. Server returns the final `"complete"` result.
+<br><br>
+
+2. Change into the *lab4* directory and open the skeleton.
+
+```
+cd ../lab4
+code trip_server.py
+```
+<br><br>
+
+3. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
+
+```
+code -d ../extra/trip_server.txt trip_server.py
+```
+<br><br>
+
+4. Notice the shape as you merge. The tool is called **twice** for one logical operation and branches on `ctx.input_responses` - `None` on the first call, populated on the retry. That's the **guard pattern**.
+<br><br>
+
+5. Start the server.
+
+```
+python trip_server.py
+```
+<br><br>
+
+6. In a second terminal, look at the client before running it.
+
+```
+cd lab4
+code trip_client.py
+```
+
+   Register an `elicitation_handler` and FastMCP drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
+<br><br>
+
+7. Run the client. It will ask you for a traveler name, then have you pick a flight.
+
+```
+python trip_client.py
+```
+
+![MRTR booking flow](./images/mcp161.png?raw=true "MRTR booking flow")
+<br><br>
+
+8. Switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your side, a single `book_trip` call - each one an entirely independent HTTP request.
+<br><br>
+
+9. Run the client again and enter something invalid (like `99`) at the flight prompt. The handler declines and the server reports a cancelled booking rather than crashing.
+
+![Declining an elicitation](./images/mcp162.png?raw=true "Declining an elicitation")
+<br><br>
+
+10. Stop the server with CTRL+C when you're done.
+<br><br>
+
+**What just happened** - why MRTR is shaped this way.
+
+- **The server never initiates.** Pushing requests to a client needs a live two-way connection, which pins that client to one instance. Under MRTR everything travels in the retry instead, so the retry can land on a different instance and still work.
+- **`requestState` is opaque, but not trusted.** "The client can't read it" is not "the client can't tamper with it," so servers must **integrity-protect** it - `RequestStateSecurity(keys=[SIGNING_KEY])` signs it for you. Every replica must share that key.
+- **The guard pattern is the migration gotcha.** `ctx.elicit()` still compiles, and still works on legacy connections, but **raises at runtime** on a 2026-07-28 connection.
+- **Declining is required behavior.** An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content. A user is always allowed to say no. Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`.
+
+<p align="center">
+**[END OF LAB]**
+</p>
+
+</br></br></br>
+
+**Lab 4 - MCP in the Real World**
+
+**Purpose: In this lab, we'll compose two servers behind a single gateway, then connect that gateway to VS Code's Copilot Chat and drive our own tools from an AI assistant.**
+
+### Part A - Compose two servers behind one gateway
+
+1. Change into *lab6* and bring in the note server you completed in Lab 2 - the gateway will mount it alongside a new math server.
+
+```
+cd ../lab6
+cp ../lab2/note_server.py .
+```
+<br><br>
+
+2. Merge the completed code into the math server skeleton - just two tools, `add` and `multiply` - then close the tab.
+
+```
+code -d ../extra/math_server.txt math_server.py
+```
+
+![math server merge](./images/mcp135.png?raw=true "math server merge")
+<br><br>
+
+3. Now the gateway - one server that mounts both behind a single endpoint. As you merge, note the key lines: `gateway.mount(note_service, namespace="notes")` and `gateway.mount(math_service, namespace="math")`.
+
+```
+code -d ../extra/gateway.txt gateway.py
+```
+
+![gateway server merge](./images/mcp136.png?raw=true "gateway server merge")
+<br><br>
+
+4. Start the gateway and leave it running.
+
+```
+python gateway.py
+```
+
+![gateway server running](./images/mcp137.png?raw=true "gateway server running")
+<br><br>
+
+### Part B - Drive your tools from the IDE
+
+5. In a second terminal, create the IDE configuration that tells VS Code how to reach the gateway. `"type": "http"` selects the Streamable HTTP transport and `"url"` is the same endpoint the Explorer used - note there's no trailing slash.
+
+```
+cd /workspaces/mcp
+mkdir -p .vscode
+cp extra/mcp_local_settings.json .vscode/mcp.json
+code .vscode/mcp.json
+```
+<br><br>
+
+6. Open the Copilot Chat panel with the Copilot icon at the top, and set it to *Agent* mode with the drop-down at the bottom. (If you don't see the mode options, click the Copilot icon in the bottom status bar and choose *Finish setup* first.)
+
+![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
+<br><br>
+
+7. In *mcp.json*, click the small *Start* link above the "Lab Gateway" server name. It should change to "√Running | Stop | Restart | N tools".
+
+![Click start to connect](./images/mcp139.png?raw=true "Click start to connect")
+
+![connection successful](./images/mcp140.png?raw=true "connection successful")
+<br><br>
+
+8. Click the *Configure Tools...* icon in Copilot Chat, then find *Lab Gateway* in the dialog and expand it. You should see the tools from **both** servers, namespaced: `notes_open_notebook`, `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`.
+
+![Configure tools](./images/mcp141.png?raw=true "Configure tools")
+
+![Lab Gateway tools](./images/mcp142.png?raw=true "Lab Gateway tools")
+<br><br>
+
+9. Now use your own tools from Copilot Chat. You'll probably have to *Allow* the operation.
+
+```
+Open a notebook called "lab-notes" and tell me the handle
+```
+
+![First tool prompt](./images/mcp143.png?raw=true "First tool prompt")
+<br><br>
+
+10. Save a note, then list them. Notice you never paste the handle back yourself - the model kept it from the previous turn and passes it along. Watch for the "Ran notes_save_note" confirmations - these are *your* tools, on *your* server.
+
+```
+Save a note in that notebook titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
+```
+
+```
+List all the notes in that notebook
+```
+
+![saved note](./images/mcp144.png?raw=true "saved note")
+
+![saved notes](./images/mcp145.png?raw=true "saved notes")
+<br><br>
+
+11. Stop the gateway with CTRL+C and close any extra tabs.
+<br><br>
+
+**What just happened**
+
+- **`namespace=` is all that composition takes.** Two independent servers, one endpoint, and the host needed no special knowledge of either. Combine that with the `Mcp-Method` and `Mcp-Name` headers from Lab 2 and a gateway can route and meter per tool without ever parsing a JSON body.
+- **The handle was visible to the model the whole time.** Because state that spans calls is ordinary data in the conversation rather than something hidden in the transport, the model can hold onto it, pass it to the right calls, and manage several notebooks at once. Making state explicit didn't only help the infrastructure - it made the agent more capable.
+
+<p align="center">
+**[END OF LAB]**
+</p>
+
+</br></br></br>
+
+**Lab 5 - Security and Authorization in MCP**
 
 **Purpose: In this lab, we'll stand up an authorization server and a protected MCP server, and walk the full OAuth 2.1 discovery chain that a 2026-07-28 client is required to follow.**
 
@@ -446,399 +638,14 @@ curl -s -X POST http://127.0.0.1:9000/introspect \
 **What just happened** - the security rules behind what you just ran.
 
 - **The 401 bootstraps everything.** Because the challenge names where to find the metadata, a client that has never seen this server before can authenticate against it with no prior configuration.
-- **The AS metadata is how a client learns the rules.** The one check this lab's client actually performs is that the `issuer` it gets back matches the URL it asked - that is what closes **authorization server mix-up attacks**. The document also advertises PKCE (`code_challenge_methods_supported`) and CIMD (`client_id_metadata_document_supported`); a production client using the authorization-code flow would require both. This lab uses a simple password grant, so you see those two advertised but not exercised.
-- **Audience binding is the most important security rule in MCP.** A server **must** reject any token not issued *for it* - that is the rejection you just triggered in step 10. The same rule applies one hop further out: a server that calls an upstream API **must not** pass the client's token through, it obtains its own. (This lab's server calls nothing upstream, so that half is described rather than demonstrated.) Without it you get the **confused deputy**: your server spends a token minted for somebody else, and the downstream API trusts it because your server vouched for it.
+- **The AS metadata is how a client learns the rules.** The check this client performs is that the `issuer` it gets back matches the URL it asked - that closes **authorization server mix-up attacks**. The document also advertises PKCE and CIMD, which a production authorization-code client would require; this lab uses a password grant, so you see them advertised but not exercised.
+- **Audience binding is the most important security rule in MCP.** A server **must** reject any token not issued *for it* - the rejection you triggered in step 10. One hop further out, a server calling an upstream API **must not** pass the client's token through; it obtains its own. (Not demonstrated here - this server calls nothing upstream.) Without that you get the **confused deputy**: your server spends a token minted for somebody else, and the API trusts it because your server vouched for it.
 - **Nothing about the connection carries meaning.** The token, the protocol version, the capabilities and the caller's identity all travel together on every single request. There is no session for a token to be attached to.
 
 <p align="center">
 **[END OF LAB]**
 </p>
-</br></br></br>
 
-**Lab 4 - Multi Round-Trip Requests (asking the user a question)**
-
-**Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern that replaced server-initiated requests.**
-
-1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. MCP handles that with **Multi Round-Trip Requests (MRTR)**, in which the server never initiates anything:
-
-   1. Client sends `tools/call` (id 1).
-   2. Server responds with `resultType: "input_required"`, carrying `inputRequests` (what it needs) and an opaque `requestState` (what it wants to remember).
-   3. Client gathers the answers, then **re-sends the original request with a new id**, adding `inputResponses` and echoing `requestState` back untouched.
-   4. Server returns the final `"complete"` result.
-<br><br>
-
-2. Change into the *lab4* directory and open the skeleton.
-
-```
-cd ../lab4
-code trip_server.py
-```
-<br><br>
-
-3. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
-
-```
-code -d ../extra/trip_server.txt trip_server.py
-```
-<br><br>
-
-4. Notice the shape as you merge. The tool is called **twice** for one logical operation and branches on `ctx.input_responses` - `None` on the first call, populated on the retry. That's the **guard pattern**.
-<br><br>
-
-5. Start the server.
-
-```
-python trip_server.py
-```
-<br><br>
-
-6. In a second terminal, look at the client before running it.
-
-```
-cd lab4
-code trip_client.py
-```
-
-   Register an `elicitation_handler` and FastMCP drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
-<br><br>
-
-7. Run the client. It will ask you for a traveler name, then have you pick a flight.
-
-```
-python trip_client.py
-```
-
-![MRTR booking flow](./images/mcp161.png?raw=true "MRTR booking flow")
-<br><br>
-
-8. Switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your side, a single `book_trip` call - each one an entirely independent HTTP request.
-<br><br>
-
-9. Run the client again and enter something invalid (like `99`) at the flight prompt. The handler declines and the server reports a cancelled booking rather than crashing.
-
-![Declining an elicitation](./images/mcp162.png?raw=true "Declining an elicitation")
-<br><br>
-
-10. Stop the server with CTRL+C when you're done.
-<br><br>
-
-**What just happened** - why MRTR is shaped this way.
-
-- **The server never initiates.** A server that pushes requests to a client needs a live bidirectional connection, and that pins the client to one instance. Under MRTR everything the server needs travels in the retry instead - so the retry can land on a completely different instance and still work. Put four replicas behind a round-robin load balancer and this is unchanged.
-- **`requestState` is opaque, but not trusted.** The client echoes it back without reading or modifying it - but "the client can't read it" is not "the client can't tamper with it," so the spec requires servers to **integrity-protect** it. `request_state_security=RequestStateSecurity(keys=[SIGNING_KEY])` signs it for you. Every replica must share that key, or a retry landing elsewhere is rejected. Lab 5 shows exactly what that failure looks like.
-- **The guard pattern is the migration gotcha.** `ctx.elicit()` still compiles under FastMCP 4 and still works on legacy connections, but **raises at runtime** on a 2026-07-28 connection.
-- **Declining is required behavior.** An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content. A user is always allowed to say no.
-- **One limit.** Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`.
-
-<p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 5 - Running Replicas**
-
-**Purpose: In this lab, we'll put two copies of a server behind a real round-robin load balancer and watch the 2026-07-28 model earn its keep: in-memory state breaks, MRTR survives, and a mismatched signing key shows why replicas must share one.**
-
-1. Change into *lab5*. These three files are complete - no merging in this lab.
-
-```
-cd ../lab5
-```
-
-| **File**               | **What it is**                                                             |
-|------------------------|-----------------------------------------------------------------------------|
-| **[`replica_lb.py`](lab5/replica_lb.py)**   | A ~50-line round-robin load balancer. Deliberately dumb: no sessions, no JSON parsing - it just rotates and logs the `Mcp-Method` / `Mcp-Name` headers it sees. |
-| **[`memory_server.py`](lab5/memory_server.py)** | The **anti-pattern**: a notebook server keeping handles in an in-memory dict - Lab 2's design, run the way you must never run it. |
-| **[`replica_server.py`](lab5/replica_server.py)** | The Lab 4 TripBooker made replica-ready: port from the command line, per-replica logging, signing key from `REQUEST_STATE_KEY`. |
-
-<br><br>
-
-### Part A - Watch in-memory state break
-
-2. You'll need **four terminals** for this lab. In the first three, start two replicas of the *memory* server and the load balancer. Note what the replicas print at startup: *"handles live ONLY in this process."*
-
-```
-Terminal 1:   cd lab5 && python memory_server.py 8001
-Terminal 2:   cd lab5 && python memory_server.py 8002
-Terminal 3:   cd lab5 && python replica_lb.py 8000
-```
-<br><br>
-
-3. In the fourth terminal, run the client. It opens a notebook, then saves into it **twice with the identical call** - one succeeds, one fails. Check the two replica terminals: the handle exists in one process's memory and not the other's.
-
-```
-cd lab5
-python handle_client.py
-```
-
-![In-memory state breaking behind the load balancer](./images/mcp163.png?raw=true "In-memory state breaking behind the load balancer")
-<br><br>
-
-### Part B - Watch MRTR survive the same setup
-
-4. Stop the two memory servers - CTRL+C in terminals 1 and 2 only. **Leave the load balancer in terminal 3 running for the rest of this lab**; restarting it resets which replica gets picked next.
-<br><br>
-
-   Now start two replicas of the trip server in their place. If you see "address already in use", wait a second and retry - the old process needs a moment to release the port.
-
-```
-Terminal 1:   python replica_server.py 8001
-Terminal 2:   python replica_server.py 8002
-```
-<br><br>
-
-5. Run the **unchanged Lab 4 client** from the fourth terminal. It still points at port 8000 - which is now the load balancer, not a server. The client cannot tell the difference.
-
-```
-cd ../lab4
-python trip_client.py
-```
-<br><br>
-
-6. Look at the two replica terminals. One logical call, two different processes:
-
-```
-[replica-8001] round 1: asking for inputs, returning signed requestState
-[replica-8002] round 2: verified requestState signature, finishing the booking
-```
-
-![One MRTR call spanning two replicas](./images/mcp164.png?raw=true "One MRTR call spanning two replicas")
-
-   The load balancer terminal shows what it needed to know to route all that - two headers, no JSON:
-
-```
-[lb] POST /mcp  Mcp-Method=tools/call Mcp-Name=book_trip  ->  http://127.0.0.1:8001
-[lb] POST /mcp  Mcp-Method=tools/call Mcp-Name=book_trip  ->  http://127.0.0.1:8002
-```
-<br><br>
-
-### Part C - Why replicas must share the signing key
-
-7. Stop replica 8002 (CTRL+C in terminal 2) and restart it with a **different** signing key.
-
-```
-REQUEST_STATE_KEY="a-different-key-on-this-replica!" python replica_server.py 8002
-```
-<br><br>
-
-8. Run `python trip_client.py` again and answer the prompts. The load balancer alternates, so round 2 always lands on the replica with the different key - and the retry is always rejected. That is the whole argument for sharing the key: one replica cannot verify what another one signed.
-
-```
-MCPError: Invalid or expired requestState
-```
-
-![Mismatched signing key rejection](./images/mcp165.png?raw=true "Mismatched signing key rejection")
-<br><br>
-
-9. Stop everything with CTRL+C in each terminal.
-<br><br>
-
-**What just happened** - three things to carry out of this lab.
-
-- **Both failures you saw were *intermittent*.** Same handle, same call, different replica, different outcome. That's the classic production symptom, and it's why these are unpleasant bugs to chase. If you ever see a "sometimes" failure behind an MCP load balancer, unknown-handle and invalid-requestState are the first two things to check.
-- **State either travels with the request or lives somewhere every replica can reach.** `requestState` and handles travel; in-process memory does neither. The protocol did its job by making the state's address explicit - where you *keep* that state is yours to get right (Redis, a database, keyed `user:handle`).
-- **The load balancer can be completely MCP-ignorant.** Rotation plus optional header logging is the whole job. No session table, no sticky routing, no JSON parsing - which is the entire point of the stateless design.
-
-<p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
----
-
-**The remaining three labs are an optional track for rooms that move fast. Each builds on the one before it: compose servers behind a gateway (Lab 6), connect that gateway to an IDE (Lab 7), then add a remote server alongside it (Lab 8).**
-
-**Lab 6 - Composing MCP Servers (Optional)**
-
-**Purpose: In this lab, we'll compose multiple focused servers behind a single gateway endpoint - the pattern production MCP deployments use.**
-
-1. Change into *lab6* and bring in the note server you completed in Lab 2 - the gateway will mount it alongside a new math server.
-
-```
-cd ../lab6
-cp ../lab2/note_server.py .
-```
-<br><br>
-
-2. Merge the completed code into the math server skeleton - just two tools, `add` and `multiply` - then close the tab.
-
-```
-code -d ../extra/math_server.txt math_server.py
-```
-
-![math server merge](./images/mcp135.png?raw=true "math server merge")
-<br><br>
-
-3. Now the gateway - one server that mounts both behind a single endpoint. As you merge, note the key lines: `gateway.mount(note_service, namespace="notes")` and `gateway.mount(math_service, namespace="math")`.
-
-```
-code -d ../extra/gateway.txt gateway.py
-```
-
-![gateway server merge](./images/mcp136.png?raw=true "gateway server merge")
-<br><br>
-
-4. Start the gateway.
-
-```
-python gateway.py
-```
-
-![gateway server running](./images/mcp137.png?raw=true "gateway server running")
-<br><br>
-
-5. Start the Explorer as in Lab 2 (`python scripts/mcp_explorer.py http://localhost:8000/mcp 5000` from the repo root) and click *Tools*. You'll see everything from both servers, namespaced: `notes_open_notebook`, `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`. Call `math_multiply` with `a`: 6 and `b`: 7 to confirm both are live.
-
-![all tools](./images/mcp138.png?raw=true "all tools")
-<br><br>
-
-**What just happened**
-
-- **A gateway in front of replicas needs no session affinity.** An ordinary round-robin load balancer works, with no shared session store - Lab 5's little load balancer was exactly this idea, live.
-- **Combine that with the `Mcp-Method` and `Mcp-Name` headers from Lab 2** and your gateway can route and meter per tool without ever parsing a JSON body.
-
-<p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 7 - MCP in the Real World - IDE Integration (Optional)**
-
-**Purpose: In this lab, we'll connect the gateway server from optional Lab 6 to VS Code's Copilot Chat. (Requires Lab 6.)**
-
-1. You'll need a GitHub personal access token. Click the link below, add a note, and click the green *Generate token* button at the bottom.
-
-Link:  Generate classic personal access token (repo & workflow scopes) https://github.com/settings/tokens/new?scopes=repo,workflow
-
-![Creating token](./images/mcp10.png?raw=true "Creating token")
-
-![Creating token](./images/mcp87.png?raw=true "Creating token")
-<br><br>
-
-2. Copy the generated token and save it - you will not be able to see it again.
-
-![Copying token](./images/mcp11.png?raw=true "Copying token")
-<br><br>
-
-3. Make sure the Lab 6 gateway is running. If you stopped it, restart it.
-
-```
-cd ../lab6
-python gateway.py
-```
-<br><br>
-
-4. Create the IDE configuration that tells VS Code how to reach the gateway. `"type": "http"` selects the Streamable HTTP transport and `"url"` is the same endpoint the Explorer used - note there's no trailing slash. (Switch to another terminal if needed.)
-
-```
-cd /workspaces/mcp
-mkdir -p .vscode
-cp extra/mcp_local_settings.json .vscode/mcp.json
-code .vscode/mcp.json
-```
-<br><br>
-
-5. Open the Copilot Chat panel with the Copilot icon at the top, and set it to *Agent* mode with the drop-down at the bottom. (If you don't see the mode options, click the Copilot icon in the bottom status bar and choose *Finish setup* first.)
-
-![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
-<br><br>
-
-6. In *mcp.json*, click the small *Start* link above the "Lab Gateway" server name. It should change to "√Running | Stop | Restart | N tools".
-
-![Click start to connect](./images/mcp139.png?raw=true "Click start to connect")
-
-![connection successful](./images/mcp140.png?raw=true "connection successful")
-<br><br>
-
-7. Click the *Configure Tools...* icon in Copilot Chat, then find *Lab Gateway* in the dialog and expand it. You should see your namespaced Lab 6 tools: `notes_open_notebook`, `notes_save_note`, `notes_list_notes`, `math_add`, `math_multiply`.
-
-![Configure tools](./images/mcp141.png?raw=true "Configure tools")
-
-![Lab Gateway tools](./images/mcp142.png?raw=true "Lab Gateway tools")
-<br><br>
-
-8. Now use your own tools from Copilot Chat. You'll probably have to *Allow* the operation.
-
-```
-Open a notebook called "lab-notes" and tell me the handle
-```
-
-![First tool prompt](./images/mcp143.png?raw=true "First tool prompt")
-<br><br>
-
-9. Save a note. Notice you don't paste the handle back yourself - the model kept it from the previous turn and passes it along.
-
-```
-Save a note in that notebook titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
-```
-
-![saved note](./images/mcp144.png?raw=true "saved note")
-<br><br>
-
-10. One more, to see the rest of the tools in action. Watch for the "Ran notes_save_note" / "Ran math_multiply" confirmations - these are *your* tools, on *your* server.
-
-```
-List all the notes in that notebook
-```
-
-![saved notes](./images/mcp145.png?raw=true "saved notes")
-<br><br>
-
-**What just happened**
-
-- **The handle was visible to the model the whole time.** Because state that spans calls is ordinary data in the conversation rather than something hidden in the transport, the model can hold onto it, pass it to the right calls, and manage several notebooks at once. Making state explicit didn't only help the load balancer - it made the agent more capable.
-
-<p align="center">
-**[END OF LAB]**
-</p>
-</br></br></br>
-
-**Lab 8 - Using Multiple MCP Servers (Optional)**
-
-**Purpose: In this lab, we'll add the remote GitHub MCP Server alongside our gateway server and look at the MCP Servers Marketplace.**
-
-1. Add a second MCP server - the GitHub MCP Server - alongside the gateway.
-
-```
-cp extra/mcp_full_settings.json .vscode/mcp.json
-code .vscode/mcp.json  (if not already open)
-```
-<br><br>
-
-2. You'll see two servers now: "Lab Gateway" (local) and "GitHub MCP Server" (remote). Click *Start* on the GitHub MCP Server, paste your PAT into the dialog, and hit *Enter*.
-
-![Putting in PAT for token](./images/mcp146.png?raw=true "Putting in PAT for token")
-<br><br>
-
-3. Copilot now has tools from *both* servers. Try a prompt that needs both - watch it call the GitHub search tool first, then `notes_open_notebook` and `notes_save_note` with the result.
-
-```
-Find the GitHub username for <your name>, then open a notebook and save it as a note titled "my-github-info"
-```
-
-![combined operation](./images/mcp147.png?raw=true "combined operation")
-<br><br>
-
-4. Click the *Extensions* icon in the left sidebar. Under *MCP SERVERS - INSTALLED* you'll see both your Lab Gateway and the GitHub MCP Server.
-
-![Connected servers](./images/mcp150.png?raw=true "Connected servers")
-<br><br>
-
-5. Click the magnifying glass icon above the GitHub MCP Server entry to approve access and browse a broader list of available MCP servers. When you're done, stop the gateway with CTRL+C and close any extra tabs.
-
-![enable MCP Servers Marketplace](./images/mcp148.png?raw=true "enable MCP Servers Marketplace")
-
-![Seeing list of MCP servers](./images/mcp149.png?raw=true "Seeing list of MCP servers")
-<br><br>
-
-**What just happened**
-
-- **That was multi-server orchestration.** One conversation, tools from two independent servers, connected through the same protocol - and the host needed no special knowledge of either.
-- **The two servers need not speak the same protocol revision.** Version negotiation happens per request, so a host can hold connections to a mix of modern and older servers at once without any of them having to agree with each other.
-
-<p align="center">
-**[END OF LAB]**
-</p>
 </br></br></br>
 
 ---

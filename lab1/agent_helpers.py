@@ -36,7 +36,18 @@ _NOT_A_NUMBER = re.compile(r"\b(nan|undefined|infinity|error)\b", re.IGNORECASE)
 
 async def ask_model(client, messages, tools):
     """One turn with the LLM. Retries because cold local models are slow."""
-    payload = {"model": MODEL, "messages": messages, "tools": tools, "stream": False}
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "tools": tools,
+        "stream": False,
+        # Ollama unloads an idle model after 5 minutes by default, and this
+        # loop makes several calls with a human typing in between. Reloading
+        # a 3B model on a 4-core box costs far more than the answer does.
+        "keep_alive": -1,
+        # A small model will happily ramble. The answer we want is one line.
+        "options": {"num_predict": 512},
+    }
     for attempt in range(4):
         try:
             resp = await client.post(OLLAMA_URL, json=payload)

@@ -36,5 +36,5 @@
         }
     },
     "postCreateCommand": "bash .devcontainer/install-merge-info.sh && bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
-    "postStartCommand": "nohup bash -c 'ollama serve &'"
+    "postStartCommand": "bash scripts/serveOllama.sh"
 }
