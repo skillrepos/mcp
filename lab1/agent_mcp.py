@@ -10,8 +10,6 @@ An "agent" is just this loop:
 
 The HTTP plumbing and trace printing live in agent_helpers.py, so everything
 below is MCP.
-
-Merge in the completed code to fill the TODOs below.
 """
 
 import asyncio

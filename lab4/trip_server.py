@@ -3,9 +3,9 @@
 #
 # WHAT MRTR IS
 #   A tool sometimes needs something mid-call: a confirmation, a missing
-#   parameter, a choice. Before 2026-07-28 the server pushed a request back
-#   down an SSE stream it was holding open, which required session affinity.
-#   Now the server never initiates anything. It RESPONDS with resultType
+#   parameter, a choice. The server never initiates that exchange -- pushing
+#   requests to a client would need a live two-way connection, which would pin
+#   that client to one instance. It RESPONDS with resultType
 #   "input_required", naming what it needs. The client gathers the answers and
 #   RE-SENDS the original request -- with a NEW JSON-RPC id -- carrying
 #   `inputResponses` and echoing `requestState`. Because everything the server

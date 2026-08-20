@@ -4,17 +4,16 @@
 # Demonstrates: explicit state handles, tools that change state,
 #               static resources, resource templates, and prompts.
 #
-# WHAT CHANGED IN 2026-07-28 -- READ THIS FIRST
-#   Earlier revisions let a server keep per-connection state, keyed by the
-#   Mcp-Session-Id header. That header is gone. MCP is now stateless: a server
-#   must not infer anything from previous requests, even on the same connection,
-#   because any request may land on any instance behind a plain load balancer.
+# STATELESS BY DESIGN -- READ THIS FIRST
+#   A server keeps nothing between requests. It must not infer anything from
+#   previous requests, even on the same connection, because any request may
+#   land on any instance behind a plain load balancer.
 #
-#   State that must span requests is now referenced by an EXPLICIT HANDLE that
-#   the server mints and the client passes back on every call. Note what this
-#   buys you beyond scaling: the handle is an ordinary tool argument, so the
-#   model can see it, reason about it, and carry it forward -- the state is
-#   visible in the conversation instead of hidden in the transport.
+#   State that spans requests is referenced by an EXPLICIT HANDLE that the
+#   server mints and the client passes back on every call. Note what this buys
+#   you beyond scaling: the handle is an ordinary tool argument, so the model
+#   can see it, reason about it, and carry it forward -- the state is visible
+#   in the conversation instead of hidden in the transport.
 #
 # SECURITY (spec: "State Handle Hijacking")
 #   Possessing a handle is NOT authentication. Handles must be unguessable and

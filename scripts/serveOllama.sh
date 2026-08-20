@@ -25,12 +25,12 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-# Warm it: load the weights and keep them resident. Backgrounded so the
-# container finishes starting immediately - by the time anyone reaches Lab 1
-# step 11 this has long since completed.
-nohup curl -sf http://localhost:11434/api/chat \
+# Warm it: load the weights and keep them resident. Measured at ~5s on a
+# 4-core codespace, so run it synchronously - backgrounding it does not
+# survive postStart and the model stays cold.
+curl -sf --max-time 180 http://localhost:11434/api/chat \
   -H 'Content-Type: application/json' \
   -d "{\"model\":\"${MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"stream\":false,\"keep_alive\":-1}" \
-  >/tmp/ollama-warm.log 2>&1 &
+  >/tmp/ollama-warm.log 2>&1 || echo 'warm-up failed' >&2
 
 exit 0
