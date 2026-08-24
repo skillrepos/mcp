@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.3 - 08/24/26
+## Revision 9.5 - 08/24/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -260,14 +260,17 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
 ![specific resource](./images/mcp173.png?raw=true "specific resource")
 <br><br>
 
-   Then click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
+11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
 
 ![prompts](./images/mcp134.png?raw=true "prompts")
 <br><br>
 
-### Part B - The protocol on the wire
+   If you are stopping here, stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
+<br><br>
 
-9. Leave note_server.py running. Stop the Explorer (CTRL+C) or open a third terminal, then run the probe from *lab2* to see the raw HTTP with no SDK in the way.
+### Part B - The protocol on the wire (Optional - if time is short, finish this part on your own)
+
+12. Leave note_server.py running. Stop the Explorer (CTRL+C) or open a third terminal, then run the probe from *lab2* to see the raw HTTP with no SDK in the way.
 
 ```
 cd lab2   (if needed)
@@ -277,7 +280,7 @@ cd lab2   (if needed)
 ![Wire probe output](./images/mcp166.png?raw=true "Wire probe output")
 <br><br>
 
-10. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType`, `ttlMs`, `cacheScope` and `_meta`. Then open the script to see what was sent.
+13. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType`, `ttlMs`, `cacheScope` and `_meta`. Then open the script to see what was sent.
 
 ```
 code wire_probe.sh
@@ -293,7 +296,7 @@ code wire_probe.sh
    | `Mcp-Name` | `tools/call`, `resources/read`, `prompts/get` | `params.name` or `params.uri` |
 <br><br>
 
-11. Check the last three sections, then stop the server with CTRL+C to free port 8000 and close the Explorer browser tab.
+14. Check the last three sections, then stop the server with CTRL+C to free port 8000 and close the Explorer browser tab.
 
    - **Section 4** sends `Mcp-Name: list_notes` while the body says `open_notebook`: **HTTP 400**, error **-32020** (`HeaderMismatch`).
    - **Section 5** asks for version `1999-01-01`: **-32022** (`UnsupportedProtocolVersion`), with a `data.supported` list telling you what to retry with.
@@ -475,22 +478,25 @@ Open a notebook called "lab-notes" and tell me the handle
 ![First tool prompt](./images/mcp143.png?raw=true "First tool prompt")
 <br><br>
 
-10. Save a note, then list them. Notice you never paste the handle back yourself - the model kept it from the previous turn and passes it along. Watch for the "Ran notes_save_note" confirmations - these are *your* tools, on *your* server.
+10. Save a note. Notice you never paste the handle back yourself - the model kept it from the previous turn and passes it along.
 
 ```
 Save a note in that notebook titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
 ```
 
+![saved note](./images/mcp144.png?raw=true "saved note")
+<br><br>
+
+11. List the notes. Watch for the "Ran notes_list_notes" confirmation - these are *your* tools, on *your* server.
+
 ```
 List all the notes in that notebook
 ```
 
-![saved note](./images/mcp144.png?raw=true "saved note")
-
 ![saved notes](./images/mcp145.png?raw=true "saved notes")
 <br><br>
 
-11. Stop the gateway with CTRL+C and close any extra tabs.
+12. Stop the gateway with CTRL+C and close any extra tabs.
 <br><br>
 
 **What just happened**
