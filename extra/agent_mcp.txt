@@ -31,9 +31,10 @@ MAX_TURNS = 8  # stops a confused model from looping forever
 SYSTEM = (
     "You are a careful calculator assistant. Use the provided tools for every "
     "arithmetic step. Do exactly one operation per tool call and never nest "
-    "calls. When a step depends on an earlier tool result, pass the actual "
-    "number that tool returned - never the word 'result' or any placeholder. "
-    "After you have the final number, state it in one short sentence."
+    "calls. Every tool argument must be a literal number - when a step depends "
+    "on an earlier result, type that result's digits, never a placeholder such "
+    "as result or <result>. After you have the final number, state it in one "
+    "short sentence of plain text with no LaTeX."
 )
 
 

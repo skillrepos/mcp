@@ -22,11 +22,6 @@ RESET = "\033[0m"
 
 TIMEOUT = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
 
-# A small local model will sometimes pass back the word it used for a number
-# last turn ("result") instead of the number itself. Swapping in the real
-# value keeps the lab from dead-ending in NaN.
-_PLACEHOLDER = re.compile(r"^(result|answer|previous|prior)$", re.IGNORECASE)
-
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 # "...is NaN" still contains digits earlier in the sentence, so spot the
@@ -60,12 +55,29 @@ async def ask_model(client, messages, tools):
     raise RuntimeError("model unreachable")
 
 
+def _is_number(value) -> bool:
+    """True only if this value IS a number - no guessing, no extraction."""
+    try:
+        float(str(value).strip())
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
 def resolve_placeholders(args, last_value):
-    """Replace placeholder words in tool arguments with the last real number."""
+    """Repair arguments the model sent as text instead of numbers.
+
+    The tool's JSON Schema says these parameters are numbers. A small model
+    will sometimes send a stand-in meaning "the number from the last call"
+    instead - "result", "<result>", "${result}", "previous answer". Rather
+    than trying to list every spelling it might invent, we test the only
+    thing that actually matters: is this a number? If it is not, and we have
+    a real number from the previous call, that is what it meant.
+    """
     if last_value is None:
         return args
     return {
-        k: last_value if isinstance(v, str) and _PLACEHOLDER.match(v.strip()) else v
+        k: (v if _is_number(v) else last_value)
         for k, v in args.items()
     }
 
@@ -75,7 +87,8 @@ def to_number(value, fallback=None):
 
     A server may answer with a bare number or with a sentence like
     "The product of 12 and 8 is 96". Take the last number either way, and
-    keep the previous value if there isn't a usable one.
+    keep the previous value if there isn't a usable one. This is the opposite
+    job from _is_number: here we are reading a RESULT, so prose is expected.
     """
     if isinstance(value, bool) or value is None:
         return fallback
