@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.1 - 08/19/26 - Five labs; code-only merges; Ollama now genuinely warmed at container start
+## Revision 9.1 - 08/19/26 
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -22,44 +22,6 @@
 
 ---
 
-## What changed in MCP specification revision 2026-07-28
-
-**Read this before Lab 1.** These labs target the current MCP specification revision,
-`2026-07-28`, which is the largest breaking change the protocol has had. If you have
-used MCP before, these are the things that will surprise you:
-
-| Gone | What replaced it |
-|---|---|
-| The `initialize` / `initialized` handshake | Every request carries its own protocol version and capabilities in `_meta` |
-| The `Mcp-Session-Id` header | Nothing. Servers mint **explicit handles** and return them as ordinary data |
-| Servers pushing requests to clients | **MRTR** - the server *responds* with `input_required` and the client retries |
-| `GET` on the MCP endpoint (the SSE stream) | `subscriptions/listen`, which clients opt into explicitly |
-| `ping`, `logging/setLevel`, `notifications/roots/list_changed` | Removed outright |
-
-**Deprecated** (still functional). **Roots**, **Sampling**, **Logging** and
-**Dynamic Client Registration** become eligible for removal in the first revision
-released on or after 2027-07-28. The old **HTTP+SSE** transport has been deprecated
-since 2025-03-26 and is on a shorter clock: three months after SEP-2596 reaches Final.
-
-**Course structure:** five labs fit the 3-hour format - Jumpstart, Building Servers
-& the Wire Protocol, MRTR, MCP in the Real World, and Security. Expect to work
-through the first four together; Lab 5 is written to be finished on your own
-afterwards.
-
-**The one idea to hold on to:** the protocol no longer remembers anything between
-requests. Any state that outlives a single call is now an explicit identifier that
-the server hands out and the client passes back. That is what makes MCP servers
-horizontally scalable - and, as a bonus, it makes state visible to the model instead
-of hiding it inside the transport.
-
-> **A note on versions.** These labs run on **FastMCP 4.0.0b1**, which is a *beta*. It
-> is the only FastMCP release that speaks `2026-07-28`; The version is pinned exactly in
-> `requirements.txt` on purpose.
->
-
-</br></br>
-
----
 
 **Lab 1 - MCP Jumpstart**
 
@@ -106,7 +68,7 @@ python classic_calc.py
 npx -y github:skillrepos/calculator-mcp --port 8931
 ```
 
-![Running remote MCP server](./images/mcp152.png?raw=true "Running remote MCP server")
+![Running remote MCP server](./images/mcp153.png?raw=true "Running remote MCP server")
 <br><br>
 
 6. Open a second terminal for the client - use the "+" control, or the down-arrow beside it and *Split terminal*.
@@ -121,7 +83,7 @@ code mcp_client.py
 ```
 <br><br>
 
-8. Paste this in and save. Compare it against step 3: no endpoint, no query string, no hand-written schema.
+8. Paste this in and **save**. Compare it against step 3: no endpoint, no query string, no hand-written schema.
 
 ```
 import asyncio
@@ -155,7 +117,7 @@ python mcp_client.py
 ![Running client](./images/mcp159.png?raw=true "Running client")
 <br><br>
 
-10. Now build an agent that uses those tools with a local LLM. The HTTP calls and trace printing are already done for you in *agent_helpers.py* - what you merge in is the MCP loop itself. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
+10. Now build an agent that uses those tools with a local LLM. We'll focus on the part of the code that manages the MCP loop itself. Supporting pieces like the HTTP calls and trace printing are already done for you in *agent_helpers.py*. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
 
 ```
 code -d ../extra/agent_mcp.txt agent_mcp.py
