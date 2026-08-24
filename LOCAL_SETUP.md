@@ -174,14 +174,23 @@ This will:
 ```
 mcp-labs/
 ├── py_env/                 # Python virtual environment
-├── lab2/                   # Lab 2 exercises
-│   ├── mcp_server.py      # Basic MCP server
-│   ├── mcp_travel_server.py # Travel helper server
-│   └── mcp_client.py      # MCP client examples
-├── lab3/                   # Lab 3 - Security
-│   ├── secure_server.py   # JWT-protected server
-│   └── auth_server.py     # Authentication server
-├── lab4/                   # Lab 4 - Advanced topics
+├── lab1/                   # Lab 1 - MCP Jumpstart
+│   ├── agent_mcp.py       # Minimal MCP agent (diff-and-merge skeleton)
+│   └── agent_helpers.py   # HTTP + trace plumbing, provided complete
+├── lab2/                   # Lab 2 - Building MCP Servers
+│   ├── note_server.py     # Note-taking server (diff-and-merge skeleton)
+│   └── wire_probe.sh      # Raw-HTTP tour of the protocol
+├── lab3/                   # Lab 3 - Multi Round-Trip Requests
+│   ├── trip_server.py     # MRTR server (diff-and-merge skeleton)
+│   └── trip_client.py     # Client with an elicitation handler
+├── lab4/                   # Lab 4 - MCP in the Real World
+│   ├── math_server.py     # Second server to compose
+│   └── gateway.py         # Mounts both servers behind one endpoint
+├── lab5/                   # Lab 5 - Security and Authorization
+│   ├── auth_server.py     # Authorization server
+│   ├── secure_server.py   # Audience-validating MCP server
+│   └── secure_client.py   # Walks the discovery chain
+├── extra/                 # Completed code for diff-and-merge, plus retired labs
 ├── scripts/               # Utility scripts
 │   ├── working_local_setup.sh    # Complete setup
 │   ├── clear_chrome_cache.sh     # Browser cache clearing
@@ -198,17 +207,17 @@ mcp-labs/
 # Activate environment
 source py_env/bin/activate
 
-# Run Lab 2 travel server
+# Run the Lab 2 note server
 cd lab2
-python3 mcp_travel_server.py
+python3 note_server.py
 
-# Run Lab 3 secure server
+# Run the Lab 3 MRTR server
 cd lab3
-python3 secure_server.py
+python3 trip_server.py
 
-# Run Lab 4 examples
-cd lab4
-python3 mcp_server.py
+# Run the Lab 5 secure server
+cd lab5
+python3 secure_server.py
 ```
 
 ### Testing with MCP Inspector

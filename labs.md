@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.6 - 08/24/26
+## Revision 9.7 - 08/24/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -150,9 +150,9 @@ python agent_mcp.py
 
 </br></br></br>
 
-**Lab 2 - Building MCP Servers and the Protocol**
+**Lab 2 - Building MCP Servers and the Protocol on the Wire**
 
-**Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles.**
+**Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles - then look at the raw protocol it speaks on the wire.**
 
 ### Part A - Build and explore the server
 
@@ -260,15 +260,56 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
 ![specific resource](./images/mcp173.png?raw=true "specific resource")
 <br><br>
 
-11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged your notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
+11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
 
 ![prompts](./images/mcp134.png?raw=true "prompts")
 <br><br>
 
-12. Stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
+   If you are stopping here, stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
 <br><br>
 
+### Part B - The protocol on the wire (Optional - if time is short, finish this part on your own)
 
+12. Leave note_server.py running. Stop the Explorer (CTRL+C) or open a third terminal, then run the probe from *lab2* to see the raw HTTP with no SDK in the way.
+
+```
+cd lab2   (if needed)
+./wire_probe.sh
+```
+
+![Wire probe output](./images/mcp166.png?raw=true "Wire probe output")
+<br><br>
+
+13. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType`, `ttlMs`, `cacheScope` and `_meta`. Then open the script to see what was sent.
+
+```
+code wire_probe.sh
+```
+<br><br>
+
+   Every request carries its own `_meta` plus three headers that mirror the body:
+
+   | Header | When required | Mirrors |
+   |---|---|---|
+   | `MCP-Protocol-Version` | Every request | `_meta` protocol version |
+   | `Mcp-Method` | Every request | the JSON-RPC `method` |
+   | `Mcp-Name` | `tools/call`, `resources/read`, `prompts/get` | `params.name` or `params.uri` |
+<br><br>
+
+14. Check the last three sections, then stop the server with CTRL+C to free port 8000 and close the Explorer browser tab.
+
+   - **Section 4** sends `Mcp-Name: list_notes` while the body says `open_notebook`: **HTTP 400**, error **-32020** (`HeaderMismatch`).
+   - **Section 5** asks for version `1999-01-01`: **-32022** (`UnsupportedProtocolVersion`), with a `data.supported` list telling you what to retry with.
+   - **Section 6** does a plain `GET`: a 4xx. The endpoint takes POST only.
+<br><br>
+
+**What just happened** - the ideas this lab was built to show.
+
+- **The handle replaces the session.** The server keeps nothing between requests, so state spanning calls is named explicitly and passed back. Because it's an ordinary tool argument, the model can see it and carry it forward.
+- **A handle is not a credential.** Possessing one proves nothing. Handles must be unguessable, and in production bound server-side to the authenticated user - so even a *correct* handle from the wrong user is refused. That's the spec's **State Handle Hijacking** guidance.
+- **Caching hints are required** on discover, the list calls, and `resources/read`. Ours is `"private"` because notebook contents vary per user - a shared proxy must never serve one user's data to another.
+- **The headers duplicate the body so infrastructure never parses JSON.** A gateway can route or rate-limit per tool with a plain header rule. Section 4 is why the executing server must re-validate that header and body agree.
+- **Order never mattered.** No call depended on an earlier one; nothing was opened or closed. That is the property the whole revision was designed around.
 
 <p align="center">
 **[END OF LAB]**
@@ -286,12 +327,14 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
    2. Server responds with `resultType: "input_required"`, carrying `inputRequests` (what it needs) and an opaque `requestState` (what it wants to remember).
    3. Client gathers the answers, then **re-sends the original request with a new id**, adding `inputResponses` and echoing `requestState` back untouched.
    4. Server returns the final `"complete"` result.
+
+   Each entry in `inputRequests` is an **elicitation** - the spec's name for the server asking the user a question. You'll see that name throughout the code.
 <br><br>
 
-2. Change into the *lab4* directory and open the skeleton.
+2. Change into the *lab3* directory and open the skeleton.
 
 ```
-cd ../lab4
+cd ../lab3
 code trip_server.py
 ```
 <br><br>
@@ -316,11 +359,11 @@ python trip_server.py
 6. In a second terminal, look at the client before running it.
 
 ```
-cd lab4
+cd lab3
 code trip_client.py
 ```
 
-   Register an `elicitation_handler` and FastMCP drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
+   Notice the client registers an `elicitation_handler` - the function that answers each elicitation. FastMCP then drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
 <br><br>
 
 7. Run the client. It will ask you for a traveler name, then have you pick a flight.
@@ -362,10 +405,10 @@ python trip_client.py
 
 ### Part A - Compose two servers behind one gateway
 
-1. Change into *lab6* and bring in the note server you completed in Lab 2 - the gateway will mount it alongside a new math server.
+1. Change into *lab4* and bring in the note server you completed in Lab 2 - the gateway will mount it alongside a new math server.
 
 ```
-cd ../lab6
+cd ../lab4
 cp ../lab2/note_server.py .
 ```
 <br><br>
@@ -473,10 +516,10 @@ List all the notes in that notebook
 
 **Purpose: In this lab, we'll stand up an authorization server and a protected MCP server, and walk the full OAuth 2.1 discovery chain that a 2026-07-28 client is required to follow.**
 
-1. Change into the *lab3* directory.
+1. Change into the *lab5* directory.
 
 ```
-cd ../lab3
+cd ../lab5
 ```
 <br><br>
 
@@ -484,9 +527,9 @@ cd ../lab3
 
 | **File**               | **What to notice**                                                             |
 |------------------------|--------------------------------------------------------------------------------|
-| **[`auth_server.py`](lab3/auth_server.py)**   | Publishes RFC 8414 metadata; mints tokens whose **audience is the MCP server's canonical URI** |
-| **[`secure_server.py`](lab3/secure_server.py)** | `JWTVerifier` + `RemoteAuthProvider` - validates audience, enforces scopes, publishes RFC 9728 resource metadata |
-| **[`secure_client.py`](lab3/secure_client.py)** | Walks the chain by hand: 401 to resource metadata to AS metadata to token to call |
+| **[`auth_server.py`](lab5/auth_server.py)**   | Publishes RFC 8414 metadata; mints tokens whose **audience is the MCP server's canonical URI** |
+| **[`secure_server.py`](lab5/secure_server.py)** | `JWTVerifier` + `RemoteAuthProvider` - validates audience, enforces scopes, publishes RFC 9728 resource metadata |
+| **[`secure_client.py`](lab5/secure_client.py)** | Walks the chain by hand: 401 to resource metadata to AS metadata to token to call |
 
 <br><br>
 
@@ -499,10 +542,10 @@ python auth_server.py
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 <br><br>
 
-4. In another terminal, start the secure **MCP** server from the *lab3* directory.
+4. In another terminal, start the secure **MCP** server from the *lab5* directory.
 
 ```
-cd lab3    (if needed)
+cd lab5    (if needed)
 python secure_server.py
 ```
 
@@ -512,7 +555,7 @@ python secure_server.py
 5. In a third terminal, send a request with no token to see the challenge.
 
 ```
-cd lab3
+cd lab5
 
 curl -i -X POST http://127.0.0.1:8000/mcp \
      -H "Content-Type: application/json" \
