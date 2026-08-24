@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.5 - 08/24/26
+## Revision 9.6 - 08/24/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -150,9 +150,9 @@ python agent_mcp.py
 
 </br></br></br>
 
-**Lab 2 - Building MCP Servers and the Protocol on the Wire**
+**Lab 2 - Building MCP Servers and the Protocol**
 
-**Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles - then look at the raw protocol it speaks on the wire.**
+**Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles.**
 
 ### Part A - Build and explore the server
 
@@ -260,56 +260,15 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
 ![specific resource](./images/mcp173.png?raw=true "specific resource")
 <br><br>
 
-11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
+11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged your notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
 
 ![prompts](./images/mcp134.png?raw=true "prompts")
 <br><br>
 
-   If you are stopping here, stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
+12. Stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
 <br><br>
 
-### Part B - The protocol on the wire (Optional - if time is short, finish this part on your own)
 
-12. Leave note_server.py running. Stop the Explorer (CTRL+C) or open a third terminal, then run the probe from *lab2* to see the raw HTTP with no SDK in the way.
-
-```
-cd lab2   (if needed)
-./wire_probe.sh
-```
-
-![Wire probe output](./images/mcp166.png?raw=true "Wire probe output")
-<br><br>
-
-13. **Section 1** is the `server/discover` response. Find `supportedVersions`, `capabilities`, `resultType`, `ttlMs`, `cacheScope` and `_meta`. Then open the script to see what was sent.
-
-```
-code wire_probe.sh
-```
-<br><br>
-
-   Every request carries its own `_meta` plus three headers that mirror the body:
-
-   | Header | When required | Mirrors |
-   |---|---|---|
-   | `MCP-Protocol-Version` | Every request | `_meta` protocol version |
-   | `Mcp-Method` | Every request | the JSON-RPC `method` |
-   | `Mcp-Name` | `tools/call`, `resources/read`, `prompts/get` | `params.name` or `params.uri` |
-<br><br>
-
-14. Check the last three sections, then stop the server with CTRL+C to free port 8000 and close the Explorer browser tab.
-
-   - **Section 4** sends `Mcp-Name: list_notes` while the body says `open_notebook`: **HTTP 400**, error **-32020** (`HeaderMismatch`).
-   - **Section 5** asks for version `1999-01-01`: **-32022** (`UnsupportedProtocolVersion`), with a `data.supported` list telling you what to retry with.
-   - **Section 6** does a plain `GET`: a 4xx. The endpoint takes POST only.
-<br><br>
-
-**What just happened** - the ideas this lab was built to show.
-
-- **The handle replaces the session.** The server keeps nothing between requests, so state spanning calls is named explicitly and passed back. Because it's an ordinary tool argument, the model can see it and carry it forward.
-- **A handle is not a credential.** Possessing one proves nothing. Handles must be unguessable, and in production bound server-side to the authenticated user - so even a *correct* handle from the wrong user is refused. That's the spec's **State Handle Hijacking** guidance.
-- **Caching hints are required** on discover, the list calls, and `resources/read`. Ours is `"private"` because notebook contents vary per user - a shared proxy must never serve one user's data to another.
-- **The headers duplicate the body so infrastructure never parses JSON.** A gateway can route or rate-limit per tool with a plain header rule. Section 4 is why the executing server must re-validate that header and body agree.
-- **Order never mattered.** No call depended on an earlier one; nothing was opened or closed. That is the property the whole revision was designed around.
 
 <p align="center">
 **[END OF LAB]**
