@@ -1,7 +1,7 @@
 # trip_client.py - the client half of Multi Round-Trip Requests
 # FastMCP 4.x / MCP specification revision 2026-07-28
 #
-# Register an elicitation_handler and FastMCP drives the whole MRTR loop for
+# This client registers an elicitation_handler, and FastMCP drives the MRTR loop for
 # you: it sees resultType "input_required", calls your handler once per
 # requested input, then re-sends the original tools/call with a new JSON-RPC id,
 # the answers in `inputResponses`, and `requestState` echoed back verbatim.
