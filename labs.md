@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.2 - 08/24/26
+## Revision 9.3 - 08/24/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -191,33 +191,73 @@ python note_server.py
 ![Running note server](./images/mcp128.png?raw=true "Running note server")
 <br><br>
 
-5. In a second terminal, start the MCP Explorer, then click *Open in Browser*. The status line shows the negotiated protocol version and the server's name. (Adjust the path if you're not in /workspaces/mcp.)
+5. In a second terminal, start the MCP Explorer with the command below. (Adjust the path if you're not in /workspaces/mcp.) When you get the pop-up in the lower right corner, click on the *Open in Browswer* button.  The Explorer will open in a new tab.
 
 ```
 python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
 ```
+
+Notice the status line shows the negotiated protocol version and the server's name. 
+
 
 ![Starter MCP explorer](./images/mcp129.png?raw=true "Starter MCP explorer")
 <br><br>
 
 6. Click *Tools* and call `open_notebook` with `name`: "lab2". **Copy the `handle` out of the result** - every later call needs it.
 
-![Using a tool](./images/mcp160.png?raw=true "Using a tool")
+![Using a tool](./images/mcp169.png?raw=true "Using a tool")
 <br><br>
 
-   Call `save_note` twice with that handle - `title` "meeting-summary" / `content` "Discussed MCP architecture and decided to use server composition.", then `title` "action-items" / `content` "Build gateway server and connect to IDE." Then call `list_notes` with the handle to see both.
+7. Now, we'll call `save_note` twice from the Explorer with that handle. Scroll down to the `save_note` tool section.  Click on `Call Tool`. For the `handle* (string):` field, paste in the handle you copied in the previous step.
+
+For the `title` put in this string:
+ 
+```
+meeting-summary
+```
+
+For the `content` put in this string: 
+ 
+```
+Discussed MCP architecture and decided to use server composition
+```
+
+![Using save_note tool](./images/mcp170.png?raw=true "Using save_note tool")
+
+Now, repeat the process with title:
+
+```
+action items
+```
+
+and content:
+
+```
+Build gateway server and connect to IDE
+```
+
 <br><br>
 
-7. Call `list_notes` once more, but change one character in the middle of the handle. You get a clean error rather than someone else's data.
+8. Scroll down and invoke the `list_notes` tool with the handle to see the list of notes.
+
+
+![Using list_notes tool](./images/mcp171.png?raw=true "Using list_notes tool")
+
 <br><br>
 
-8. Click *Resources* and *Read Resource* on `resource://catalog`. Then under **Resource Templates**, type a concrete URI with your handle substituted in and read that.
+9. Let's now look at the server's resources. Go back to the top of the Explorer and click *Resources*. Then, on the `notes_catalog` entry, click *Read Resource*. You should see the content of the overall catalog (URI: resource://catalog).
+   
+![Notes catalog](./images/mcp172.png?raw=true "notes catalog")
+
+<br><br>
+
+10. Let's choose a particular resource to view by filling in a template. Scroll down and under **Resource Templates**, type a URI with your handle substituted in and then click on *Read Resource*.
 
 ```
 resource://note/YOUR_HANDLE_HERE/meeting-summary
 ```
 
-![resources](./images/mcp133.png?raw=true "resources")
+![specific resource](./images/mcp173.png?raw=true "specific resource")
 <br><br>
 
    Then click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
