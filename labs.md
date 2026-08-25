@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.15 - 08/25/26
+## Revision 9.16 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -546,7 +546,7 @@ List all the notes in that notebook
 
 **Lab 5 - Security and Authorization in MCP**
 
-**Purpose: In this lab, we'll stand up an authorization server and a protected MCP server, and walk the full OAuth 2.1 discovery chain that a 2026-07-28 client is required to follow.**
+**Purpose: In this lab, we'll stand up a protected MCP server and see how a client that knows nothing but its URL can authenticate to it - then prove the server's checks are real.**
 
 1. Change into the *lab5* directory.
 
@@ -584,7 +584,7 @@ python secure_server.py
 ![start secure server](./images/mcp156.png?raw=true "start secure server")
 <br><br>
 
-5. In a third terminal, send a request with no token to see the challenge.
+5. The server is protected, so a client needs a token - but nobody has configured a token endpoint, a client ID or a password anywhere. Watch how a client finds all of that starting from a refusal. In a third terminal, send a request with no token.
 
 ```
 cd lab5
@@ -600,34 +600,37 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 ![401 error](./images/mcp157.png?raw=true "401 error") 
 <br><br>
 
-   You get a **401**. Look at the `WWW-Authenticate` header rather than the status code - it tells the client where to go next.
+   You get a **401**, but look at the `WWW-Authenticate` header rather than the status code. It doesn't just say "denied" - it says *where to go and find out how to authenticate*. That is hop 1 of 4.
 
 ```
 WWW-Authenticate: Bearer scope="calc:add", resource_metadata="http://127.0.0.1:8000/.well-known/oauth-protected-resource/mcp"
 ```
 <br><br>
 
-6. Follow that URL - the RFC 9728 **Protected Resource Metadata** document. Note `resource` (this server's canonical URI) and `authorization_servers` (who can issue tokens for it).
+6. Hop 2 - follow that URL. This is the server describing itself. `resource` is its canonical URI, the exact string a token has to be issued *for*, and `authorization_servers` names who is allowed to issue one.
 
 ```
 curl -s http://127.0.0.1:8000/.well-known/oauth-protected-resource/mcp | jq
 ```
 <br><br>
 
-7. Next hop - the authorization server's own metadata (RFC 8414). Find `code_challenge_methods_supported`, `authorization_response_iss_parameter_supported`, and `client_id_metadata_document_supported`.
+7. Hop 3 - ask that authorization server how to talk to it. `token_endpoint` is where a token gets requested. Check that `issuer` matches the URL you just asked: a client that skips that check can be pointed at an attacker's authorization server and never notice.
 
 ```
 curl -s http://127.0.0.1:9000/.well-known/oauth-authorization-server | jq
 ```
 <br><br>
 
-8. Now run the client, which walks every hop above and then calls the tool. Each step is printed as it happens.
+8. Hop 4 is the token request itself. Rather than doing that by hand, run the client - it repeats all four hops and prints each one, then calls the tool.
 
 ```
 python secure_client.py
 ```
 
 ![Running the secure client](./images/mcp59.png?raw=true "Running the secure client") 
+<br><br>
+
+   You just did by hand what this client - and FastMCP, and the MCP client inside your IDE - does on every connection. Two reasons to have seen it once. **A client needs nothing but the server's URL**, which is why you can add an MCP server to an IDE without configuring anything. And when a connection fails with a bare `401` and no explanation, these four hops are the only places it can have gone wrong.
 <br><br>
 
 9. In step [4] of the output, note the token's audience: `http://127.0.0.1:8000/mcp`. That came from the RFC 8707 `resource` parameter the client sent with its token request.
@@ -679,10 +682,10 @@ curl -s -X POST http://127.0.0.1:9000/introspect \
 
 **What just happened** - the security rules behind what you just ran.
 
-- **The 401 bootstraps everything.** Because the challenge names where to find the metadata, a client that has never seen this server before can authenticate against it with no prior configuration.
-- **The AS metadata is how a client learns the rules.** The check this client performs is that the `issuer` it gets back matches the URL it asked - that closes **authorization server mix-up attacks**. The document also advertises PKCE and CIMD, which a production authorization-code client would require; this lab uses a password grant, so you see them advertised but not exercised.
-- **Audience binding is the most important security rule in MCP.** A server **must** reject any token not issued *for it* - the rejection you triggered in step 10. One hop further out, a server calling an upstream API **must not** pass the client's token through; it obtains its own. (Not demonstrated here - this server calls nothing upstream.) Without that you get the **confused deputy**: your server spends a token minted for somebody else, and the API trusts it because your server vouched for it.
-- **Nothing about the connection carries meaning.** The token, the protocol version, the capabilities and the caller's identity all travel together on every single request. There is no session for a token to be attached to.
+- **Audience binding is the most important rule here.** A server **must** reject a token that wasn't issued *for it* - the rejection you triggered in step 10. One hop further out, a server calling an upstream API obtains its own token rather than passing the client's through. Skip that and you are the **confused deputy**: spending someone else's token, and trusted because your hostname vouched for it.
+- **The issuer check closes authorization server mix-up.** Matching `issuer` against the URL you asked (step 7) is what stops a client being steered to an attacker's authorization server.
+- **What the metadata advertises isn't always what's exercised.** It lists PKCE and CIMD, which a production authorization-code client would require. This lab uses a password grant, so you see them advertised but not used.
+- **Nothing about the connection carries meaning.** The token, the protocol version, the capabilities and the caller's identity travel together on every request. There is no session for a token to be attached to.
 
 <p align="center">
 **[END OF LAB]**
