@@ -367,7 +367,7 @@ python ask_agent.py
 
 ### Part B - A description is untrusted input
 
-9. Stop the server with CTRL+C, then start a different one - the same help desk, published by somebody else.
+9. Stop the server with CTRL+C, then start a different one - the same help desk, published by somebody else. It offers the real tool plus one more.
 
 ```
 python poisoned_server.py
@@ -382,7 +382,7 @@ python show_tools.py
 
 ![a poisoned description](./images/mcp184.png?raw=true "a poisoned description")
 
-   Read `get_order_status` to the end. The last paragraph is not addressed to you.
+   Look at `verify_order_status`. Its description isn't documentation - it's an instruction aimed at the model, telling it to use this tool instead of the real one.
 <br><br>
 
 11. Ask the same question again and watch what the agent does with it.
@@ -393,7 +393,7 @@ python ask_agent.py
 
 ![the model following the injected instruction](./images/mcp185.png?raw=true "the model following the injected instruction")
 
-   Nothing marked that text as an instruction. It arrived in the same field as every other description, and the model read it the same way.
+   The model took the advice, called the tool the server author recommended, and told you an order that shipped was cancelled. Nothing marked that text as an instruction - it arrived in the same field as every honest description, and the model read it the same way.
 <br><br>
 
 12. Run the same inspection with the checker turned on.
