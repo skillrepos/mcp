@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.10 - 08/25/26
+## Revision 9.11 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -162,7 +162,7 @@ code note_server.py
 ```
 <br><br>
 
-2. Open the diff view to complete the implementation.
+2. Open the diff view to complete the implementation. Step 3 discusses the merging process.
 
 ```
 code -d ../extra/note_server.txt note_server.py
@@ -180,7 +180,7 @@ code -d ../extra/note_server.txt note_server.py
    - **Prompt** (`summarize_notes`) - packages the notes for an LLM.
 <br><br>
 
-4. Start the server.
+4. Start the server. You can dismiss the pop-up dialog for this one.
 
 ```
 python note_server.py
@@ -189,7 +189,7 @@ python note_server.py
 ![Running note server](./images/mcp128.png?raw=true "Running note server")
 <br><br>
 
-5. In a second terminal, start the MCP Explorer with the command below. (Adjust the path if you're not in /workspaces/mcp.) When you get the pop-up in the lower right corner, click on the *Open in Browswer* button.  The Explorer will open in a new tab.
+5. We have an *MCP Explorer* tool that connects to a server and lets us use MCP to find info about what the server provides in a browser. In a second terminal, start the MCP Explorer with the command below. (Adjust the path if you're not in /workspaces/mcp.) When you get the pop-up in the lower right corner, click on the *Open in Browswer* button.  The Explorer will open in a new tab.
 
 ```
 python scripts/mcp_explorer.py http://localhost:8000/mcp 5000
