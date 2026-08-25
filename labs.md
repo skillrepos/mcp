@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.17 - 08/25/26
+## Revision 9.18 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -292,6 +292,18 @@ It has packaged both notes into one LLM-ready prompt. Tools write data, resource
 
 **Purpose: In this lab, we'll see how much a model depends on what your tool definitions say - and what happens when one was written by someone who isn't on your side.**
 
+The files you'll use. Everything is in *lab3* except the merge source:
+
+| **File** | **What it's for** |
+|---|---|
+| **`helpdesk_server.py`** | The MCP server you'll fix. Its three tools work; nothing about them says what they do |
+| **`extra/helpdesk_server.txt`** | The documented version of the same server - you'll merge it in |
+| **`show_tools.py`** | Prints what a model is actually told about a server. `--scan` also checks the descriptions for trouble |
+| **`ask_agent.py`** | The agent from Lab 1, pointed at this server. Provided complete |
+| **`poisoned_server.py`** | The same help desk, published by somebody else. Used in Part B |
+
+<br>
+
 ### Part A - The model only knows what you tell it
 
 1. Change into the *lab3* directory.
@@ -363,6 +375,8 @@ python ask_agent.py
 ```
 
 ![the model choosing correctly](./images/mcp183.png?raw=true "the model choosing correctly")
+
+   That is the fix for what you saw in step 4: the model stopped inventing a status because it finally had a tool that plainly returns one.
 <br><br>
 
 ### Part B - A description is untrusted input
