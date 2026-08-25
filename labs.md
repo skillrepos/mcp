@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.14 - 08/25/26
+## Revision 9.15 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -459,12 +459,12 @@ code -d ../extra/gateway.txt gateway.py
 python gateway.py
 ```
 
-![gateway server running](./images/mcp137.png?raw=true "gateway server running")
+![gateway server running](./images/mcp175.png?raw=true "gateway server running")
 <br><br>
 
 ### Part B - Drive your tools from the IDE
 
-5. In a second terminal, create the IDE configuration that tells VS Code how to reach the gateway. `"type": "http"` selects the Streamable HTTP transport and `"url"` is the same endpoint the Explorer used - note there's no trailing slash.
+5. In a second terminal, create the IDE configuration that tells VS Code how to reach the gateway. 
 
 ```
 cd /workspaces/mcp
@@ -472,11 +472,19 @@ mkdir -p .vscode
 cp extra/mcp_local_settings.json .vscode/mcp.json
 code .vscode/mcp.json
 ```
+
+`"type": "http"` selects the Streamable HTTP transport and `"url"` is the same endpoint the Explorer used - note there's no trailing slash.
+
+![gateway server running](./images/mcp176.png?raw=true "gateway server running")
+
 <br><br>
 
 6. Open the Copilot Chat panel with the Copilot icon at the top, and set it to *Agent* mode with the drop-down at the bottom. (If you don't see the mode options, click the Copilot icon in the bottom status bar and choose *Finish setup* first.)
 
 ![Opening chat panel](./images/mcp103.png?raw=true "Opening chat panel")
+
+![Choosing agent mode](./images/mcp179.png?raw=true "Choosing agent mode")
+
 <br><br>
 
 7. In *mcp.json*, click the small *Start* link above the "Lab Gateway" server name. It should change to "√Running | Stop | Restart | N tools".
@@ -499,7 +507,8 @@ code .vscode/mcp.json
 Open a notebook called "lab-notes" and tell me the handle
 ```
 
-![First tool prompt](./images/mcp143.png?raw=true "First tool prompt")
+![First tool prompt](./images/mcp178.png?raw=true "First tool prompt")
+
 <br><br>
 
 10. Save a note. Notice you never paste the handle back yourself - the model kept it from the previous turn and passes it along.
@@ -507,6 +516,7 @@ Open a notebook called "lab-notes" and tell me the handle
 ```
 Save a note in that notebook titled "lab-recap" with content "MCP lets AI agents discover and call tools dynamically."
 ```
+![Next tool prompt](./images/mcp143.png?raw=true "Next tool prompt")
 
 ![saved note](./images/mcp144.png?raw=true "saved note")
 <br><br>
