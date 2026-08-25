@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.12 - 08/25/26
+## Revision 9.13 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -290,7 +290,7 @@ It has packaged both notes into one LLM-ready prompt. Tools write data, resource
 
 **Lab 3 - Multi Round-Trip Requests (asking the user a question)**
 
-**Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern that replaced server-initiated requests.**
+**Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern.**
 
 1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. MCP handles that with **Multi Round-Trip Requests (MRTR)**, in which the server never initiates anything:
 
@@ -302,7 +302,7 @@ It has packaged both notes into one LLM-ready prompt. Tools write data, resource
    Each entry in `inputRequests` is an **elicitation** - the spec's name for the server asking the user a question. You'll see that name throughout the code.
 <br><br>
 
-2. Change into the *lab3* directory and open the skeleton.
+2. Change into the *lab3* directory and open the skeleton. Browse the code and scroll down and check out the `TODO:` sections.
 
 ```
 cd ../lab3
@@ -310,7 +310,7 @@ code trip_server.py
 ```
 <br><br>
 
-3. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
+3. Run the merge command below. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
 
 ```
 code -d ../extra/trip_server.txt trip_server.py
@@ -320,7 +320,7 @@ code -d ../extra/trip_server.txt trip_server.py
 4. Notice the shape as you merge. The tool is called **twice** for one logical operation and branches on `ctx.input_responses` - `None` on the first call, populated on the retry. That's the **guard pattern**.
 <br><br>
 
-5. Start the server.
+5. Start the server. You can dismiss the pop-up dialog.
 
 ```
 python trip_server.py
