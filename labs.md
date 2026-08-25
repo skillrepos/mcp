@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.11 - 08/25/26
+## Revision 9.12 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -219,24 +219,26 @@ For the `content` put in this string:
 ```
 Discussed MCP architecture and decided to use server composition
 ```
+Click on `Execute` to save the changes.
 
 ![Using save_note tool](./images/mcp170.png?raw=true "Using save_note tool")
 
-Now, repeat the process with title:
+Now, add a second entry. You can just stay on the screen and leave `handle` as-is.  Just retype in the `title` field.
 
 ```
 action items
 ```
 
-and content:
+and retype in the `content` field:
 
 ```
 Build gateway server and connect to IDE
 ```
+And press `Execute` again.
 
 <br><br>
 
-8. Scroll down and invoke the `list_notes` tool with the handle to see the list of notes.
+8. Scroll down and invoke the `list_notes` tool with the handle to see the list of notes. (Copy the handle again and paste in the `handle` area and then click `Execute`.)
 
 
 ![Using list_notes tool](./images/mcp171.png?raw=true "Using list_notes tool")
@@ -258,12 +260,18 @@ resource://note/YOUR_HANDLE_HERE/meeting-summary
 ![specific resource](./images/mcp173.png?raw=true "specific resource")
 <br><br>
 
-11. Click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle. It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
+11. Go back to the top, click *Prompts* and *Get Prompt* on `summarize_notes`, passing your handle in the JSON format the popup box asks for (see format below - quotes and space are required).
 
-![prompts](./images/mcp134.png?raw=true "prompts")
+```
+{"handle": "YOUR_HANDLE_HERE"}
+```
+
+It has packaged both notes into one LLM-ready prompt. Tools write data, resources expose it, prompts package it.
+
+![prompts](./images/mcp174.png?raw=true "prompts")
 <br><br>
 
-   If you are stopping here, stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
+12. Stop the server with CTRL+C to free port 8000 for the next lab, and close the Explorer browser tab.
 <br><br>
 
 
