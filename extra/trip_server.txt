@@ -64,7 +64,7 @@ async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult
     if dest not in FLIGHTS:
         return f"Sorry, we do not fly to {destination}."
 
-    # ---- Round 1: we have no answers yet, so ask for them ----------------
+    # ---- First call: no answers yet, so ask for them ---------------------
     if answers is None:
         return InputRequiredResult(
             result_type="input_required",
@@ -107,7 +107,7 @@ async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult
             request_state=ctx.request_state or "",
         )
 
-    # ---- Round 2: the client re-sent the call with the answers -----------
+    # ---- Second call: the answers came back ------------------------------
     traveler = answers.get("traveler")
     flight = answers.get("flight")
 

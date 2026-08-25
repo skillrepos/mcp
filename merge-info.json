@@ -121,8 +121,8 @@
     ],
     "extra/trip_server.txt": [
       {
-        "anchor": "# ---- Round 1: we have no answers yet, so ask for them ----------------",
-        "title": "Round 1: asking for input",
+        "anchor": "# ---- First call: no answers yet, so ask for them ---------------------",
+        "title": "First call: asking for input",
         "note": [
           "**Returns `input_required` naming what it needs, rather than asking directly.**",
           "- Each key is server-assigned; the client answers under the same key",
@@ -132,7 +132,7 @@
       {
         "anchor": "traveler = answers.get(\"traveler\")",
         "endAnchor": "return f\"Booked {which} to {destination.title()} for {who}.\"",
-        "title": "Round 2: completing the booking",
+        "title": "Second call: completing the booking",
         "note": [
           "**Runs only on the retry, once the client has attached answers.**",
           "- Check `action == \"accept\"` and non-empty content - a user may decline"

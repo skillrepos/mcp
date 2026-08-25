@@ -292,7 +292,7 @@ It has packaged both notes into one LLM-ready prompt. Tools write data, resource
 
 **Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern.**
 
-1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. MCP handles that with **Multi Round-Trip Requests (MRTR)**, in which the server never initiates anything:
+1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. An MCP server can't interrupt a call to ask, so it answers with a question instead and waits to be called again. That exchange is a **Multi Round-Trip Request (MRTR)**:
 
    1. Client sends `tools/call` (id 1).
    2. Server responds with `resultType: "input_required"`, carrying `inputRequests` (what it needs) and an opaque `requestState` (what it wants to remember).
@@ -310,24 +310,27 @@ code trip_server.py
 ```
 <br><br>
 
-3. Run the merge command below. Merge in **every** difference, then close the tab to save. There are two: the Round 1 branch and the Round 2 branch.
+3. Run the merge command below. Merge in **every** difference, then close the tab to save. There are two, one for each call.
 
 ```
 code -d ../extra/trip_server.txt trip_server.py
 ```
 <br><br>
 
-4. Notice the shape as you merge. The tool is called **twice** for one logical operation and branches on `ctx.input_responses` - `None` on the first call, populated on the retry. That's the **guard pattern**.
+4. Look at the **first** block you merged. When the tool has no answers yet, it returns an `InputRequiredResult` listing what it needs instead of returning a finished answer. Returning that is how the server asks its question.
 <br><br>
 
-5. Start the server. You can dismiss the pop-up dialog.
+5. Look at the **second** block. `ctx.input_responses` holds the answers the client sent back - it's empty the first time the tool runs, and filled in when the client calls again. Same function, two paths: ask, then answer.
+<br><br>
+
+6. Start the server. You can dismiss the pop-up dialog.
 
 ```
 python trip_server.py
 ```
 <br><br>
 
-6. In a second terminal, look at the client before running it.
+7. In a second terminal, look at the client before running it.
 
 ```
 cd lab3
@@ -337,7 +340,7 @@ code trip_client.py
    Notice the client registers an `elicitation_handler` - the function that answers each elicitation. FastMCP then drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
 <br><br>
 
-7. Run the client. It will ask you for a traveler name, then have you pick a flight.
+8. Run the client. It will ask you for a traveler name, then have you pick a flight.
 
 ```
 python trip_client.py
@@ -346,22 +349,22 @@ python trip_client.py
 ![MRTR booking flow](./images/mcp161.png?raw=true "MRTR booking flow")
 <br><br>
 
-8. Switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your side, a single `book_trip` call - each one an entirely independent HTTP request.
+9. Switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your side, a single `book_trip` call - each one an entirely independent HTTP request.
 <br><br>
 
-9. Run the client again and enter something invalid (like `99`) at the flight prompt. The handler declines and the server reports a cancelled booking rather than crashing.
+10. Run the client again and enter something invalid (like `99`) at the flight prompt. The handler declines and the server reports a cancelled booking rather than crashing.
 
 ![Declining an elicitation](./images/mcp162.png?raw=true "Declining an elicitation")
 <br><br>
 
-10. Stop the server with CTRL+C when you're done.
+11. Stop the server with CTRL+C when you're done.
 <br><br>
 
 **What just happened** - why MRTR is shaped this way.
 
-- **The server never initiates.** Pushing requests to a client needs a live two-way connection, which pins that client to one instance. Under MRTR everything travels in the retry instead, so the retry can land on a different instance and still work.
+- **Everything the server needs travels in the second call.** Nothing is held open between the two, so the second one can land on a different server instance and still work. That is what lets an MCP server scale out.
 - **`requestState` is opaque, but not trusted.** "The client can't read it" is not "the client can't tamper with it," so servers must **integrity-protect** it - `RequestStateSecurity(keys=[SIGNING_KEY])` signs it for you. Every replica must share that key.
-- **The guard pattern is the migration gotcha.** `ctx.elicit()` still compiles, and still works on legacy connections, but **raises at runtime** on a 2026-07-28 connection.
+- **If you meet `ctx.elicit()` in older code.** It still compiles, and still works on older connections, but **raises at runtime** on a 2026-07-28 connection. The two-path shape you just built is what replaces it.
 - **Declining is required behavior.** An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content. A user is always allowed to say no. Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`.
 
 <p align="center">

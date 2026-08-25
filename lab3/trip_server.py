@@ -64,14 +64,14 @@ async def book_trip(destination: str, ctx: Context) -> str | InputRequiredResult
     if dest not in FLIGHTS:
         return f"Sorry, we do not fly to {destination}."
 
-    # ---- Round 1: we have no answers yet, so ask for them ----------------
+    # ---- First call: no answers yet, so ask for them ---------------------
     # TODO: return an InputRequiredResult with result_type="input_required"
     #       and two input_requests keyed "traveler" and "flight":
     #         - "traveler": an ElicitRequest asking for a name (string)
     #         - "flight":   an ElicitRequest asking to pick one of FLIGHTS[dest]
     #       Pass request_state=ctx.request_state or "".
 
-    # ---- Round 2: the client re-sent the call with the answers -----------
+    # ---- Second call: the answers came back ------------------------------
     # TODO: read answers["traveler"] and answers["flight"], check that each has
     #       action == "accept" AND non-empty content (a user may decline), then
     #       return the confirmation string.
