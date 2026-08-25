@@ -154,7 +154,7 @@ python agent_mcp.py
 
 **Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles - then explore the items they provide.**
 
-1. Change into *lab2* and open the skeleton note-taking server. The TODO comments mark where the implementations go.
+1. Change into *lab2* and open the skeleton note-taking server. The TODO comments mark where the implementations go. Note the focus on having and resolving the *handle* everywhere.
 
 ```
 cd ../lab2
