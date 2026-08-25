@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.16 - 08/25/26
+## Revision 9.17 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -328,7 +328,7 @@ python ask_agent.py
 
 ![the model guessing](./images/mcp181.png?raw=true "the model guessing")
 
-   `get_data` and `fetch_info` are indistinguishable from outside, so a wrong pick isn't a bug - there was nothing to pick on.
+   Two things went wrong here, and only one of them is obvious. `get_data` and `fetch_info` are indistinguishable from outside, so the model had nothing to choose on and picked the wrong one. Now look at what it did with the result: the tool handed back a customer's **name**, and the model reported a shipping **status** anyway. Nothing it was given said "Shipped" - it filled the gap itself. It happens to be correct, which is exactly why nobody would catch it.
 <br><br>
 
 5. Now describe the tools properly. Merge in **every** difference, then close the tab to save.
@@ -410,6 +410,7 @@ python show_tools.py --scan
 
 **What just happened** - what your tool definitions are really for.
 
+- **The failure is silent.** Nothing errored in step 4. A tool ran, returned valid data, and the model produced a fluent answer it had no basis for. Undocumented tools don't break loudly - they degrade into plausible fiction that reads exactly like an answer.
 - **The description is the API.** A model never sees your source - only the JSON Schema in `tools/list`, and that is the entire basis on which your tool gets chosen or skipped. Vague names and undocumented parameters aren't untidy, they're unusable.
 - **Schemas constrain, prose only persuades.** The `enum` on `priority` makes an invalid value impossible; "use only when the customer is reporting a problem" is advice the model may ignore. Anything that must hold belongs in the schema.
 - **Descriptions are attacker-controlled input.** That is **tool poisoning**: text the server author chose, landing in your model's context, with no protocol rule about what may be in it. And approval doesn't freeze it - `tools/list` is re-read, not pinned, so a description can change underneath you. That one is called a **rug pull**.
