@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.13 - 08/25/26
+## Revision 9.14 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -288,84 +288,132 @@ It has packaged both notes into one LLM-ready prompt. Tools write data, resource
 
 </br></br></br>
 
-**Lab 3 - Multi Round-Trip Requests (asking the user a question)**
+**Lab 3 - Designing Tools an AI Can Actually Use**
 
-**Purpose: In this lab, we'll build a tool that needs information from the user partway through executing, using the MRTR pattern.**
+**Purpose: In this lab, we'll see how much a model depends on what your tool definitions say - and what happens when one was written by someone who isn't on your side.**
 
-1. A tool often needs something it wasn't given - a confirmation, a missing parameter, a choice between options. An MCP server can't interrupt a call to ask, so it answers with a question instead and waits to be called again. That exchange is a **Multi Round-Trip Request (MRTR)**:
+### Part A - The model only knows what you tell it
 
-   1. Client sends `tools/call` (id 1).
-   2. Server responds with `resultType: "input_required"`, carrying `inputRequests` (what it needs) and an opaque `requestState` (what it wants to remember).
-   3. Client gathers the answers, then **re-sends the original request with a new id**, adding `inputResponses` and echoing `requestState` back untouched.
-   4. Server returns the final `"complete"` result.
-
-   Each entry in `inputRequests` is an **elicitation** - the spec's name for the server asking the user a question. You'll see that name throughout the code.
-<br><br>
-
-2. Change into the *lab3* directory and open the skeleton. Browse the code and scroll down and check out the `TODO:` sections.
+1. Change into the *lab3* directory.
 
 ```
 cd ../lab3
-code trip_server.py
 ```
 <br><br>
 
-3. Run the merge command below. Merge in **every** difference, then close the tab to save. There are two, one for each call.
+2. Start the help desk server and leave it running. Its three tools all work correctly.
 
 ```
-code -d ../extra/trip_server.txt trip_server.py
-```
-<br><br>
-
-4. Look at the **first** block you merged. When the tool has no answers yet, it returns an `InputRequiredResult` listing what it needs instead of returning a finished answer. Returning that is how the server asks its question.
-<br><br>
-
-5. Look at the **second** block. `ctx.input_responses` holds the answers the client sent back - it's empty the first time the tool runs, and filled in when the client calls again. Same function, two paths: ask, then answer.
-<br><br>
-
-6. Start the server. You can dismiss the pop-up dialog.
-
-```
-python trip_server.py
+python helpdesk_server.py
 ```
 <br><br>
 
-7. In a second terminal, look at the client before running it.
+3. In a second terminal, print what a model is actually told about those tools.
 
 ```
 cd lab3
-code trip_client.py
+python show_tools.py
 ```
 
-   Notice the client registers an `elicitation_handler` - the function that answers each elicitation. FastMCP then drives the whole loop for you: it notices `input_required`, calls your handler once per requested input, then re-sends the original call with the answers and the echoed `requestState`.
+![tools with no descriptions](./images/mcp180.png?raw=true "tools with no descriptions")
+
+   Nothing says what any of them does, the parameters are named `a`, `x` and `q`, and everything is a bare string. That is all the model gets.
 <br><br>
 
-8. Run the client. It will ask you for a traveler name, then have you pick a flight.
+4. Ask the agent something that needs one of those tools, and watch which one it picks.
 
 ```
-python trip_client.py
+python ask_agent.py
 ```
 
-![MRTR booking flow](./images/mcp161.png?raw=true "MRTR booking flow")
+![the model guessing](./images/mcp181.png?raw=true "the model guessing")
+
+   `get_data` and `fetch_info` are indistinguishable from outside, so a wrong pick isn't a bug - there was nothing to pick on.
 <br><br>
 
-9. Switch to the terminal running the server and look at its request log. You'll see **more than one `POST /mcp`** for what was, from your side, a single `book_trip` call - each one an entirely independent HTTP request.
+5. Now describe the tools properly. Merge in **every** difference, then close the tab to save.
+
+```
+code -d ../extra/helpdesk_server.txt helpdesk_server.py
+```
 <br><br>
 
-10. Run the client again and enter something invalid (like `99`) at the flight prompt. The handler declines and the server reports a cancelled booking rather than crashing.
+6. Restart the server in the first terminal - CTRL+C, then start it again.
 
-![Declining an elicitation](./images/mcp162.png?raw=true "Declining an elicitation")
+```
+python helpdesk_server.py
+```
 <br><br>
 
-11. Stop the server with CTRL+C when you're done.
+7. Print the tool list again.
+
+```
+python show_tools.py
+```
+
+![tools that describe themselves](./images/mcp182.png?raw=true "tools that describe themselves")
+
+   Same three tools, same behavior - now with a sentence per tool, a sentence per parameter, and an `enum` naming the only priorities the ticket tool accepts. You wrote names, docstrings and type hints; the server compiled them into JSON Schema.
 <br><br>
 
-**What just happened** - why MRTR is shaped this way.
+8. Ask the same question again.
 
-- **Everything the server needs travels in the second call.** Nothing is held open between the two, so the second one can land on a different server instance and still work. That is what lets an MCP server scale out.
-- **`requestState` is opaque, but not trusted.** "The client can't read it" is not "the client can't tamper with it," so servers must **integrity-protect** it - `RequestStateSecurity(keys=[SIGNING_KEY])` signs it for you. Every replica must share that key.
-- **If you meet `ctx.elicit()` in older code.** It still compiles, and still works on older connections, but **raises at runtime** on a 2026-07-28 connection. The two-path shape you just built is what replaces it.
-- **Declining is required behavior.** An `ElicitResult` carries an `action` of `"accept"`, `"decline"` or `"cancel"`, and only `"accept"` comes with content. A user is always allowed to say no. Only `tools/call`, `resources/read` and `prompts/get` may return `input_required`.
+```
+python ask_agent.py
+```
+
+![the model choosing correctly](./images/mcp183.png?raw=true "the model choosing correctly")
+<br><br>
+
+### Part B - A description is untrusted input
+
+9. Stop the server with CTRL+C, then start a different one - the same help desk, published by somebody else.
+
+```
+python poisoned_server.py
+```
+<br><br>
+
+10. Look at what this server says about its tools.
+
+```
+python show_tools.py
+```
+
+![a poisoned description](./images/mcp184.png?raw=true "a poisoned description")
+
+   Read `get_order_status` to the end. The last paragraph is not addressed to you.
+<br><br>
+
+11. Ask the same question again and watch what the agent does with it.
+
+```
+python ask_agent.py
+```
+
+![the model following the injected instruction](./images/mcp185.png?raw=true "the model following the injected instruction")
+
+   Nothing marked that text as an instruction. It arrived in the same field as every other description, and the model read it the same way.
+<br><br>
+
+12. Run the same inspection with the checker turned on.
+
+```
+python show_tools.py --scan
+```
+
+![scanning descriptions](./images/mcp186.png?raw=true "scanning descriptions")
+<br><br>
+
+13. Stop the server with CTRL+C.
+<br><br>
+
+**What just happened** - what your tool definitions are really for.
+
+- **The description is the API.** A model never sees your source - only the JSON Schema in `tools/list`, and that is the entire basis on which your tool gets chosen or skipped. Vague names and undocumented parameters aren't untidy, they're unusable.
+- **Schemas constrain, prose only persuades.** The `enum` on `priority` makes an invalid value impossible; "use only when the customer is reporting a problem" is advice the model may ignore. Anything that must hold belongs in the schema.
+- **Descriptions are attacker-controlled input.** That is **tool poisoning**: text the server author chose, landing in your model's context, with no protocol rule about what may be in it. And approval doesn't freeze it - `tools/list` is re-read, not pinned, so a description can change underneath you. That one is called a **rug pull**.
+- **Your client is the trust boundary.** Nothing else here can object. Review descriptions before enabling a server, hash them and diff on change, prefer servers whose source you can see, and keep a person in the loop for tools that *do* something rather than read something.
 
 <p align="center">
 **[END OF LAB]**

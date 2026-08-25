@@ -119,23 +119,43 @@
         ]
       }
     ],
-    "extra/trip_server.txt": [
+    "extra/helpdesk_server.txt": [
       {
-        "anchor": "# ---- First call: no answers yet, so ask for them ---------------------",
-        "title": "First call: asking for input",
+        "anchor": "from typing import Literal",
+        "title": "The type hint that becomes a schema",
         "note": [
-          "**Returns `input_required` naming what it needs, rather than asking directly.**",
-          "- Each key is server-assigned; the client answers under the same key",
-          "- `requestState` carries anything needed on the retry"
+          "**`Literal` compiles into a JSON Schema `enum`.**",
+          "- The model is shown the only three values it may send",
+          "- A constraint in the schema cannot be argued with; one in prose can"
         ]
       },
       {
-        "anchor": "traveler = answers.get(\"traveler\")",
-        "endAnchor": "return f\"Booked {which} to {destination.title()} for {who}.\"",
-        "title": "Second call: completing the booking",
+        "anchor": "def get_order_status(order_id: str) -> str:",
+        "endAnchor": "return str(ORDERS.get(order_id, \"no record\"))",
+        "title": "A name and a docstring",
         "note": [
-          "**Runs only on the retry, once the client has attached answers.**",
-          "- Check `action == \"accept\"` and non-empty content - a user may decline"
+          "**Same code as `get_data(a)` - all that changed is what the model is told.**",
+          "- The name says what it does; `order_id` says what to put in it",
+          "- The `Args:` line becomes a description on the parameter itself"
+        ]
+      },
+      {
+        "anchor": "def get_customer_name(order_id: str) -> str:",
+        "endAnchor": "return CUSTOMERS.get(order_id, \"no record\")",
+        "title": "Telling two tools apart",
+        "note": [
+          "**This is the tool `fetch_info` was, and the reason the model kept confusing them.**",
+          "- Two tools taking the same argument need descriptions to be distinguishable"
+        ]
+      },
+      {
+        "anchor": "def open_support_ticket(",
+        "endAnchor": "return f\"ticket opened on {order_id} with priority {priority}\"",
+        "title": "Constraining what the model may send",
+        "note": [
+          "**The `enum` is enforced; the sentence about when to use it is not.**",
+          "- \"Use only when the customer is reporting a problem\" is advice, not a rule",
+          "- Put anything that must hold in the schema, not in the prose"
         ]
       }
     ],

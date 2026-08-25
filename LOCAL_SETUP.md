@@ -180,9 +180,11 @@ mcp-labs/
 ├── lab2/                   # Lab 2 - Building MCP Servers
 │   ├── note_server.py     # Note-taking server (diff-and-merge skeleton)
 │   └── wire_probe.sh      # Raw-HTTP tour of the protocol
-├── lab3/                   # Lab 3 - Multi Round-Trip Requests
-│   ├── trip_server.py     # MRTR server (diff-and-merge skeleton)
-│   └── trip_client.py     # Client with an elicitation handler
+├── lab3/                   # Lab 3 - Designing Tools an AI Can Use
+│   ├── helpdesk_server.py # Under-described server (diff-and-merge skeleton)
+│   ├── show_tools.py      # Prints what the model is told; --scan checks it
+│   ├── ask_agent.py       # The Lab 1 agent, provided complete
+│   └── poisoned_server.py # Same tools, one hostile description
 ├── lab4/                   # Lab 4 - MCP in the Real World
 │   ├── math_server.py     # Second server to compose
 │   └── gateway.py         # Mounts both servers behind one endpoint
@@ -191,6 +193,8 @@ mcp-labs/
 │   ├── secure_server.py   # Audience-validating MCP server
 │   └── secure_client.py   # Walks the discovery chain
 ├── extra/                 # Completed code for diff-and-merge, plus retired labs
+│   ├── mrtr/              # Retired: Multi Round-Trip Requests / elicitation
+│   └── replicas/          # Retired: statelessness across replicas
 ├── scripts/               # Utility scripts
 │   ├── working_local_setup.sh    # Complete setup
 │   ├── clear_chrome_cache.sh     # Browser cache clearing
@@ -211,9 +215,9 @@ source py_env/bin/activate
 cd lab2
 python3 note_server.py
 
-# Run the Lab 3 MRTR server
+# Run the Lab 3 help desk server
 cd lab3
-python3 trip_server.py
+python3 helpdesk_server.py
 
 # Run the Lab 5 secure server
 cd lab5

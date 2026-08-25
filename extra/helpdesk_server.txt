@@ -1,0 +1,62 @@
+# helpdesk_server.py - a small MCP server for a support desk.
+#
+# The tools below work exactly the same before and after you merge. What
+# changes is everything the model has to go on: the tool names, the parameter
+# names, the types, and the documentation. That is the whole contract.
+
+from typing import Literal
+
+from fastmcp import FastMCP
+
+server = FastMCP("HelpDesk", cache_ttl=300, cache_scope="public")
+
+ORDERS = {
+    "A-1043": {"status": "shipped", "carrier": "UPS", "eta": "2026-08-27"},
+    "A-1044": {"status": "processing", "carrier": None, "eta": "2026-08-30"},
+    "B-2210": {"status": "delivered", "carrier": "FedEx", "eta": "2026-08-19"},
+}
+
+CUSTOMERS = {
+    "A-1043": "Ada Lovelace",
+    "A-1044": "Grace Hopper",
+    "B-2210": "Alan Turing",
+}
+
+
+@server.tool
+def get_order_status(order_id: str) -> str:
+    """Look up the shipping status, carrier and delivery estimate for an order.
+
+    Args:
+        order_id: The order identifier, formatted like "A-1043".
+    """
+    return str(ORDERS.get(order_id, "no record"))
+
+
+@server.tool
+def get_customer_name(order_id: str) -> str:
+    """Return the name of the customer who placed a given order.
+
+    Args:
+        order_id: The order identifier, formatted like "A-1043".
+    """
+    return CUSTOMERS.get(order_id, "no record")
+
+
+@server.tool
+def open_support_ticket(
+    order_id: str,
+    priority: Literal["low", "normal", "urgent"] = "normal",
+) -> str:
+    """Open a new support ticket against an order. Use only when the customer
+    is reporting a problem, never to look information up.
+
+    Args:
+        order_id: The order identifier, formatted like "A-1043".
+        priority: How urgent the ticket is.
+    """
+    return f"ticket opened on {order_id} with priority {priority}"
+
+
+if __name__ == "__main__":
+    server.run(transport="http", host="0.0.0.0", port=8000)
