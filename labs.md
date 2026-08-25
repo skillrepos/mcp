@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.18 - 08/25/26
+## Revision 9.19 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -651,7 +651,7 @@ python secure_client.py
 9. In step [4] of the output, note the token's audience: `http://127.0.0.1:8000/mcp`. That came from the RFC 8707 `resource` parameter the client sent with its token request.
 <br><br>
 
-10. Prove the audience check is real. Get a token bound to a *different* resource and try to use it - correctly signed, unexpired, from an issuer this server trusts, and rejected anyway.
+10. (OPTIONAL) Prove the audience check is real. Get a token bound to a *different* resource and try to use it - correctly signed, unexpired, from an issuer this server trusts, and rejected anyway.
 
 ```
 curl -s -X POST "http://127.0.0.1:9000/token?resource=http://example.com/other-server" \
@@ -666,7 +666,7 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
      -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}'
 ```
 
-11. Now prove the signature check is real. Get a *valid* token, corrupt it, and watch it fail too.
+11. (OPTIONAL) Now prove the signature check is real. Get a *valid* token, corrupt it, and watch it fail too.
 
 ```
 export TOKEN=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp" \
