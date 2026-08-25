@@ -144,8 +144,9 @@
         "endAnchor": "return CUSTOMERS.get(order_id, \"no record\")",
         "title": "Telling two tools apart",
         "note": [
-          "**This is the tool `fetch_info` was, and the reason the model kept confusing them.**",
-          "- Two tools taking the same argument need descriptions to be distinguishable"
+          "**This is the tool `fetch_info` was - the one the model picked by mistake every time.**",
+          "- Two tools taking the same argument need descriptions to be distinguishable",
+          "- Before the merge nothing distinguished it from `get_data`, so the model guessed"
         ]
       },
       {
