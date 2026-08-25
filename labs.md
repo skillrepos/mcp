@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.8 - 08/24/26
+## Revision 9.9 - 08/25/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -117,7 +117,7 @@ python mcp_client.py
 ![Running client](./images/mcp159.png?raw=true "Running client")
 <br><br>
 
-10. Now build an agent that uses those tools with a local LLM. We'll focus on the part of the code that manages the MCP loop itself. Supporting pieces like the HTTP calls and trace printing are already done for you in *agent_helpers.py*. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
+10. Now build an agent that uses those tools against a local LLM (llama3.2) via a local tool called Ollama. We'll focus on the part of the code that manages the MCP loop itself. Supporting pieces like the HTTP calls and trace printing are already done for you in *agent_helpers.py*. Assemble it with the *diff and merge* approach: scroll through the differences and merge in **every** one, then close the tab with the "X". The file will not run until all of them are merged.
 
 ```
 code -d ../extra/agent_mcp.txt agent_mcp.py
