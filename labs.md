@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.22 - 09/14/26
+## Revision 9.23 - 09/14/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -146,7 +146,7 @@ code -d ../extra/agent_mcp.txt agent_mcp.py
 ![Diff view](./images/mcp155.png?raw=true "Diff view")
 <br><br>
 
-11. Run the agent. It prints each tool call and result, then a final answer. The model runs locally on the codespace CPU, so expect a wait of a minute or two across the loop's turns. (Different problem this time: 12 x 8 / 3.) If the answer is wrong, run it again; the local model is small.
+11. Run the agent. It prints each tool call and result, then a final answer. The model runs locally on the codespace CPU, so expect a wait of a minute or two across the loop's turns. (Different problem this time: 12 x 8 / 3.) If the answer is wrong, or a tool result comes back as NaN, run it again; the local model is small and will occasionally drop an argument from a tool call.
 
 ```
 python agent_mcp.py
