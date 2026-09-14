@@ -38,6 +38,37 @@ Changes to these files do **not** require a rebuild:
 
 ## How to rebuild and push
 
+### Preferred: the GitHub Actions workflow
+
+`.github/workflows/build-devcontainer.yml` builds and pushes the image on
+GitHub's own amd64 runners. Use this unless you have a reason not to.
+
+- **Manually:** Actions tab -> *Build devcontainer image* -> **Run workflow**.
+- **Automatically:** it also fires on any push to `main` that touches
+  `requirements.txt` or `.devcontainer/Dockerfile` - the two triggers listed
+  above - so the image stops drifting from the repo on its own.
+
+It authenticates with the automatic `GITHUB_TOKEN`, so there is no PAT to
+manage and no `docker login`. Because the runner is amd64, the arm64 trap below
+cannot happen. Every run publishes **two** tags: `:latest` and a dated
+`:YYYY-MM-DD`, so a bad image can be rolled back by pointing
+`devcontainer.json` at the previous date.
+
+After building, the workflow pulls the image it just pushed and asserts the
+baked venv matches `requirements.txt` (the `fastmcp` pin), that `ollama` is on
+PATH, and that the embedding model is cached - so a green run means the image
+is actually correct, not merely that the build exited 0.
+
+**One-time setup:** the workflow needs the `skillrepos/mcp` repo to have write
+access to the package. If the first run fails with `denied` or
+`installation not allowed`, go to
+`github.com/orgs/skillrepos/packages/container/mcp-devcontainer/settings` ->
+**Manage Actions access** and add the repository with **Write** (the section
+below covers the Read grants Codespaces needs to *pull*; publishing needs
+Write).
+
+### Fallback: build it by hand
+
 Run from the repo root (the `COPY requirements.txt` in the Dockerfile needs the repo root as build context).
 
 **You must specify `--platform linux/amd64`** — Codespaces runs on amd64. If you build on Apple Silicon (ARM) without this flag, the image will be arm64 and Codespaces will fail with "No manifest found."
