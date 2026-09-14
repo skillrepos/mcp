@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.19 - 08/25/26
+## Revision 9.20 - 09/11/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 ```
 <br><br>
 
-9. Run the client in the second terminal. The tool list it prints came from the server, not from your code.
+9. Run the client in the second terminal. The tool list it prints came from the server, not from your code. Note the negotiated version it reports: **`2025-11-25`**, not `2026-07-28`. That is not a fault - this third-party server is from the older era, so your client asked for the new revision and fell back. Watch for the contrast in Lab 2, where our own server answers `2026-07-28`.
 
 ```
 python mcp_client.py
@@ -550,7 +550,7 @@ List all the notes in that notebook
 
 **What just happened**
 
-- **`namespace=` is all that composition takes.** Two independent servers, one endpoint, and the host needed no special knowledge of either. Combine that with the `Mcp-Method` and `Mcp-Name` headers from Lab 2 and a gateway can route and meter per tool without ever parsing a JSON body.
+- **`namespace=` is all that composition takes.** Two independent servers, one endpoint, and the host needed no special knowledge of either. Combine that with the `Mcp-Method` and `Mcp-Name` headers that ride on every Streamable HTTP request and a gateway can route and meter per tool without ever parsing a JSON body.
 - **The handle was visible to the model the whole time.** Because state that spans calls is ordinary data in the conversation rather than something hidden in the transport, the model can hold onto it, pass it to the right calls, and manage several notebooks at once. Making state explicit didn't only help the infrastructure - it made the agent more capable.
 
 <p align="center">
@@ -726,9 +726,10 @@ field on capabilities, always opt-in, and versioned separately from the core spe
 | Extension | What it does | Status as of Aug 2026 |
 |---|---|---|
 | **MCP Apps** (`io.modelcontextprotocol/ui`) | Server-supplied HTML UI rendered in a sandboxed iframe in the host, communicating over `postMessage`. `ui://` resources can be prefetched. | Mature - shipped since Nov 2025, supported by several hosts |
-| **Tasks** (`io.modelcontextprotocol/tasks`) | Long-running work via `tools/call` then `tasks/get` (poll) / `tasks/update` / `tasks/cancel`. Note there is deliberately **no `tasks/list`**, so one caller's tasks aren't enumerable by another. | SEP merged, but the reference implementation still self-labels experimental. Don't build production on the exact wire shapes yet. |
-| **Enterprise Managed Authorization** | Enterprise IdP (Okta, Entra) issues an ID-JAG that the MCP authorization server exchanges for an access token. Centralized grant/revoke, no per-server user consent. | Documentation is inconsistent about stable vs draft. Requires IdP-side setup, not just client support. |
-| **OAuth Client Credentials** | Machine-to-machine auth with no user present. | Draft |
+| **Tasks** (`io.modelcontextprotocol/tasks`) | Long-running work via `tools/call` then `tasks/get` (poll) / `tasks/update` / `tasks/cancel`. Note there is deliberately **no `tasks/list`**, so one caller's tasks aren't enumerable by another. | Official extension (`modelcontextprotocol/ext-apps` org). Wire shapes are settled; client support is still thin. |
+| **Enterprise Managed Authorization** | Enterprise IdP (Okta, Entra) issues an ID-JAG that the MCP authorization server exchanges for an access token. Centralized grant/revoke, no per-server user consent. | Official extension, in `modelcontextprotocol/ext-auth`. Requires IdP-side setup, not just client support. |
+| **OAuth Client Credentials** | Machine-to-machine auth with no user present. | Official extension, in `modelcontextprotocol/ext-auth`. |
+| **Skills over MCP** | Agent skills - structured instructions for agent workflows - discovered and consumed through MCP, built on the existing Resources primitive. | Not an official extension yet. SEP-2640 is in review on the Extensions Track; the working group's prototype lives in `modelcontextprotocol/experimental-ext-skills`. |
 
 ### Subscriptions
 
@@ -783,9 +784,10 @@ pre-2026 stack (FastMCP 3.4.5, spec 2025-11-25):
   `Mcp-Session-Id` header on every later call. The status bar tells you which era
   you landed in ("stateless" vs. "legacy mode").
 
-The one thing that is *not* backward compatible by design is the wire probe in
-Lab 2 - it speaks raw 2026-07-28 on purpose, so against an old server its very
-first request is the `400` a dual-era client would use as its fallback signal.
+The one thing that is *not* backward compatible by design is `lab2/wire_probe.sh`
+- kept in the repo, but no longer a lab step. It speaks raw 2026-07-28 on purpose,
+so against an old server its very first request is the `400` a dual-era client
+would use as its fallback signal.
 
 <br><br>
 **THE END**

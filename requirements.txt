@@ -35,7 +35,7 @@ httpx
 requests
 aiohttp
 
-# --- Auth (JWT for lab3) ---
+# --- Auth (JWT for lab5) ---
 python-jose>=3.5.0
 
 # --- LLM access for the Lab 1 agent ---
