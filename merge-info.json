@@ -198,5 +198,213 @@
         ]
       }
     ]
+  },
+  "skeletons": {
+    "lab1/agent_mcp.py": [
+      {
+        "anchor": "# TODO: to_ollama_tools() - translate MCP tool definitions (name, description,",
+        "done": "def to_ollama_tools(mcp_tools):",
+        "title": "Adapting MCP tools for the model",
+        "note": [
+          "**Converts MCP's tool schemas into Ollama's tool-calling format.**",
+          "- One adapter, any number of tools - sixty would need no more code",
+          "- `t.input_schema` is already JSON Schema - nothing hand-written"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: discovery - call list_tools() and convert them for the model",
+        "done": "# 2) Discovery: the server tells us what it offers. We wrote no",
+        "title": "Asking the server what it offers",
+        "note": [
+          "**The tool list comes from the server, not from your code.**",
+          "- No endpoint URLs, query strings, or schemas written by hand"
+        ]
+      },
+      {
+        "anchor": "# TODO: the agent loop - ask the model, run any tool calls it makes",
+        "done": "# 3) The agent loop.",
+        "title": "The agent loop",
+        "note": [
+          "**Up to 8 turns of: ask the model, keep whatever it says.**",
+          "- An \"agent\" is just this loop - no framework involved"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: print the full trace and the final natural-language answer",
+        "done": "calls = message.get(\"tool_calls\") or []",
+        "title": "Running the model's tool calls",
+        "note": [
+          "**No tool calls means the model answered in plain text, so stop.**",
+          "- Each tool it names runs via `mcp.call_tool`, results fed back",
+          "- `.data` is the hydrated value; `.content` holds raw blocks",
+          "- `resolve_placeholders` / `print_trace` come from agent_helpers.py"
+        ]
+      }
+    ],
+    "lab2/note_server.py": [
+      {
+        "anchor": "# TODO: return \"nb_\" plus secrets.token_urlsafe(16)",
+        "done": "return f\"nb_{secrets.token_urlsafe(16)}\"",
+        "title": "Minting an unguessable handle",
+        "note": [
+          "**Creates the identifier that replaces a session.**",
+          "- High entropy on purpose: handles must not be guessable or enumerable"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: look up the handle in `notebooks`. Raise a clear ValueError if it",
+        "done": "nb = notebooks.get(handle)",
+        "title": "Resolving and expiring handles",
+        "note": [
+          "**Looks up a handle, rejecting unknown or expired ones.**",
+          "- Holding a handle is not authentication - production also binds it to a user"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: mint a handle, store the notebook with its name, empty notes, and",
+        "done": "handle = _new_handle()",
+        "title": "What open_notebook returns",
+        "note": [
+          "**Stores the notebook with a TTL and returns the handle to the caller.**",
+          "- The `note` field tells the model what to do with the handle next"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: resolve the handle, store the note, report the new total",
+        "done": "nb = _get(handle)",
+        "title": "The save_note tool",
+        "note": [
+          "**Writes one note into the notebook named by the handle.**",
+          "- Re-resolves the handle every call - nothing is remembered between requests"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: resolve the handle, return the notebook name, sorted titles, count",
+        "done": "nb = _get(handle)",
+        "title": "The list_notes tool",
+        "note": [
+          "**Returns the note titles in one notebook, identified by handle.**",
+          "- Change one character of the handle later to see the error"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: return JSON listing each open notebook's handle, name, note count",
+        "done": "return json.dumps(",
+        "title": "Static resource: the catalog",
+        "note": [
+          "**A fixed URI listing open notebooks and how many notes each holds.**",
+          "- List results may vary by authorization, never by connection",
+          "- No auth in this lab, so ours is the same for everyone"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: resolve the handle, then return the one note - raising if the",
+        "done": "nb = _get(handle)",
+        "title": "Resource template: one note",
+        "note": [
+          "**A dynamic URI with the handle and title embedded in the path.**",
+          "- The resource-side equivalent of passing the handle as an argument",
+          "- A missing note raises -32602 (Invalid params)"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: resolve the handle and build one prompt string from every note",
+        "done": "nb = _get(handle)",
+        "title": "The summarize_notes prompt",
+        "note": [
+          "**Packages every note in a notebook into one LLM-ready prompt.**",
+          "- Tools write data, resources expose it, prompts package it"
+        ],
+        "lines": 2
+      }
+    ],
+    "lab3/helpdesk_server.py": [
+      {
+        "anchor": "from fastmcp import FastMCP",
+        "done": "from typing import Literal",
+        "title": "The type hint that becomes a schema",
+        "note": [
+          "**`Literal` compiles into a JSON Schema `enum`.**",
+          "- The model is shown the only three values it may send",
+          "- A constraint in the schema cannot be argued with; one in prose can"
+        ],
+        "lines": 1
+      },
+      {
+        "anchor": "def get_data(a: str) -> str:",
+        "done": "def get_order_status(order_id: str) -> str:",
+        "title": "A name and a docstring",
+        "note": [
+          "**Same code as `get_data(a)` - all that changed is what the model is told.**",
+          "- The name says what it does; `order_id` says what to put in it",
+          "- The `Args:` line becomes a description on the parameter itself"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "def fetch_info(x: str) -> str:",
+        "done": "def get_customer_name(order_id: str) -> str:",
+        "title": "Telling two tools apart",
+        "note": [
+          "**This is the tool `fetch_info` was - the one the model picked by mistake every time.**",
+          "- Two tools taking the same argument need descriptions to be distinguishable",
+          "- Before the merge nothing distinguished it from `get_data`, so the model guessed"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "def run(q: str, p: str = \"normal\") -> str:",
+        "done": "def open_support_ticket(",
+        "title": "Constraining what the model may send",
+        "note": [
+          "**The `enum` is enforced; the sentence about when to use it is not.**",
+          "- \"Use only when the customer is reporting a problem\" is advice, not a rule",
+          "- Put anything that must hold in the schema, not in the prose"
+        ],
+        "lines": 2
+      }
+    ],
+    "lab4/math_server.py": [
+      {
+        "anchor": "# TODO: add tool - add two numbers",
+        "done": "@math_service.tool",
+        "title": "Two arithmetic tools",
+        "note": [
+          "**The gateway will expose these as `math_add` and `math_multiply`.**",
+          "- Type hints become the JSON Schema that clients discover"
+        ],
+        "lines": 4
+      }
+    ],
+    "lab4/gateway.py": [
+      {
+        "anchor": "# TODO: import note_server's `server` as note_service, and math_server's",
+        "done": "from note_server import server as note_service",
+        "title": "Importing both servers",
+        "note": [
+          "**Brings in the note and math servers as ordinary Python objects.**",
+          "- Composing them this way needs no network hop"
+        ],
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: create the gateway, then mount note_service under \"notes\" and",
+        "done": "gateway = FastMCP(\"Lab Gateway\", instructions=\"Notes and math behind one endpoint.\")",
+        "title": "Creating the gateway",
+        "note": [
+          "**One FastMCP instance fronting both servers on a single endpoint.**"
+        ],
+        "lines": 2
+      }
+    ]
   }
 }

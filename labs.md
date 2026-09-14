@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.20 - 09/11/26
+## Revision 9.21 - 09/14/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -17,6 +17,26 @@
 7. When your cursor is in a file in the editor and you need to type a command, be sure to click back in *TERMINAL* before typing so you don't write over file contents. If you do inadvertently write over contents, you can use "git checkout <filename>" to get the most recent committed version.
 </br></br></br>
 8. Except where a lab gives specific instructions to click on a button in a pop-up, you can close any pop-up that comes up.
+
+</br></br>
+
+**ASSEMBLING CODE - the yellow bands and the hover notes**
+
+Several labs have you complete a starter file by merging in the finished version with a side-by-side
+diff (`code -d <finished> <starter>`). Two things in the codespace help you as you do it:
+
+- **Yellow bands in the starter file.** Before you merge, the places where code is missing are
+  highlighted. Each band is one block you are about to bring in, so you can see the shape of the
+  work before you start. A band disappears once you have merged that block, which makes the
+  bands a progress bar. They are hidden while the diff view itself is open, so they never
+  double up with the diff's own red and green.
+- **Hover notes in the diff.** In the diff view, blocks with a small icon in the left gutter have
+  a note attached - hover anywhere in the block to read what it does and why it is there. The
+  notes are optional depth: the lab works fine if you merge straight through and never hover one.
+
+Both come from the *Merge Info* extension, which is installed for you. If you find them
+distracting, open the Command Palette (CTRL/CMD + SHIFT + P) and run
+*Merge Info: Toggle Skeleton Highlights*.
 
 </br></br>
 
@@ -154,7 +174,7 @@ python agent_mcp.py
 
 **Purpose: In this lab, we'll build a complete MCP server - tools, a resource, a resource template, and a prompt, tied together by explicit handles - then explore the items they provide.**
 
-1. Change into *lab2* and open the skeleton note-taking server. The TODO comments mark where the implementations go. Note the focus on having and resolving the *handle* everywhere.
+1. Change into *lab2* and open the skeleton note-taking server. The TODO comments and the yellow bands mark where the implementations go - there are eight of them. Note the focus on having and resolving the *handle* everywhere.
 
 ```
 cd ../lab2
@@ -306,21 +326,15 @@ The files you'll use. Everything is in *lab3* except the merge source:
 
 ### Part A - The model only knows what you tell it
 
-1. Change into the *lab3* directory.
+1. Change into *lab3* and start the help desk server, leaving it running. Its three tools all work correctly.
 
 ```
 cd ../lab3
-```
-<br><br>
-
-2. Start the help desk server and leave it running. Its three tools all work correctly.
-
-```
 python helpdesk_server.py
 ```
 <br><br>
 
-3. In a second terminal, print what a model is actually told about those tools.
+2. In a second terminal, print what a model is actually told about those tools.
 
 ```
 cd lab3
@@ -332,7 +346,7 @@ python show_tools.py
    Nothing says what any of them does, the parameters are named `a`, `x` and `q`, and everything is a bare string. That is all the model gets.
 <br><br>
 
-4. Ask the agent something that needs one of those tools, and watch which one it picks.
+3. Ask the agent something that needs one of those tools, and watch which one it picks.
 
 ```
 python ask_agent.py
@@ -343,21 +357,21 @@ python ask_agent.py
    Two things went wrong here, and only one of them is obvious. `get_data` and `fetch_info` are indistinguishable from outside, so the model had nothing to choose on and picked the wrong one. Now look at what it did with the result: the tool handed back a customer's **name**, and the model reported a shipping **status** anyway. Nothing it was given said "Shipped" - it filled the gap itself. It happens to be correct, which is exactly why nobody would catch it.
 <br><br>
 
-5. Now describe the tools properly. Merge in **every** difference, then close the tab to save.
+4. Now describe the tools properly. Merge in **every** difference, then close the tab to save.
 
 ```
 code -d ../extra/helpdesk_server.txt helpdesk_server.py
 ```
 <br><br>
 
-6. Restart the server in the first terminal - CTRL+C, then start it again.
+5. Restart the server in the first terminal - CTRL+C, then start it again.
 
 ```
 python helpdesk_server.py
 ```
 <br><br>
 
-7. Print the tool list again.
+6. Print the tool list again.
 
 ```
 python show_tools.py
@@ -368,7 +382,7 @@ python show_tools.py
    Same three tools, same behavior - now with a sentence per tool, a sentence per parameter, and an `enum` naming the only priorities the ticket tool accepts. You wrote names, docstrings and type hints; the server compiled them into JSON Schema.
 <br><br>
 
-8. Ask the same question again.
+7. Ask the same question again.
 
 ```
 python ask_agent.py
@@ -376,19 +390,19 @@ python ask_agent.py
 
 ![the model choosing correctly](./images/mcp183.png?raw=true "the model choosing correctly")
 
-   That is the fix for what you saw in step 4: the model stopped inventing a status because it finally had a tool that plainly returns one.
+   That is the fix for what you saw in step 3: the model stopped inventing a status because it finally had a tool that plainly returns one.
 <br><br>
 
 ### Part B - A description is untrusted input
 
-9. Stop the server with CTRL+C, then start a different one - the same help desk, published by somebody else. It offers the real tool plus one more.
+8. Stop the server with CTRL+C, then start a different one - the same help desk, published by somebody else. It offers the real tool plus one more.
 
 ```
 python poisoned_server.py
 ```
 <br><br>
 
-10. Look at what this server says about its tools.
+9. Look at what this server says about its tools.
 
 ```
 python show_tools.py
@@ -399,7 +413,7 @@ python show_tools.py
    Look at `verify_order_status`. Its description isn't documentation - it's an instruction aimed at the model, telling it to use this tool instead of the real one.
 <br><br>
 
-11. Ask the same question again and watch what the agent does with it.
+10. Ask the same question again and watch what the agent does with it.
 
 ```
 python ask_agent.py
@@ -410,7 +424,7 @@ python ask_agent.py
    The model took the advice, called the tool the server author recommended, and told you an order that shipped was cancelled. Nothing marked that text as an instruction - it arrived in the same field as every honest description, and the model read it the same way.
 <br><br>
 
-12. Run the same inspection with the checker turned on.
+11. Run the same inspection with the checker turned on.
 
 ```
 python show_tools.py --scan
@@ -419,12 +433,12 @@ python show_tools.py --scan
 ![scanning descriptions](./images/mcp186.png?raw=true "scanning descriptions")
 <br><br>
 
-13. Stop the server with CTRL+C.
+12. Stop the server with CTRL+C.
 <br><br>
 
 **What just happened** - what your tool definitions are really for.
 
-- **The failure is silent.** Nothing errored in step 4. A tool ran, returned valid data, and the model produced a fluent answer it had no basis for. Undocumented tools don't break loudly - they degrade into plausible fiction that reads exactly like an answer.
+- **The failure is silent.** Nothing errored in step 3. A tool ran, returned valid data, and the model produced a fluent answer it had no basis for. Undocumented tools don't break loudly - they degrade into plausible fiction that reads exactly like an answer.
 - **The description is the API.** A model never sees your source - only the JSON Schema in `tools/list`, and that is the entire basis on which your tool gets chosen or skipped. Vague names and undocumented parameters aren't untidy, they're unusable.
 - **Schemas constrain, prose only persuades.** The `enum` on `priority` makes an invalid value impossible; "use only when the customer is reporting a problem" is advice the model may ignore. Anything that must hold belongs in the schema.
 - **Descriptions are attacker-controlled input.** That is **tool poisoning**: text the server author chose, landing in your model's context, with no protocol rule about what may be in it. And approval doesn't freeze it - `tools/list` is re-read, not pinned, so a description can change underneath you. That one is called a **rug pull**.

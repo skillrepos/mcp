@@ -9,7 +9,7 @@ if [ -d "/opt/py_env" ]; then
     ln -sfn /opt/py_env ./$PYTHON_ENV
 
     # The image's venv can lag behind requirements.txt (e.g. FastMCP 3.x baked
-    # into the image while the course now pins 4.0.0b1). Always sync it. This
+    # into the image while the course now pins 4.0.3). Always sync it. This
     # is a fast no-op when the image is already current. The
     # fastmcp pair is uninstalled-then-installed (see below) to avoid a
     # half-removed-3.x "cannot import Client" state.

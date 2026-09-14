@@ -1,4 +1,4 @@
-# Updated 2026-08-03 for MCP specification revision 2026-07-28.
+# Updated 2026-09-14 for MCP specification revision 2026-07-28.
 #
 # WHY THESE PINS
 #   The 2026-07-28 revision is a breaking protocol change. Support for it landed
@@ -6,10 +6,11 @@
 #   hard-pins mcp<2.0 and therefore cannot speak 2026-07-28 at all - it tops out
 #   at 2025-11-25. So this course runs on FastMCP 4.
 #
-#   FastMCP 4.0.0b1 is a BETA. It is pinned exactly, on purpose: betas move.
-#   Re-verify the labs before delivery if you bump it. `fastmcp` on PyPI is only
-#   a metadata wrapper around `fastmcp-slim`, so the constraint below keeps the
-#   two in lockstep (uv in particular needs the explicit pin).
+#   FastMCP 4.0 went STABLE on 2026-08-31. This course was previously pinned to
+#   the 4.0.0b1 beta; it now pins 4.0.3 (2026-09-05), the current stable patch.
+#   All five labs were re-verified against 4.0.3 on 2026-09-14. `fastmcp` on
+#   PyPI is only a metadata wrapper around `fastmcp-slim`, so the constraint
+#   below keeps the two in lockstep (uv in particular needs the explicit pin).
 #
 #   REMOVED: langchain_mcp_adapters. It imports mcp.server.fastmcp, a module
 #   deleted in SDK v2, so it cannot be installed alongside this stack.
@@ -18,8 +19,8 @@
 #   want it back later.
 
 # --- Core MCP framework (2026-07-28 capable) ---
-fastmcp==4.0.0b1
-fastmcp-slim==4.0.0b1
+fastmcp==4.0.3
+fastmcp-slim==4.0.3
 mcp>=2.0.0,<3.0.0
 
 # --- Web frameworks (auth_server, travel server, explorer) ---

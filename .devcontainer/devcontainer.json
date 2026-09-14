@@ -26,6 +26,8 @@
                     "scminput": false
                 },
                 "workbench.startupEditor": "none",
+                "mergeInfo.skeletonHighlights": true,
+                "mergeInfo.reviewHighlights": true,
                 "workbench.editorAssociations": {
                     "*.md": "vscode.markdown.preview.editor"
                 }
@@ -35,6 +37,9 @@
             ]
         }
     },
-    "postCreateCommand": "bash .devcontainer/install-merge-info.sh && bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
-    "postStartCommand": "bash scripts/serveOllama.sh"
+    "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startOllama.sh",
+    "postStartCommand": "bash scripts/serveOllama.sh",
+    "postAttachCommand": {
+        "merge-info": "nohup bash -c 'for i in 1 2 3 4 5 6; do code --install-extension ${containerWorkspaceFolder}/.devcontainer/merge-info-0.3.1.vsix --force && break; sleep 10; done' >/tmp/merge-info-install.log 2>&1 &"
+    }
 }
