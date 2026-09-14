@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.21 - 09/14/26
+## Revision 9.22 - 09/14/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -261,7 +261,7 @@ And press `Execute` again.
 8. Scroll down and invoke the `list_notes` tool with the handle to see the list of notes. (Copy the handle again and paste in the `handle` area and then click `Execute`.)
 
 
-![Using list_notes tool](./images/mcp171.png?raw=true "Using list_notes tool")
+![Using list_notes tool](./images/mcp187.png?raw=true "Using list_notes tool")
 
 <br><br>
 
