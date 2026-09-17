@@ -7,19 +7,24 @@ first-run latency is absorbed here instead of during a live demo.
 
 What gets warmed up (in parallel where possible):
   1. Ollama  – verifies the server is reachable, then forces llama3.2
-               into GPU/CPU memory with a throwaway inference call.
-  2. SentenceTransformer – downloads / loads the all-MiniLM-L6-v2
-               embedding model (heaviest Python-side cold start).
-  3. ChromaDB – creates an ephemeral client so the native lib is loaded.
-  4. FastMCP + LangChain imports – imports the libraries so first
-               `import` in lab code is a no-op.
+               into memory with a throwaway inference call and pins it
+               there (keep_alive=-1). This is the one that matters: the
+               Lab 1 and Lab 3 agents both call this model.
+  2. SentenceTransformer – loads the all-MiniLM-L6-v2 embedding model.
+               None of the five core labs use it; it is here for the
+               optional/extended material that ships in `extra/`.
+  3. Lab library imports – imports fastmcp, mcp and friends so the
+               first `import` in lab code is a no-op.
 
 Parallelism strategy:
   • Ollama inference and SentenceTransformer loading are the two
     slowest steps and are independent, so they run concurrently in
     separate threads.
-  • ChromaDB and library imports are fast (<0.5 s each) and run
-    sequentially after the heavy work finishes.
+  • Library imports are fast (<0.5 s) and run after the heavy work.
+
+NOTE: scripts/serveOllama.sh already starts and warms Ollama at
+container start, so this script is belt-and-braces for the LLM. It is
+still useful after a long idle gap or on a local (non-Codespace) setup.
 """
 
 from __future__ import annotations
@@ -80,6 +85,7 @@ def warmup_ollama_inference() -> bool:
                 "model": OLLAMA_MODEL,
                 "messages": [{"role": "user", "content": "hi"}],
                 "stream": False,
+                "keep_alive": -1,                # stay resident, as serveOllama.sh does
                 "options": {"num_predict": 1},   # generate exactly 1 token
             },
             timeout=120,
@@ -96,12 +102,12 @@ def warmup_ollama_inference() -> bool:
 
 def warmup_embedding_model() -> bool:
     """
-    Load the SentenceTransformer embedding model used by the MCP
-    servers (mcp_server_solution, mcp_server_support_solution,
-    mcp_server_classification, index_pdfs).
+    Load the SentenceTransformer embedding model.
 
-    First load downloads ~80 MB; subsequent loads read from the
-    HuggingFace cache in ~1-3 s.
+    No lab in labs.md uses embeddings - this is for the optional and
+    retired material under `extra/`. The devcontainer image pre-downloads
+    the model, so this is a ~1-3 s cache read there; on a local setup the
+    first load downloads ~80 MB.
     """
     try:
         print(f"  {CYAN}Loading embedding model ({EMBED_MODEL})…{RESET}")
@@ -121,28 +127,19 @@ def warmup_embedding_model() -> bool:
         return False
 
 
-def warmup_chromadb() -> bool:
-    """Import and initialize an ephemeral ChromaDB client."""
-    try:
-        t0 = time.time()
-        import chromadb
-        _ = chromadb.EphemeralClient()
-        dt = time.time() - t0
-        print(f"  {GREEN}✓ ChromaDB ready ({dt:.1f}s){RESET}")
-        return True
-    except Exception as e:
-        print(f"  {RED}✗ ChromaDB warmup failed: {e}{RESET}")
-        return False
-
-
 def warmup_library_imports() -> bool:
     """
     Import the key libraries used across the labs so that Python's
     import cache is primed.  This covers:
-      • fastmcp  (FastMCP server + Client)
-      • langchain_ollama (ChatOllama for agents)
-      • langchain_mcp_adapters (MultiServerMCPClient)
-      • langgraph (agent graph runtime)
+      • fastmcp   (FastMCP server + Client - every lab)
+      • mcp       (the MCP Python SDK underneath it)
+      • httpx     (the agents' HTTP client)
+      • fastapi / uvicorn (lab5 auth server, the Explorer)
+      • jose      (JWT handling in lab5)
+
+    The langchain packages are deliberately absent: langchain_mcp_adapters
+    imports mcp.server.fastmcp, a module deleted in MCP Python SDK v2, so
+    it cannot be installed alongside this stack. See requirements.txt.
     """
     try:
         t0 = time.time()
@@ -150,9 +147,11 @@ def warmup_library_imports() -> bool:
 
         for mod_name in (
             "fastmcp",
-            "langchain_ollama",
-            "langchain_mcp_adapters",
-            "langgraph",
+            "mcp",
+            "httpx",
+            "fastapi",
+            "uvicorn",
+            "jose",
         ):
             try:
                 __import__(mod_name)
@@ -191,8 +190,8 @@ def main() -> None:
     print(f"{YELLOW}Phase 1 ▸ Checking Ollama server …{RESET}")
     ollama_ok = check_ollama()
     if not ollama_ok:
-        print(f"{RED}  Ollama is required. Start it with:  ollama serve &{RESET}")
-        print(f"{RED}  Then pull the model with:           ollama pull {OLLAMA_MODEL}{RESET}\n")
+        print(f"{RED}  Ollama is required. Start and warm it with:  bash scripts/serveOllama.sh{RESET}")
+        print(f"{RED}  If the model is missing, pull it first with:  bash scripts/startOllama.sh{RESET}\n")
 
     # ── Phase 2: Heavy loads in parallel ─────────────────────────────
     print(f"\n{YELLOW}Phase 2 ▸ Loading models (parallel) …{RESET}")
@@ -210,7 +209,6 @@ def main() -> None:
 
     # ── Phase 3: Fast follow-ups (sequential is fine) ────────────────
     print(f"\n{YELLOW}Phase 3 ▸ Loading supporting libraries …{RESET}")
-    results["ChromaDB"]  = warmup_chromadb()
     results["Libraries"] = warmup_library_imports()
 
     # ── Summary ──────────────────────────────────────────────────────

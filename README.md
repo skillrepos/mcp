@@ -3,14 +3,19 @@
 
 These instructions will guide you through configuring a GitHub Codespaces environment that you can use to run the code.
 
+Prefer to run the labs on your own machine instead? See **[LOCAL_SETUP.md](./LOCAL_SETUP.md)**
+for the full list of prerequisites and setup steps. The Codespace is the environment the labs
+are verified against, so a few things will look different locally.
+
 > **Updated for MCP specification revision `2026-07-28`.** This is a breaking protocol
 > change: the `initialize` handshake and `Mcp-Session-Id` are gone, servers can no longer
 > push requests to clients, and Roots, Sampling and Logging are deprecated. See the
-> "What changed" section at the top of `labs.md`, and `MCP-2026-07-28-UPDATE-REPORT.md`
-> for the full rundown.
+> "Parts of 2026-07-28 we did not lab" appendix at the end of `labs.md`, and
+> `MCP-2026-07-28-UPDATE-REPORT.md` for the full rundown.
 >
-> The labs run on **FastMCP 4.0.0b1**, which is a beta and is pinned exactly in
-> `requirements.txt`. FastMCP 3.4.x cannot speak this protocol revision. 
+> The labs run on **FastMCP 4**, pinned exactly in `requirements.txt` (currently
+> 4.0.3, the stable release line - FastMCP 4.0 went stable on 2026-08-31).
+> FastMCP 3.4.x hard-pins `mcp<2.0` and cannot speak this protocol revision.
 
 <br><br>
 
