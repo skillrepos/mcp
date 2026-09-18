@@ -1,7 +1,7 @@
 # Understanding MCP (Model Context Protocol) - A hands-on guide
 ## Understanding how AI agents can connect to the world
 ## Session labs 
-## Revision 9.24 - 09/16/26
+## Revision 9.25 - 09/17/26
 
 **Versions of dialogs, buttons, etc. shown in screenshots may differ from current version used in dev environments**
 
@@ -575,146 +575,156 @@ List all the notes in that notebook
 
 **Lab 5 - Security and Authorization in MCP**
 
-**Purpose: In this lab, we'll stand up a protected MCP server and see how a client that knows nothing but its URL can authenticate to it - then prove the server's checks are real.**
+**Purpose: In this lab, we'll get a token, read what's inside it, spend it at a protected MCP server - then break it four different ways and watch the server catch each one.**
 
-1. Change into the *lab5* directory.
+The files you'll use, all in *lab5*. They're teaching stand-ins - a shared HS256 secret so the lab runs offline, where production would use asymmetric keys published via JWKS - but the tokens and the checks are the real ones.
+
+| **File** | **What it's for** |
+|---|---|
+| **[`auth_server.py`](lab5/auth_server.py)** | Mints signed tokens. Two demo clients: `demo-client` may add, `readonly-client` may not |
+| **[`secure_server.py`](lab5/secure_server.py)** | The protected MCP server. Checks signature, issuer, audience, expiry and scope before `add` runs |
+| **[`call_tool.py`](lab5/call_tool.py)** | Sends one `tools/call add(7, 5)` request, with whatever token you give it, and prints the server's verdict |
+| **[`show_token.py`](lab5/show_token.py)** | Opens a token up so you can read the claims the server is about to check |
+| **[`secure_client.py`](lab5/secure_client.py)** | A client that starts with nothing but the server's URL and works the rest out for itself |
+
+<br>
+
+1. Change into *lab5* and start the **authorization** server. Leave it running in this terminal.
 
 ```
 cd ../lab5
-```
-<br><br>
-
-2. This directory holds an authorization server, a secure MCP server, and a client. They're teaching stand-ins - a shared HS256 secret so the lab runs offline, where production would use asymmetric keys published via JWKS - but the *protocol flow* is the real one. Open any file to read its numbered comments.
-
-| **File**               | **What to notice**                                                             |
-|------------------------|--------------------------------------------------------------------------------|
-| **[`auth_server.py`](lab5/auth_server.py)**   | Publishes RFC 8414 metadata; mints tokens whose **audience is the MCP server's canonical URI** |
-| **[`secure_server.py`](lab5/secure_server.py)** | `JWTVerifier` + `RemoteAuthProvider` - validates audience, enforces scopes, publishes RFC 9728 resource metadata |
-| **[`secure_client.py`](lab5/secure_client.py)** | Walks the chain by hand: 401 to resource metadata to AS metadata to token to call |
-
-<br><br>
-
-3. Start the **authorization** server and leave it running in that terminal.
-
-```
 python auth_server.py
 ```
 
 ![Running authentication server](./images/mcp58.png?raw=true "Running authentication server") 
 <br><br>
 
-4. In another terminal, start the secure **MCP** server from the *lab5* directory.
+2. In a second terminal, start the protected **MCP** server. Leave it running too - it will report every token it rejects, and why.
 
 ```
-cd lab5    (if needed)
+cd lab5
 python secure_server.py
 ```
 
 ![start secure server](./images/mcp156.png?raw=true "start secure server")
 <br><br>
 
-5. The server is protected, so a client needs a token - but nobody has configured a token endpoint, a client ID or a password anywhere. Watch how a client finds all of that starting from a refusal. In a third terminal, send a request with no token.
+3. In a third terminal, call the tool with no token at all.
 
 ```
 cd lab5
-
-curl -i -X POST http://127.0.0.1:8000/mcp \
-     -H "Content-Type: application/json" \
-     -H "Accept: application/json, text/event-stream" \
-     -H "MCP-Protocol-Version: 2026-07-28" \
-     -H "Mcp-Method: tools/list" \
-     -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}'
+python call_tool.py
 ```
 
-![401 error](./images/mcp157.png?raw=true "401 error") 
+![401 with no token](./images/mcp188.png?raw=true "401 with no token") 
+
+   A **401**. The `WWW-Authenticate` header names the scope the tool wants and where a client could go to learn how to get one. Nothing runs without a token, so let's get one.
 <br><br>
 
-   You get a **401**, but look at the `WWW-Authenticate` header rather than the status code. It doesn't just say "denied" - it says *where to go and find out how to authenticate*. That is hop 1 of 4.
+4. Ask the authorization server for a token. The `resource` parameter says which server you intend to spend it at.
 
 ```
-WWW-Authenticate: Bearer scope="calc:add", resource_metadata="http://127.0.0.1:8000/.well-known/oauth-protected-resource/mcp"
+export TOKEN=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp" \
+     -d "username=demo-client&password=demopass" | jq -r .access_token)
+
+echo $TOKEN
 ```
+
+![a token](./images/mcp189.png?raw=true "a token") 
 <br><br>
 
-6. Hop 2 - follow that URL. This is the server describing itself. `resource` is its canonical URI, the exact string a token has to be issued *for*, and `authorization_servers` names who is allowed to issue one.
+5. That string is a JWT: three base64 parts joined by dots. Open it up.
 
 ```
-curl -s http://127.0.0.1:8000/.well-known/oauth-protected-resource/mcp | jq
+python show_token.py $TOKEN
 ```
+
+![inside the token](./images/mcp190.png?raw=true "inside the token") 
+
+   Header and payload are readable by anyone holding the token - no key needed. The five claims are what the server is about to check: who it's for (`sub`), what it allows (`scope`), **which server it may be spent at** (`aud`), who minted it (`iss`), when it dies (`exp`). The signature is what stops anyone changing them.
 <br><br>
 
-7. Hop 3 - ask that authorization server how to talk to it. `token_endpoint` is where a token gets requested. Check that `issuer` matches the URL you just asked: a client that skips that check can be pointed at an attacker's authorization server and never notice.
+6. Spend it.
 
 ```
-curl -s http://127.0.0.1:9000/.well-known/oauth-authorization-server | jq
+python call_tool.py $TOKEN
 ```
+
+![200 with a token](./images/mcp191.png?raw=true "200 with a token") 
+
+   **200**, and `add` ran. Every check passed. Now break one at a time.
 <br><br>
 
-8. Hop 4 is the token request itself. Rather than doing that by hand, run the client - it repeats all four hops and prints each one, then calls the tool.
+7. **Wrong audience.** Get a token that is correctly signed, unexpired and from an issuer this server trusts - but minted for a *different* server. Then try to spend it here.
+
+```
+export WRONG_AUD=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://example.com/other-server" \
+     -d "username=demo-client&password=demopass" | jq -r .access_token)
+
+python call_tool.py $WRONG_AUD
+```
+
+![wrong audience rejected](./images/mcp192.png?raw=true "wrong audience rejected") 
+
+   Rejected. Look at the second terminal: the server logged *audience mismatch* with both URLs, while the client was told only `invalid_token`.
+<br><br>
+
+8. **Tampered token.** Take your good token and change one character.
+
+```
+python call_tool.py ${TOKEN}x
+```
+
+   Same `401`. The signature no longer matches the content, and the server can tell without asking anyone.
+<br><br>
+
+9. **Missing scope.** `readonly-client` is a real client with a valid token - it just was never granted `calc:add`.
+
+```
+export NO_SCOPE=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp" \
+     -d "username=readonly-client&password=readonlypass" | jq -r .access_token)
+
+python call_tool.py $NO_SCOPE
+```
+
+![insufficient scope](./images/mcp193.png?raw=true "insufficient scope") 
+
+   A different answer: **403** `insufficient_scope`. The server knows who this is - it's just not allowed to do this. 401 is *not authenticated*; 403 is *authenticated, not authorized*.
+<br><br>
+
+10. **Expired.** Mint a token that lives for five seconds, wait it out, then try it.
+
+```
+export SHORT=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp&expires_in=5" \
+     -d "username=demo-client&password=demopass" | jq -r .access_token)
+
+sleep 8; python call_tool.py $SHORT
+```
+
+![expired token](./images/mcp194.png?raw=true "expired token") 
+<br><br>
+
+11. You typed the token endpoint and the `resource` yourself. A real client - FastMCP's, or the one inside your IDE - is given nothing but the server's URL and learns the rest from the 401 you saw in step 3. Run one and watch it.
 
 ```
 python secure_client.py
 ```
 
 ![Running the secure client](./images/mcp59.png?raw=true "Running the secure client") 
-<br><br>
 
-   You just did by hand what this client - and FastMCP, and the MCP client inside your IDE - does on every connection. Two reasons to have seen it once. **A client needs nothing but the server's URL**, which is why you can add an MCP server to an IDE without configuring anything. And when a connection fails with a bare `401` and no explanation, these four hops are the only places it can have gone wrong.
-<br><br>
-
-9. In step [4] of the output, note the token's audience: `http://127.0.0.1:8000/mcp`. That came from the RFC 8707 `resource` parameter the client sent with its token request.
-<br><br>
-
-10. (OPTIONAL) Prove the audience check is real. Get a token bound to a *different* resource and try to use it - correctly signed, unexpired, from an issuer this server trusts, and rejected anyway.
-
-```
-curl -s -X POST "http://127.0.0.1:9000/token?resource=http://example.com/other-server" \
-     -d "username=demo-client&password=demopass" | jq -r .access_token > /tmp/wrong_aud.txt
-
-curl -i -X POST http://127.0.0.1:8000/mcp \
-     -H "Authorization: Bearer $(cat /tmp/wrong_aud.txt)" \
-     -H "Content-Type: application/json" \
-     -H "Accept: application/json, text/event-stream" \
-     -H "MCP-Protocol-Version: 2026-07-28" \
-     -H "Mcp-Method: tools/list" \
-     -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}'
-```
-
-11. (OPTIONAL) Now prove the signature check is real. Get a *valid* token, corrupt it, and watch it fail too.
-
-```
-export TOKEN=$(curl -s -X POST "http://127.0.0.1:9000/token?resource=http://127.0.0.1:8000/mcp" \
-     -d "username=demo-client&password=demopass" | jq -r .access_token)
-
-curl -i -X POST http://127.0.0.1:8000/mcp \
-     -H "Authorization: Bearer ${TOKEN}corruption" \
-     -H "Content-Type: application/json" \
-     -H "Accept: application/json, text/event-stream" \
-     -H "MCP-Protocol-Version: 2026-07-28" \
-     -H "Mcp-Method: tools/list" \
-     -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}'
-```
-
-   (Optional) Introspect a valid token, or `echo $TOKEN` and paste it into https://jwt.io.
-
-```
-curl -s -X POST http://127.0.0.1:9000/introspect \
-     -H "Content-Type: application/json" \
-     -d "{\"token\":\"$TOKEN\"}" | jq
-```
-
-![Introspecting token](./images/mcp62.png?raw=true "Introspecting token") 
+   [1]-[3] are discovery: the refusal points at the server's metadata, which names the authorization server, which names its token endpoint. [4] is the token request you made by hand in step 4. That is why adding an MCP server to an IDE takes only a URL - and when a connection fails with a bare `401`, those hops are the only places it can have gone wrong.
 <br><br>
 
 12. Stop the authorization server and the secure MCP server with CTRL+C.
 <br><br>
 
-**What just happened** - the security rules behind what you just ran.
+**What just happened** - the checks behind every request.
 
-- **Audience binding is the most important rule here.** A server **must** reject a token that wasn't issued *for it* - the rejection you triggered in step 10. One hop further out, a server calling an upstream API obtains its own token rather than passing the client's through. Skip that and you are the **confused deputy**: spending someone else's token, and trusted because your hostname vouched for it.
-- **The issuer check closes authorization server mix-up.** Matching `issuer` against the URL you asked (step 7) is what stops a client being steered to an attacker's authorization server.
-- **What the metadata advertises isn't always what's exercised.** It lists PKCE and CIMD, which a production authorization-code client would require. This lab uses a password grant, so you see them advertised but not used.
-- **Nothing about the connection carries meaning.** The token, the protocol version, the capabilities and the caller's identity travel together on every request. There is no session for a token to be attached to.
+- **The server never issues a token - it only checks one.** Signature, issuer, audience, expiry, then scope, before your tool code runs. The first four fail as `401 invalid_token`; scope fails as `403 insufficient_scope`.
+- **Audience binding is the rule that matters most.** The step 7 token was valid in every way except *who it was for*, and the server **must** refuse it. One hop further out the same rule reads: a server calling an upstream API gets its *own* token rather than passing the client's through. Skip that and you're the **confused deputy** - spending someone else's token, trusted because your hostname vouched for it.
+- **A token is readable, not forgeable.** Anyone holding one can read the claims (step 5); nobody without the key can change them (step 8). A token is a secret because of what it *lets you do*, not what it hides.
+- **The client is told little; the server log says why.** Every 401 came back as a generic `invalid_token`. The reason - audience mismatch, expired - appears only on the server's side. That is deliberate, and it's where to look when auth fails.
+- **Nothing about the connection carries meaning.** There is no session for a token to attach to. Token, protocol version and identity travel on every request, and every request is judged on its own.
 
 <p align="center">
 **[END OF LAB]**

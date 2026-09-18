@@ -2,17 +2,22 @@
 #
 # A single "add" tool protected by OAuth 2.1 bearer tokens.
 #
-# What changed for the 2026-07-28 spec:
-#   * We no longer hand-roll ASGI middleware that just looks for a Bearer prefix.
-#     FastMCP's auth providers implement the spec's required behavior for us:
-#       - 401 with a WWW-Authenticate header naming the resource metadata URL
-#       - RFC 9728 Protected Resource Metadata served at a well-known URL
-#       - RFC 8707 audience validation (token MUST be issued FOR this server)
-#       - scope enforcement, with 403 + insufficient_scope on a scope shortfall
-#   * Audience validation is a MUST, not a nicety. A server that accepts a token
-#     minted for someone else is the "confused deputy" the spec warns about.
-#   * There is no session to protect anymore - 2026-07-28 removed Mcp-Session-Id,
-#     so every request is authorized on its own, from its own Authorization header.
+# The MCP server is an OAuth RESOURCE SERVER. It never issues a token; it only
+# checks the one presented on each request, in this order, before your tool
+# code runs:
+#
+#   signature   was it really minted by the key we share with the issuer?
+#   issuer      does `iss` name an authorization server we trust?
+#   audience    does `aud` name THIS server? (RFC 8707 - a MUST)
+#   expiry      is `exp` still in the future?
+#   scope       does `scope` include what this tool needs?
+#
+# The first four failing gives 401 invalid_token - the request is not
+# authenticated. Scope failing gives 403 insufficient_scope - authenticated,
+# but not authorized to do this.
+#
+# There is no session to protect - 2026-07-28 removed Mcp-Session-Id - so
+# every request is authorized on its own, from its own Authorization header.
 
 import uvicorn
 from pydantic import AnyHttpUrl
@@ -32,32 +37,38 @@ RESOURCE = "http://127.0.0.1:8000/mcp"
 BASE_URL = "http://127.0.0.1:8000"
 # -------------------------------------------------------------------------
 
-# 2) The token verifier. `audience` is what enforces RFC 8707: a token whose
-#    "aud" claim is not our resource URI is rejected, even if it is otherwise
-#    perfectly valid and signed by a server we trust.
+# 2) The token verifier: signature, issuer, audience and expiry. `audience`
+#    is what enforces RFC 8707 - a token whose "aud" is not our resource URI
+#    is rejected even if it is otherwise valid and signed by a key we trust.
 verifier = JWTVerifier(
     public_key=SECRET_KEY,          # HS256 shared secret (lab only)
     algorithm=ALGORITHM,
     issuer=ISSUER,
     audience=RESOURCE,
-    required_scopes=["calc:add"],
 )
 
-# 3) RemoteAuthProvider publishes RFC 9728 Protected Resource Metadata at
-#    /.well-known/oauth-protected-resource/mcp, pointing clients at the
-#    authorization server. This is the discovery step a 2026-07-28 client
-#    performs after it receives a 401.
+# 3) RemoteAuthProvider wraps the verifier and publishes RFC 9728 Protected
+#    Resource Metadata at /.well-known/oauth-protected-resource/mcp, which is
+#    how a client that only knows our URL finds the authorization server.
+#    challenge_scopes is what the 401 advertises in WWW-Authenticate.
 auth = RemoteAuthProvider(
     token_verifier=verifier,
     authorization_servers=[AnyHttpUrl(ISSUER)],
     base_url=BASE_URL,
     resource_name="MCP Lab Secure Calculator",
+    challenge_scopes=["calc:add"],
 )
+
+# 4) Scope is enforced at the endpoint, AFTER the token itself has been
+#    accepted. That is what makes a valid token without calc:add a 403
+#    (insufficient_scope) rather than a 401: we know who you are, you just
+#    can't do this.
+auth.required_scopes = ["calc:add"]
 
 mcp = FastMCP("Secure Calc", auth=auth)
 
 
-# 4) The tool itself is unremarkable. That is the point: authorization is a
+# 5) The tool itself is unremarkable. That is the point: authorization is a
 #    transport/protocol concern, handled before your code ever runs.
 @mcp.tool
 def add(a: int, b: int) -> int:
@@ -66,7 +77,7 @@ def add(a: int, b: int) -> int:
 
 
 if __name__ == "__main__":
-    # 5) http_app() builds the Starlette app including the well-known
+    # 6) http_app() builds the Starlette app including the well-known
     #    discovery routes contributed by the auth provider.
     app = mcp.http_app(path="/mcp")
     uvicorn.run(app, host="0.0.0.0", port=8000)

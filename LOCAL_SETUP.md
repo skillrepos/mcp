@@ -77,7 +77,7 @@ On macOS, if `code` isn't found: open VS Code, Command Palette (CMD+SHIFT+P) →
 
 ### 5. curl, jq, and git
 
-Lab 5 walks the OAuth discovery chain with `curl` and pipes the JSON through `jq`.
+Lab 5 requests tokens from the authorization server with `curl` and pulls them out of the JSON with `jq`.
 
 ```bash
 # macOS
@@ -233,9 +233,11 @@ mcp/
 │   ├── math_server.py          # Second server to compose (skeleton)
 │   └── gateway.py              # Mounts both servers behind one endpoint (skeleton)
 ├── lab5/                       # Lab 5 - Security and Authorization
-│   ├── auth_server.py          # Authorization server (port 9000)
-│   ├── secure_server.py        # Audience-validating MCP server
-│   └── secure_client.py        # Walks the discovery chain
+│   ├── auth_server.py          # Authorization server (port 9000) - mints tokens
+│   ├── secure_server.py        # Token-checking MCP server (signature, issuer, audience, expiry, scope)
+│   ├── call_tool.py            # One tools/call request with a given token
+│   ├── show_token.py           # Decodes a JWT's header and claims
+│   └── secure_client.py        # Walks the discovery chain automatically
 ├── extra/                      # Completed code for diff-and-merge, plus retired labs
 │   ├── agent_mcp.txt           # Lab 1 merge source
 │   ├── note_server.txt         # Lab 2 merge source

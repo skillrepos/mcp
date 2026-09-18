@@ -1,14 +1,18 @@
 # secure_client.py - FastMCP 4.x, MCP spec revision 2026-07-28
 #
-# Walks the discovery chain a real 2026-07-28 client walks:
+# Everything you did by hand with curl, done the way a real client does it -
+# starting from nothing but the MCP server's URL:
 #   1. Call the MCP server with no token   -> 401 + WWW-Authenticate
 #   2. Read the resource_metadata URL      -> RFC 9728 Protected Resource Metadata
 #   3. Read the authorization server metadata (RFC 8414)
 #   4. Get a token, binding it to this resource with the RFC 8707 `resource` param
 #   5. Call the tool with the token
 #
-# In production you would let FastMCP's built-in OAuth client handle all of this
-# (Client(url, auth="oauth")). We do it by hand here so you can see each hop.
+# Nobody configured a token endpoint, a client id or a scope in this client.
+# It learned all of them from the server's refusal. This is what FastMCP's
+# built-in OAuth client (Client(url, auth="oauth")) and the MCP client inside
+# your IDE do on every connection - which is why adding a server to an IDE
+# takes nothing but its URL. The hops are written out here so you can see them.
 
 import asyncio
 import json
